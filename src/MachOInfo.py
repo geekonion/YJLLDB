@@ -85,13 +85,15 @@ def parse_macho(debugger, command, result, internal_dict):
     for module in target.module_iter():
         module_file_spec = module.GetFileSpec()
         module_dir = module_file_spec.GetDirectory()
-        if bundle_path not in module_dir:
-            continue
-
         module_name = module_file_spec.GetFilename()
 
-        if len(lookup_module_name) and lookup_module_name != module_name:
-            continue
+        if len(lookup_module_name):
+            lib_name = lookup_module_name + '.dylib'
+            if lookup_module_name != module_name and lib_name != module_name:
+                continue
+        else:
+            if bundle_path not in module_dir:
+                continue
 
         print("-----parsing module %s-----" % module_name)
         seg = module.FindSection('__TEXT')

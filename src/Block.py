@@ -56,13 +56,13 @@ def find_all_blocks(debugger, command, result, internal_dict):
         module_file_spec = module.GetFileSpec()
         module_path = module_file_spec.GetFilename()
         module_name = os.path.basename(module_path)
-
-        if len(module_list) > 0 and module_name not in module_list:
-            continue
-
         module_dir = module_file_spec.GetDirectory()
-        if bundle_path not in module_dir:
-            continue
+        if len(module_list) > 0:
+            if module_name not in module_list:
+                continue
+        else:
+            if bundle_path not in module_dir:
+                continue
 
         module_name = module_file_spec.GetFilename()
         if module_name.startswith('libswift'):
@@ -798,15 +798,16 @@ def break_blocks(debugger, command, result, internal_dict):
     for module in target.module_iter():
         module_file_spec = module.GetFileSpec()
         module_dir = module_file_spec.GetDirectory()
-        if bundle_path not in module_dir:
-            continue
-
         name = module_file_spec.GetFilename()
         if name.startswith('libswift'):
             continue
 
-        if len(module_list) and name not in module_list:
-            continue
+        if len(module_list):
+            if name not in module_list:
+                continue
+        else:
+            if bundle_path not in module_dir:
+                continue
 
         print("-----try to lookup block in %s-----" % name)
         blocks_info_str = get_blocks_info(name)
