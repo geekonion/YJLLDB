@@ -83,7 +83,7 @@ def trace_all_functions_in_module(debugger, command, result, internal_dict):
             if not options.individual and not sym_name:
                 continue
 
-            if options.method:
+            if not options.all:
                 if '[' not in sym_name:
                     continue
                 if sym_name.endswith(' .cxx_destruct]'):
@@ -244,14 +244,15 @@ def breakpoint_handler(frame, bp_loc, dict):
 
 
 def generate_option_parser():
-    usage = "usage: %prog [options] ModuleName\n"
+    usage = "usage: %prog [options] ModuleName\n" + \
+            "By default, only OC methods are traced. To trace swift module, you need to add the -a option."
 
     parser = optparse.OptionParser(usage=usage, prog='mtrace')
-    parser.add_option("-m", "--method",
-                      action="store_false",
-                      default=True,
-                      dest="method",
-                      help="only trace objc method")
+    parser.add_option("-a", "--all",
+                      action="store_true",
+                      default=False,
+                      dest="all",
+                      help="trace all functions")
     parser.add_option("-1", "--oneshot",
                       action="store_false",
                       default=True,

@@ -491,7 +491,7 @@ patch 32 locations
 
 #### mtrace - trace module
 
-Trace all functions in the specified module.
+Trace all functions in the specified module. By default, only OC methods are traced. To trace swift module, you need to add the -a option.
 
 ```stylus
 // begin trace

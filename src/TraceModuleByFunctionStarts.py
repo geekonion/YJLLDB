@@ -65,7 +65,8 @@ def trace_all_functions_in_module(debugger, command, result, internal_dict):
         module_path = module_file_spec.GetFilename()
         name = os.path.basename(module_path)
 
-        if lookup_module_name != name:
+        lib_name = lookup_module_name + '.dylib'
+        if lookup_module_name != name and lib_name != name:
             continue
 
         module_found = True
@@ -257,7 +258,7 @@ def breakpoint_handler(frame, bp_loc, dict):
 
 def generate_option_parser():
     usage = "usage: %prog [options] ModuleName\n" + \
-        "By default, only OC methods are traced"
+        "By default, only OC methods are traced. To trace swift module, you need to add the -a option."
 
     parser = optparse.OptionParser(usage=usage, prog='mtrace_fs')
     parser.add_option("-a", "--all",
