@@ -1120,8 +1120,37 @@ def get_blocks_info(module):
         }
     }
     
-    struct section_64 *data_const_secs[2] = {0};
-    struct section_64 *data_got_secs[2] = {0};
+    void *globalBlock = &_NSConcreteGlobalBlock;
+    void *stackBlock = &_NSConcreteStackBlock;
+    NSMutableString *globalBlocks = [NSMutableString string];
+    NSMutableString *stackBlockAddr = [NSMutableString string];
+    
+    void (^parse_g_block)(struct section_64 *) = ^(struct section_64 *data_const_sec){
+        uint64_t sec_size = data_const_sec->size;
+        int pointer_size = sizeof(void *);
+        uint64_t count = sec_size / pointer_size;
+        void **ptr = (void **)(slide + data_const_sec->addr);
+        for (uint64_t i = 0; i < count; i++) {
+            void *tmp = ptr[i];
+            if (tmp == globalBlock) {
+                [globalBlocks appendFormat:@"%p:%p;", &ptr[i], ptr[i + 2]];
+            }
+        }
+    };
+    
+    void (^parse_s_block)(struct section_64 *) = ^(struct section_64 *data_got_sec){
+        uint64_t sec_size = data_got_sec->size;
+        int pointer_size = sizeof(void *);
+        uint64_t count = sec_size / pointer_size;
+        void **ptr = (void **)(slide + data_got_sec->addr);
+        for (uint64_t i = 0; i < count; i++) {
+            void *tmp = ptr[i];
+            if (tmp == stackBlock) {
+                [stackBlockAddr appendFormat:@"%p;", &ptr[i]];
+            }
+        }
+    };
+    
     if (x_mach_header) {
         uint32_t magic = x_mach_header->magic;
         if (magic == 0xfeedfacf) { // MH_MAGIC_64
@@ -1149,10 +1178,11 @@ def get_blocks_info(module):
                             for (uint32_t idx = 0; idx < nsects; idx++) {
                                 struct section_64 *sec = (struct section_64 *)sec_start;
                                 char *sec_name = strndup(sec->sectname, 16);
-                                if (strcmp(sec_name, "__const") == 0) {
-                                    data_const_secs[index] = sec;
+                                if (strcmp(sec_name + strlen(sec_name) - 5, "const") == 0
+                                    && strcmp(sec_name + strlen(sec_name) - 11, "_objc_const") != 0) {
+                                    parse_g_block(sec);
                                 } else if (strcmp(sec_name, "__got") == 0) {
-                                    data_got_secs[index] = sec;
+                                    parse_s_block(sec);
                                 }
                                 
                                 sec_start += sec_size;
@@ -1167,45 +1197,9 @@ def get_blocks_info(module):
         }
     }
     
-    void *globalBlock = &_NSConcreteGlobalBlock;
-    void *stackBlock = &_NSConcreteStackBlock;
-    NSMutableString *globalBlocks = [NSMutableString string];
-    for (int i = 0; i < 2; i++) {
-        struct section_64 *data_const_sec = data_const_secs[i];
-        if (data_const_sec) {
-            uint64_t sec_size = data_const_sec->size;
-            int pointer_size = sizeof(void *);
-            uint64_t count = sec_size / pointer_size;
-            void **ptr = (void **)(slide + data_const_sec->addr);
-            for (uint64_t i = 0; i < count; i++) {
-                void *tmp = ptr[i];
-                if (tmp == globalBlock) {
-                    [globalBlocks appendFormat:@"%p:%p;", &ptr[i], ptr[i + 2]];
-                }
-            }
-        }
-    }
-    
     NSUInteger len = [globalBlocks length];
     if (len > 0) {
         [globalBlocks replaceCharactersInRange:NSMakeRange(len - 1, 1) withString:@""];
-    }
-    
-    NSMutableString *stackBlockAddr = [NSMutableString string];
-    for (int i = 0; i < 2; i++) {
-        struct section_64 *data_got_sec = data_got_secs[i];
-        if (data_got_sec) {
-            uint64_t sec_size = data_got_sec->size;
-            int pointer_size = sizeof(void *);
-            uint64_t count = sec_size / pointer_size;
-            void **ptr = (void **)(slide + data_got_sec->addr);
-            for (uint64_t i = 0; i < count; i++) {
-                void *tmp = ptr[i];
-                if (tmp == stackBlock) {
-                    [stackBlockAddr appendFormat:@"%p;", &ptr[i]];
-                }
-            }
-        }
     }
     
     len = [stackBlockAddr length];
