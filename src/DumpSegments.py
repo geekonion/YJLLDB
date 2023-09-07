@@ -85,7 +85,7 @@ def dump_segments(debugger, command, result, internal_dict):
                         sec_start = slide + int(sect['addr'], 16)
                         sec_size = int(sect['size'], 16)
                         sec_end = sec_start + sec_size
-                        seg_info += '\t[0x{:<9x}-0x{:<9x})\t0x{:<9x} {}\n'.format(sec_start, sec_end, sec_size, sect['name'])
+                        seg_info += '\t[0x{:<9x}-0x{:<9x})\t0x{:<9x}   {}\n'.format(sec_start, sec_end, sec_size, sect['name'])
 
                     if seg_name == '__LINKEDIT':
                         linkedit_offset = int(lc['offset'], 16)
