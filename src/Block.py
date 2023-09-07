@@ -57,6 +57,10 @@ def find_all_blocks(debugger, command, result, internal_dict):
         module_path = module_file_spec.GetFilename()
         module_name = os.path.basename(module_path)
         module_dir = module_file_spec.GetDirectory()
+        if not module_dir:
+            print('unexpected module: {}'.format(module))
+            continue
+
         if len(module_list) > 0:
             if module_name not in module_list:
                 continue
