@@ -78,6 +78,11 @@ def find_all_blocks(debugger, command, result, internal_dict):
             continue
 
         blocks_info = json.loads(blocks_info_str)
+        error = blocks_info['error']
+        if len(error):
+            print(error)
+            continue
+
         global_blocks_str = blocks_info['globalBlocks']
         if len(global_blocks_str):
             blocks_info_list = global_blocks_str.split(';')
@@ -509,6 +514,11 @@ def find_blocks(debugger, command, result, internal_dict):
             continue
 
         blocks_info = json.loads(blocks_info_str)
+        error = blocks_info['error']
+        if len(error):
+            print(error)
+            continue
+
         global_blocks_str = blocks_info['globalBlocks']
         if len(global_blocks_str):
             blocks_info_list = global_blocks_str.split(';')
@@ -819,6 +829,11 @@ def break_blocks(debugger, command, result, internal_dict):
             continue
 
         blocks_info = json.loads(blocks_info_str)
+        error = blocks_info['error']
+        if len(error):
+            print(error)
+            continue
+
         global_blocks_str = blocks_info['globalBlocks']
         if len(global_blocks_str):
             blocks_info_list = global_blocks_str.split(';')
@@ -1105,37 +1120,45 @@ def get_blocks_info(module):
         }
     }
     
-    struct segment_command_64 *data_seg = NULL;
-    struct section_64 *data_const_sec = NULL;
-    struct section_64 *data_got_sec = NULL;
-    uint32_t magic = x_mach_header->magic;
-    if (magic == 0xfeedfacf) { // MH_MAGIC_64
-        uint32_t ncmds = x_mach_header->ncmds;
-        if (ncmds > 0) {
-            uintptr_t cur = (uintptr_t)x_mach_header + sizeof(mach_header_t);
-            struct load_command *sc = NULL;
-            for (uint i = 0; i < ncmds; i++, cur += sc->cmdsize) {
-                sc = (struct load_command *)cur;
-                if (sc->cmd == 0x19) { // LC_SEGMENT_64
-                    struct segment_command_64 *seg = (struct segment_command_64 *)sc;
-                    if (strcmp(seg->segname, "__DATA") == 0) { //SEG_DATA
-                        data_seg = seg;
-                        
-                        uint32_t nsects = seg->nsects;
-                        char *sec_start = (char *)seg + sizeof(struct segment_command_64);
-                        size_t sec_size = sizeof(struct section_64);
-                        for (uint32_t idx = 0; idx < nsects; idx++) {
-                            struct section_64 *sec = (struct section_64 *)sec_start;
-                            char *sec_name = strndup(sec->sectname, 16);
-                            if (strcmp(sec_name, "__const") == 0) {
-                                data_const_sec = sec;
-                            } else if (strcmp(sec_name, "__got") == 0) {
-                                data_got_sec = sec;
-                            }
+    struct section_64 *data_const_secs[2] = {0};
+    struct section_64 *data_got_secs[2] = {0};
+    if (x_mach_header) {
+        uint32_t magic = x_mach_header->magic;
+        if (magic == 0xfeedfacf) { // MH_MAGIC_64
+            uint32_t ncmds = x_mach_header->ncmds;
+            if (ncmds > 0) {
+                uintptr_t cur = (uintptr_t)x_mach_header + sizeof(mach_header_t);
+                struct load_command *sc = NULL;
+                for (uint i = 0; i < ncmds; i++, cur += sc->cmdsize) {
+                    sc = (struct load_command *)cur;
+                    if (sc->cmd == 0x19) { // LC_SEGMENT_64
+                        struct segment_command_64 *seg = (struct segment_command_64 *)sc;
+                        BOOL isSegData = strcmp(seg->segname, "__DATA") == 0;
+                        BOOL isSegDataConst = strcmp(seg->segname, "__DATA_CONST") == 0;
+                        if (isSegData || isSegDataConst) { //SEG_DATA
                             
-                            sec_start += sec_size;
-                            if (sec_name) {
-                                free(sec_name);
+                            int index = 0;
+                            if (isSegData) {
+                                index = 0;
+                            } else if (isSegDataConst) {
+                                index = 1;
+                            }
+                            uint32_t nsects = seg->nsects;
+                            char *sec_start = (char *)seg + sizeof(struct segment_command_64);
+                            size_t sec_size = sizeof(struct section_64);
+                            for (uint32_t idx = 0; idx < nsects; idx++) {
+                                struct section_64 *sec = (struct section_64 *)sec_start;
+                                char *sec_name = strndup(sec->sectname, 16);
+                                if (strcmp(sec_name, "__const") == 0) {
+                                    data_const_secs[index] = sec;
+                                } else if (strcmp(sec_name, "__got") == 0) {
+                                    data_got_secs[index] = sec;
+                                }
+                                
+                                sec_start += sec_size;
+                                if (sec_name) {
+                                    free(sec_name);
+                                }
                             }
                         }
                     }
@@ -1147,33 +1170,40 @@ def get_blocks_info(module):
     void *globalBlock = &_NSConcreteGlobalBlock;
     void *stackBlock = &_NSConcreteStackBlock;
     NSMutableString *globalBlocks = [NSMutableString string];
-    if (data_const_sec) {
-        uint64_t sec_size = data_const_sec->size;
-        int pointer_size = sizeof(void *);
-        uint64_t count = sec_size / pointer_size;
-        void **ptr = (void **)(slide + data_const_sec->addr);
-        for (uint64_t i = 0; i < count; i++) {
-            void *tmp = ptr[i];
-            if (tmp == globalBlock) {
-                [globalBlocks appendFormat:@"%p:%p;", &ptr[i], ptr[i + 2]];
+    for (int i = 0; i < 2; i++) {
+        struct section_64 *data_const_sec = data_const_secs[i];
+        if (data_const_sec) {
+            uint64_t sec_size = data_const_sec->size;
+            int pointer_size = sizeof(void *);
+            uint64_t count = sec_size / pointer_size;
+            void **ptr = (void **)(slide + data_const_sec->addr);
+            for (uint64_t i = 0; i < count; i++) {
+                void *tmp = ptr[i];
+                if (tmp == globalBlock) {
+                    [globalBlocks appendFormat:@"%p:%p;", &ptr[i], ptr[i + 2]];
+                }
             }
         }
     }
+    
     NSUInteger len = [globalBlocks length];
     if (len > 0) {
         [globalBlocks replaceCharactersInRange:NSMakeRange(len - 1, 1) withString:@""];
     }
     
     NSMutableString *stackBlockAddr = [NSMutableString string];
-    if (data_got_sec) {
-        uint64_t sec_size = data_got_sec->size;
-        int pointer_size = sizeof(void *);
-        uint64_t count = sec_size / pointer_size;
-        void **ptr = (void **)(slide + data_got_sec->addr);
-        for (uint64_t i = 0; i < count; i++) {
-            void *tmp = ptr[i];
-            if (tmp == stackBlock) {
-                [stackBlockAddr appendFormat:@"%p;", &ptr[i]];
+    for (int i = 0; i < 2; i++) {
+        struct section_64 *data_got_sec = data_got_secs[i];
+        if (data_got_sec) {
+            uint64_t sec_size = data_got_sec->size;
+            int pointer_size = sizeof(void *);
+            uint64_t count = sec_size / pointer_size;
+            void **ptr = (void **)(slide + data_got_sec->addr);
+            for (uint64_t i = 0; i < count; i++) {
+                void *tmp = ptr[i];
+                if (tmp == stackBlock) {
+                    [stackBlockAddr appendFormat:@"%p;", &ptr[i]];
+                }
             }
         }
     }
@@ -1188,7 +1218,8 @@ def get_blocks_info(module):
         @"_NSConcreteStackBlock": [NSString stringWithFormat:@"%p", stackBlock],
         @"globalBlocks": globalBlocks,
         @"stackBlockAddr": stackBlockAddr,
-        @"slide": @(slide)
+        @"slide": @(slide),
+        @"error": !x_mach_header ? @"module not found" : @""
     };
     
     NSData *json_data = [NSJSONSerialization dataWithJSONObject:block_info options:kNilOptions error:nil];
