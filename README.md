@@ -72,6 +72,8 @@
 
 ​     \* [bmain - break main function](#bmain---break-main-function)
 
+​     \* [func_starts - function starts](#func_starts---function-starts)
+
 ## Installation
 
 1. Clone this repo
@@ -832,6 +834,25 @@ set 2 breakpoints
 ```stylus
 (lldb) bmain
 Breakpoint 9: BasicSyntax`___lldb_unnamed_symbol266, address = 0x10017c3fc
+```
+
+[back to commands list](#Commands-list)
+
+
+
+#### func_starts - function starts
+
+Print function starts
+
+```stylus
+(lldb) func_starts
+-----parsing module JITDemo-----
+address = 0x1021bc5c8 where = JITDemo`globalBlock_block_invoke at ViewController.m:17
+address = 0x1021bc608 where = JITDemo`+[ViewController load] at ViewController.m:27
+address = 0x1021bc61c where = JITDemo`-[ViewController viewDidLoad] at ViewController.m:31
+...
+address = 0x1021bdae0 where = JITDemo`-[SceneDelegate .cxx_destruct] at SceneDelegate.m:14
+(lldb) 
 ```
 
 [back to commands list](#Commands-list)
