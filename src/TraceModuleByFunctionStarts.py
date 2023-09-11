@@ -62,8 +62,7 @@ def trace_all_functions_in_module(debugger, command, result, internal_dict):
 
     for module in target.module_iter():
         module_file_spec = module.GetFileSpec()
-        module_path = module_file_spec.GetFilename()
-        name = os.path.basename(module_path)
+        name = module_file_spec.GetFilename()
 
         lib_name = lookup_module_name + '.dylib'
         if lookup_module_name != name and lib_name != name:

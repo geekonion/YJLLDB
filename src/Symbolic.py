@@ -46,14 +46,12 @@ def symbolic_uncaught_exception(debugger, command, result, internal_dict):
         module_name = "unknown"
         if module:
             module_file_spec = module.GetFileSpec()
-            module_path = module_file_spec.GetFilename()
-            module_name = os.path.basename(module_path)
+            module_name = module_file_spec.GetFilename()
 
         if main_module.__eq__(module):
             line_entry = addr_obj.GetLineEntry()
             file_spec = line_entry.GetFileSpec()
-            file_path = file_spec.GetFilename()
-            file_name = os.path.basename(file_path)
+            file_name = file_spec.GetFilename()
             offset = "at {}:{}:{}".format(file_name, line_entry.GetLine(), line_entry.GetColumn())
         else:
             offset = addr - symbol.GetStartAddress().GetLoadAddress(target)

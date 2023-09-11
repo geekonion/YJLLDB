@@ -50,8 +50,7 @@ def disable_breakpoint(target, thread, result, brkpoint_id, loc_id):
     frame = thread.GetFrameAtIndex(0)
     module = frame.GetModule()
     module_file_spec = module.GetFileSpec()
-    module_path = module_file_spec.GetFilename()
-    module_name = os.path.basename(module_path)
+    module_name = module_file_spec.GetFilename()
     # result.AppendMessage("disable breakpoint {}.{} [0x{:x}]{}`{}".
     #                      format(brkpoint_id, loc_id, loc.GetLoadAddress(),
     #                             module_name, frame.GetDisplayFunctionName()))

@@ -26,15 +26,13 @@ def get_desc_for_address(addr, default_name=None, need_line=True):
     module_name = "unknown"
     if module:
         module_file_spec = module.GetFileSpec()
-        module_path = module_file_spec.GetFilename()
-        module_name = os.path.basename(module_path)
+        module_name = module_file_spec.GetFilename()
 
     if need_line:
         line_entry = addr.GetLineEntry()
         if line_entry:
             file_spec = line_entry.GetFileSpec()
-            file_path = file_spec.GetFilename()
-            file_name = os.path.basename(file_path)
+            file_name = file_spec.GetFilename()
             return "{}`{} at {}:{}:{}".format(module_name, symbol.GetName(), file_name, line_entry.GetLine(),
                                               line_entry.GetColumn())
 

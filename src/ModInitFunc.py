@@ -41,8 +41,7 @@ def parse_mod_init_func(result, target, process, action):
     bundle_path = target.GetExecutable().GetDirectory()
     for module in target.module_iter():
         module_file_spec = module.GetFileSpec()
-        module_path = module_file_spec.GetFilename()
-        module_name = os.path.basename(module_path)
+        module_name = module_file_spec.GetFilename()
         module_dir = module_file_spec.GetDirectory()
         if bundle_path not in module_dir:
             continue
