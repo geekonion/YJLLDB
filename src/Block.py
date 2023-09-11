@@ -209,6 +209,8 @@ def find_all_blocks(debugger, command, result, internal_dict):
 
             adrp_ins = None
             stack_block_found = False
+            adrp_addr = None
+            adrp_op_list = None
             for next_ins in insts:
                 if next_ins.GetMnemonic(target) == 'adr':
                     ldr_ins_ops = next_ins.GetOperands(target).replace(' ', '')
@@ -439,9 +441,10 @@ def find_all_blocks(debugger, command, result, internal_dict):
             print("no block resolved")
 
         file_dir = os.path.join(os.path.expanduser('~'), 'block_symbols', module_name)
-        util.try_mkdir(file_dir)
         file_path = os.path.join(file_dir, 'block_symbol.json')
         if len(block_symbols) > 0:
+            util.try_mkdir(file_dir)
+
             with open(file_path, 'w') as json_file:
                 json.dump(block_symbols, json_file, indent=2)
                 json_file.close()
