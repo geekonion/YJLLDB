@@ -109,7 +109,7 @@ def parse_lcs(base, offset, n_cmds, macho):
                 'name': 'String Table',
                 'segname': '__LINKEDIT',
                 'offset': '{:X}'.format(lc_symtab['stroff']),
-                'size': '{:X}'.format(lc_symtab['stroff']),
+                'size': '{:X}'.format(lc_symtab['strsize']),
             }
             linkedit_secs.append(strtab)
         elif cmd == 0xb:  # LC_DYSYMTAB
