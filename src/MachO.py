@@ -115,7 +115,7 @@ def parse_lcs(base, offset, n_cmds, macho):
         elif cmd == 0xb:  # LC_DYSYMTAB
             lc_dysymtab = parse_dysymtab(base, offset, cmd, cmd_size)
             dysymtab = {
-                'name': 'Dynamic String Table',
+                'name': 'Dynamic Symbol Table',
                 'segname': '__LINKEDIT',
                 'offset': '{:X}'.format(lc_dysymtab['indirectsymoff']),
                 'size': '{:X}'.format(lc_dysymtab['nindirectsyms'] * 4),
