@@ -11,6 +11,7 @@ macho_magics = {
 }
 g_is_64_bit = True
 g_byteorder = 'big'
+g_endian = '<'
 
 
 def parse_header(header):
@@ -31,20 +32,20 @@ def parse_macho(base, offset):
     """
     Parse mach-o in memory
     """
-    global g_byteorder, g_is_64_bit
+    global g_byteorder, g_is_64_bit, g_endian
     magic = int.from_bytes(base[offset:offset + 4], byteorder='big')
     g_is_64_bit, is_little_endian = macho_magics[magic]
 
     if is_little_endian:
-        endian = '<'
+        g_endian = '<'
         g_byteorder = 'little'
         magic = int.from_bytes(base[offset:offset + 4], byteorder=g_byteorder)
     else:
-        endian = '>'
+        g_endian = '>'
         g_byteorder = 'big'
 
     header_bytes = base[offset + 4:offset + 24]
-    cputype, subtype, filetype, ncmds, scmds = struct.unpack(endian + '2i3I', header_bytes)
+    cputype, subtype, filetype, ncmds, scmds = struct.unpack(g_endian + '2i3I', header_bytes)
     # skip header
     if g_is_64_bit:
         offset += 32
@@ -72,6 +73,8 @@ def parse_lcs(base, offset, n_cmds, macho):
     """
     macho['lcs'] = []
 
+    seg_linkedit = None
+    linkedit_secs = []
     for _ in range(n_cmds):
         cmd = get_int(base, offset)  # load command type
         cmd_size = get_int(base, offset + 4)  # size of load command
@@ -84,15 +87,75 @@ def parse_lcs(base, offset, n_cmds, macho):
                              'offset "{}" is not divisible by 4.'.format(cmd_size, offset))
 
         if cmd == 0x1 or cmd == 0x19:  # 'SEGMENT' or 'SEGMENT_64'
-            macho['lcs'].append(parse_segment(base, offset, cmd, cmd_size))
+            segment = parse_segment(base, offset, cmd, cmd_size)
+            macho['lcs'].append(segment)
+            if segment['name'] == '__LINKEDIT':
+                seg_linkedit = segment
         elif cmd in (0x21, 0x2C):  # ('ENCRYPTION_INFO', 'ENCRYPTION_INFO_64')
             macho['lcs'].append(parse_encryption_info(base, offset, cmd, cmd_size))
         elif cmd == 0x28 | 0x80000000:  # LC_MAIN (0x28|LC_REQ_DYLD)
             macho['lcs'].append(parse_main(base, offset, cmd, cmd_size))
+        elif cmd == 0x2:  # LC_SYMTAB
+            lc_symtab = parse_symtab(base, offset, cmd, cmd_size)
+            symtab = {
+                'name': 'Symbol Table',
+                'segname': '__LINKEDIT',
+                'offset': '{:X}'.format(lc_symtab['symoff']),
+                'size': '{:X}'.format(lc_symtab['nsyms'] * 16 if g_is_64_bit else 12),  # sizeof(struct nlist_64)
+            }
+            linkedit_secs.append(symtab)
+
+            strtab = {
+                'name': 'String Table',
+                'segname': '__LINKEDIT',
+                'offset': '{:X}'.format(lc_symtab['stroff']),
+                'size': '{:X}'.format(lc_symtab['stroff']),
+            }
+            linkedit_secs.append(strtab)
+        elif cmd == 0xb:  # LC_DYSYMTAB
+            lc_dysymtab = parse_dysymtab(base, offset, cmd, cmd_size)
+            dysymtab = {
+                'name': 'Dynamic String Table',
+                'segname': '__LINKEDIT',
+                'offset': '{:X}'.format(lc_dysymtab['indirectsymoff']),
+                'size': '{:X}'.format(lc_dysymtab['nindirectsyms'] * 4),
+            }
+            linkedit_secs.append(dysymtab)
+        elif cmd == 0x26:  # LC_FUNCTION_STARTS
+            lc_function_starts = parse_linkedit_data(base, offset, cmd, cmd_size)
+            functions = {
+                'name': 'Function Starts',
+                'segname': '__LINKEDIT',
+                'offset': '{}'.format(lc_function_starts['dataoff']),
+                'size': '{}'.format(lc_function_starts['datasize']),
+            }
+            linkedit_secs.append(functions)
+        elif cmd == 0x29:  # LC_DATA_IN_CODE
+            lc_data_in_code = parse_linkedit_data(base, offset, cmd, cmd_size)
+            functions = {
+                'name': 'Data In Code Entries',
+                'segname': '__LINKEDIT',
+                'offset': '{}'.format(lc_data_in_code['dataoff']),
+                'size': '{}'.format(lc_data_in_code['datasize']),
+            }
+            linkedit_secs.append(functions)
         elif cmd == 0x1D:  # LC_CODE_SIGNATURE
-            macho['lcs'].append(parse_linkedit_data(base, offset, cmd, cmd_size))
+            lc_code_signature = parse_linkedit_data(base, offset, cmd, cmd_size)
+            codesign = {
+                'name': 'Code Signature',
+                'segname': '__LINKEDIT',
+                'offset': '{}'.format(lc_code_signature['dataoff']),
+                'size': '{}'.format(lc_code_signature['datasize']),
+            }
+            linkedit_secs.append(codesign)
 
         offset += cmd_size
+
+    def sort_comparator(info):
+        return int(info['offset'], 16)
+
+    linkedit_secs.sort(key=sort_comparator)
+    seg_linkedit['sects'] = linkedit_secs
 
 
 def parse_segment(base, m_offset, cmd, cmd_size):
@@ -101,11 +164,11 @@ def parse_segment(base, m_offset, cmd, cmd_size):
     if g_is_64_bit:
         seg_size = 72   # sizeof(struct segment_command_64)
         sect_size = 80  # sizeof(struct section_64)
-        struct_format = '<2I16s4Q2i2I'
+        struct_format = g_endian + '2I16s4Q2i2I'
     else:
         seg_size = 56   # sizeof(struct segment_command)
         sect_size = 68  # sizeof(struct section)
-        struct_format = '<2I16s4I2i2I'
+        struct_format = g_endian + '2I16s4I2i2I'
 
     seg_bytes = base[m_offset: m_offset + seg_size]
     _, _, seg_name, vmaddr, vmsize, offset, segsize, maxprot, initprot, nsects, flags = \
@@ -140,10 +203,10 @@ def parse_section(base, m_offset):
 
     if g_is_64_bit:
         read_size = 52
-        struct_format = '<16s16s2QI'
+        struct_format = g_endian + '16s16s2QI'
     else:
         read_size = 44
-        struct_format = '<16s16s3I'
+        struct_format = g_endian + '16s16s3I'
 
     sec_bytes = base[m_offset: m_offset + read_size]
     sec_name, seg_name, addr, size, offset = struct.unpack(struct_format, sec_bytes)
@@ -211,6 +274,63 @@ def parse_linkedit_data(base, offset, cmd, cmd_size):
         'cmd_size': '{:X}'.format(cmd_size),
         'dataoff': '{:X}'.format(dataoff),
         'datasize': '{:X}'.format(datasize),
+    }
+
+    return output
+
+
+def parse_symtab(base, offset, cmd, cmd_size):
+    """Parse LC_SYMTAB"""
+
+    offset += 8  # skip cmd and cmd_size
+    struct_format = g_endian + '4I'
+    sec_bytes = base[offset: offset + 16]
+    symoff, nsyms, stroff, strsize = struct.unpack(struct_format, sec_bytes)
+
+    output = {
+        'cmd': cmd,
+        'cmd_size': cmd_size,
+        'symoff': symoff,
+        'nsyms': nsyms,
+        'stroff': stroff,
+        'strsize': strsize
+    }
+
+    return output
+
+
+def parse_dysymtab(base, offset, cmd, cmd_size):
+    """Parse LC_DYSYMTAB"""
+
+    offset += 8  # skip cmd and cmd_size
+    struct_format = g_endian + '18I'
+    sec_bytes = base[offset: offset + 72]
+    ilocalsym, nlocalsym, iextdefsym, nextdefsym, \
+    iundefsym, nundefsym, tocoff, ntoc, modtaboff, \
+    nmodtab, extrefsymoff, nextrefsyms, indirectsymoff, \
+    nindirectsyms, extreloff, nextrel, locreloff, nlocrel = struct.unpack(struct_format, sec_bytes)
+
+    output = {
+        'cmd': cmd,
+        'cmd_size': cmd_size,
+        'ilocalsym': ilocalsym,
+        'nlocalsym': nlocalsym,
+        'iextdefsym': iextdefsym,
+        'nextdefsym': nextdefsym,
+        'iundefsym': iundefsym,
+        'nundefsym': nundefsym,
+        'tocoff': tocoff,
+        'ntoc': ntoc,
+        'modtaboff': modtaboff,
+        'nmodtab': nmodtab,
+        'extrefsymoff': extrefsymoff,
+        'nextrefsyms': nextrefsyms,
+        'indirectsymoff': indirectsymoff,
+        'nindirectsyms': nindirectsyms,
+        'extreloff': extreloff,
+        'nextrel': nextrel,
+        'locreloff': locreloff,
+        'nlocrel': nlocrel
     }
 
     return output
