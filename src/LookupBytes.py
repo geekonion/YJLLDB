@@ -43,6 +43,10 @@ def lookup_bytes(debugger, command, result, internal_dict):
     input_bytes = bytes(bytes_list)
 
     lookup_module = options.module
+    if options.count:
+        count = int(options.count)
+    else:
+        count = 0
 
     print('lookup bytes, this may take a while')
     target = debugger.GetSelectedTarget()
@@ -75,7 +79,7 @@ def lookup_bytes(debugger, command, result, internal_dict):
                 if seg_name != "__TEXT":
                     continue
 
-            def match_seg(in_seg, in_seg_name, in_sec_name):
+            def match_seg(in_seg, in_seg_name, in_sec_name, count):
                 matched_count = 0
                 sec_addr = in_seg.GetLoadAddress(target)
                 error = lldb.SBError()
@@ -110,12 +114,15 @@ def lookup_bytes(debugger, command, result, internal_dict):
                     else:
                         result.AppendMessage('address = 0x{:x} where = {}'.format(bytes_addr, seg_name))
 
+                    if 0 < count <= matched_count:
+                        break
+
                     pos += bytes_len
 
                 return matched_count
 
             if search_all:
-                matched_count = match_seg(seg, seg_name, '')
+                matched_count = match_seg(seg, seg_name, '', count)
                 total_count += matched_count
                 hits_count += matched_count
             else:
@@ -133,12 +140,18 @@ def lookup_bytes(debugger, command, result, internal_dict):
                             "__unwind_info" == sec_name:
                         continue
 
-                    matched_count = match_seg(sec, seg_name, sec_name)
+                    matched_count = match_seg(sec, seg_name, sec_name, count)
                     total_count += matched_count
                     hits_count += matched_count
 
+            if 0 < count <= total_count:
+                break
+
         if hits_count == 0:
             result.AppendMessage("input bytes not found in {}".format(name))
+
+        if 0 < count <= total_count:
+            break
 
     result.AppendMessage("{} locations found".format(total_count))
 
@@ -159,6 +172,10 @@ def generate_option_parser():
     parser.add_option("-m", "--module",
                       action="store",
                       dest="module",
+                      help="lookup bytes in the specified module")
+    parser.add_option("-c", "--count",
+                      action="store",
+                      dest="count",
                       help="lookup bytes in the specified module")
 
     return parser
