@@ -68,8 +68,6 @@ def dump_segments(debugger, command, result, internal_dict):
 
             lcs = info['lcs']
             seg_info += '       [start - end)\t\t\tsize\t\tname\n'
-            linkedit_offset = 0
-            linkedit_vmaddr = 0
             for lc in lcs:
                 cmd = lc['cmd']
                 if cmd == '19':  # LC_SEGMENT_64
@@ -82,24 +80,25 @@ def dump_segments(debugger, command, result, internal_dict):
                         format(seg_start, seg_end, seg_size, seg_name)
 
                     sects = lc['sects']
-                    for sect in sects:
-                        sec_start = slide + int(sect['addr'], 16)
-                        sec_size = int(sect['size'], 16)
-                        sec_end = sec_start + sec_size
-                        seg_info += '\t[0x{:<9x}-0x{:<9x})\t0x{:<9x}   {}\n'.\
-                            format(sec_start, sec_end, sec_size, sect['name'])
 
                     if seg_name == '__LINKEDIT':
                         linkedit_offset = int(lc['offset'], 16)
                         linkedit_vmaddr = int(lc['vmaddr'], 16)
-                elif cmd == '1D':  # LC_CODE_SIGNATURE
-                    dataoff = int(lc['dataoff'], 16)
-                    datasize = int(lc['datasize'], 16)
-                    sign_start = linkedit_vmaddr + slide + dataoff - linkedit_offset
-                    sign_end = sign_start + datasize
-                    seg_info += '-' * 60 + '\n'
-                    seg_info += '[0x{:<9x}-0x{:<9x})\t\t0x{:<9x} Code Signature\n'.\
-                        format(sign_start, sign_end, datasize)
+
+                        for sect in sects:
+                            dataoff = int(sect['offset'], 16)
+                            datasize = int(sect['size'], 16)
+                            data_start = linkedit_vmaddr + slide + dataoff - linkedit_offset
+                            data_end = data_start + datasize
+                            seg_info += '\t[0x{:<9x}-0x{:<9x})\t0x{:<9x}   {}\n'. \
+                                format(data_start, data_end, datasize, sect['name'])
+                    else:
+                        for sect in sects:
+                            sec_start = slide + int(sect['addr'], 16)
+                            sec_size = int(sect['size'], 16)
+                            sec_end = sec_start + sec_size
+                            seg_info += '\t[0x{:<9x}-0x{:<9x})\t0x{:<9x}   {}\n'.\
+                                format(sec_start, sec_end, sec_size, sect['name'])
 
         result.AppendMessage(seg_info)
 
