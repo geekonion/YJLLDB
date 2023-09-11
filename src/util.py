@@ -46,9 +46,13 @@ def get_desc_for_address(addr, default_name=None, need_line=True):
 
 
 def exe_script(command_script):
+    return exe_command('exp -l objc -O -- ' + command_script)
+
+
+def exe_command(command):
     res = lldb.SBCommandReturnObject()
     interpreter = lldb.debugger.GetCommandInterpreter()
-    interpreter.HandleCommand('exp -l objc -O -- ' + command_script, res)
+    interpreter.HandleCommand(command, res)
 
     if not res.HasResult():
         print('execute JIT code failed: \n{}'.format(res.GetError()))
@@ -76,7 +80,7 @@ def is_x64():
     platform = lldb.debugger.GetSelectedPlatform()
     triple = platform.GetTriple()
 
-    return 'x86_64' in triple
+    return triple and 'x86_64' in triple
 
 
 def gen_nop(size):
