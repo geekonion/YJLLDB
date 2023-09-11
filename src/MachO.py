@@ -121,7 +121,8 @@ def parse_segment(base, m_offset, cmd, cmd_size):
         'offset': '{:X}'.format(offset),
         'segsize': '{:X}'.format(segsize),
         'nsects': '{:X}'.format(nsects),
-        'sects': []
+        'sects': [],
+        'lc_offset': m_offset
     }
 
     for _ in range(nsects):
@@ -155,6 +156,7 @@ def parse_section(base, m_offset):
         'addr': '{:X}'.format(addr),
         'offset': '{:X}'.format(offset),
         'size': '{:X}'.format(size),
+        'lc_offset': m_offset
     }
 
     return output
@@ -228,7 +230,7 @@ def parse_fat(header):
 
         offset = get_int(header, cursor, byteorder)
         cursor += 4
-        size = get_int(header, cursor, byteorder)
+        # size = get_int(header, cursor, byteorder)
         cursor += 4
 
         cursor += 4     # skip align field
