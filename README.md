@@ -78,6 +78,8 @@
 
 ​     \* [lazy_sym - print __la_symbol_ptr section](#lazy_sym---print-__la_symbol_ptr-section)
 
+​     \* [read_mem_as_addr](#read_mem_as_addr)
+
 ## Installation
 
 1. Clone this repo
@@ -825,6 +827,42 @@ address = 0x104c7fe14 where = JITDemo`my_NSHomeDirectory at ViewController.m:63 
 ...
 address = 0x1815fb950 where = libsystem_kernel.dylib`open -> open
 36 location(s) found
+```
+
+[back to commands list](#Commands-list)
+
+
+
+#### read_mem_as_addr
+
+```stylus
+(lldb) seg
+...
+------------------------------------------------------------
+[0x102ee0000-0x102ee4000)		0x4000      __DATA
+	[0x102ee0000-0x102ee0068)	0x68          __got
+...
+[0x102ee02e0-0x102ee0560)	0x280         __cfstring
+...
+
+// read __got section
+(lldb) read_mem_as_addr 0x102ee0000 0x102ee0068
+0x102ee0000: 0x00000001ac734ce0 Foundation`NSFileModificationDate
+...
+0x102ee0058: 0x0000000180d44900 libobjc.A.dylib`objc_msgSend
+0x102ee0060: 0x00000001814ce1c0 libdyld.dylib`dyld_stub_binder
+
+// read __cfstring section
+(lldb) read_mem_as_addr 0x102ee02e0 0x102ee0560
+0x102ee02e0: 0x00000001b40b2610 (void *)0x00000001b40b25c0: __NSCFConstantString
+0x102ee02e8: 0x00000000000007c8
+0x102ee02f0: 0x0000000102ede156 "%s"
+0x102ee02f8: 0x0000000000000002
+...
+0x102ee0540: 0x00000001b40b2610 (void *)0x00000001b40b25c0: __NSCFConstantString
+0x102ee0548: 0x00000000000007c8
+0x102ee0550: 0x0000000102ede2cc "Default Configuration"
+0x102ee0558: 0x0000000000000015
 ```
 
 [back to commands list](#Commands-list)
