@@ -222,6 +222,7 @@ def parse_section(base, m_offset):
         'offset': '{:X}'.format(offset),
         'size': '{:X}'.format(size),
         'flags': '{:X}'.format(flags),
+        'reserved1': '{:X}'.format(reserved1),
         'lc_offset': m_offset
     }
 
@@ -378,5 +379,8 @@ def get_long(base, offset, byteorder=None):
         return int.from_bytes(base[offset:offset + 8], byteorder=g_byteorder)
 
 
-def get_string(base, offset, length):
+def get_string(base, offset, length=0):
+    if length == 0:
+        pos = base.find(b'\x00', offset)
+        length = pos - offset
     return base[offset:offset + length].strip(b'\x00').decode()
