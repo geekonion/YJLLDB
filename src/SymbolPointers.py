@@ -276,6 +276,7 @@ def get_lazy_sym_name(target, result, slide, lazy_sym_sec, linkedit_seg):
         # INDIRECT_SYMBOL_ABS	0x40000000
         # INDIRECT_SYMBOL_LOCAL	0x80000000
         if symtab_index & 0x40000000 == 0 and symtab_index & 0x80000000 == 0:
+            # 16 sizeof(struct nlist_64)
             strtab_offset = MachO.get_int(symtab_data, symtab_index * 16)
             symbol_name = MachO.get_string(strtab_data, strtab_offset)
             # print(symtab_index, strtab_offset, symbol_name)
