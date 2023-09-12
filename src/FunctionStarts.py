@@ -42,7 +42,6 @@ def dump_function_starts(debugger, command, result, internal_dict):
     byte_order = 'little' if target.GetByteOrder() == lldb.eByteOrderLittle else 'big'
     total_count = 0
     for module in target.module_iter():
-        seg_info = ''
         module_file_spec = module.GetFileSpec()
         module_name = module_file_spec.GetFilename()
 
