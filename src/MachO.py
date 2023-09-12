@@ -202,14 +202,16 @@ def parse_section(base, m_offset):
     """Parse section."""
 
     if g_is_64_bit:
-        read_size = 52
-        struct_format = g_endian + '16s16s2QI'
+        read_size = 76
+        struct_format = g_endian + '16s16s2Q7I'
     else:
-        read_size = 44
-        struct_format = g_endian + '16s16s3I'
+        read_size = 68
+        struct_format = g_endian + '16s16s9I'
 
     sec_bytes = base[m_offset: m_offset + read_size]
-    sec_name, seg_name, addr, size, offset = struct.unpack(struct_format, sec_bytes)
+    sec_name, seg_name, addr, size, \
+    offset, align, reloff, nreloc, \
+    flags, reserved1, reserved2 = struct.unpack(struct_format, sec_bytes)
 
     sec_name = sec_name.strip(b'\x00').decode()
     seg_name = seg_name.strip(b'\x00').decode()
@@ -219,6 +221,7 @@ def parse_section(base, m_offset):
         'addr': '{:X}'.format(addr),
         'offset': '{:X}'.format(offset),
         'size': '{:X}'.format(size),
+        'flags': '{:X}'.format(flags),
         'lc_offset': m_offset
     }
 
