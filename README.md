@@ -417,8 +417,6 @@ index   load addr(slide)       vmsize path
 --------------------------------------------------------
 [  0] 0x1022e4000(0x0022e4000)  81.9K /var/containers/Bundle/Application/C134E909-CC52-4A93-9557-37BA808854D3/LLDBCode.app/LLDBCode
 [  1] 0x1022f8000(0x1022f8000) 524.3K /usr/lib/system/introspection/libdispatch.dylib
-[  2] 0x1023d0000(0x1023d0000) 163.8K /usr/lib/libsubstitute.dylib
-[  3] 0x1023f8000(0x1023f8000)  81.9K /usr/lib/libsubstrate.dylib
 ...
 ```
 
@@ -431,19 +429,13 @@ index   load addr(slide)       vmsize path
 Lookup the specified string, between start addr and end addr.
 
 ```stylus
-(lldb) image_list -c 10
+(lldb) image_list -c 8
 index   load addr(slide)       vmsize path
 --------------------------------------------------------
 [  0] 0x1022e4000(0x0022e4000)  81.9K /var/containers/Bundle/Application/C134E909-CC52-4A93-9557-37BA808854D3/LLDBCode.app/LLDBCode
-[  1] 0x1022f8000(0x1022f8000) 524.3K /usr/lib/system/introspection/libdispatch.dylib
-[  2] 0x1023d0000(0x1023d0000) 163.8K /usr/lib/libsubstitute.dylib
-[  3] 0x1023f8000(0x1023f8000)  81.9K /usr/lib/libsubstrate.dylib
-[  4] 0x10270c000(0x10270c000)   4.5M /usr/lib/substitute-inserter.dylib
-[  5] 0x102b54000(0x102b54000)   3.5M /usr/lib/substitute-loader.dylib
+...
 [  6] 0x18406f000(0x004044000)   8.7K /usr/lib/libSystem.B.dylib
 [  7] 0x184071000(0x004044000) 394.1K /usr/lib/libc++.1.dylib
-[  8] 0x1840ca000(0x004044000) 144.7K /usr/lib/libc++abi.dylib
-[  9] 0x1840ec000(0x004044000)   8.7M /usr/lib/libobjc.A.dylib
   
 (lldb) slookup PROGRAM 0x18406f000 0x184071000
 found at 0x184070f7c where = [0x000000018002cf78-0x000000018002cfb8) libSystem.B.dylib.__TEXT.__const
@@ -505,12 +497,7 @@ begin trace with Breakpoint 1: 35 locations
 
 // trace log
 frame #0: 0x0000000102dd2fb8 LLDBCode`-[ViewController touchesBegan:withEvent:](self=0x00000001d4108040, _cmd="touchesBegan:withEvent:", touches=0x000000015fd0fff0, event=1 element) at ViewController.m:35
-frame #0: 0x0000000102dd3a68 LLDBCode`+[MachoTool findMacho](self=0x00000001c0038c40, _cmd="\xc5\xd1K\xb7\xa1A\U00000001") at MachoTool.m:74
-frame #0: 0x0000000102dd4318 LLDBCode`__22+[MachoTool findMacho]_block_invoke(.block_descriptor=0x000000015fd0fff0, header_addr=7852818496) at MachoTool.m:110
 ...
-frame #0: 0x0000000102dd5b20 LLDBCode`+[Image findInstruction:](self=0x00000001c0038c40, _cmd="\xc5\xd1K\xb7\xa1A\U00000001", inst_str="śJ\xb7\xa1\U00000005") at Image.m:281
-frame #0: 0x0000000102dd32f8 LLDBCode`__41-[ViewController touchesBegan:withEvent:]_block_invoke_4(.block_descriptor=0x00000001c40a5ac0, downloadProgress=0x000000018f903381) at ViewController.m:57
-frame #0: 0x0000000102dd3268 LLDBCode`__41-[ViewController touchesBegan:withEvent:]_block_invoke_3(.block_descriptor=0x00000001c40733c0, task=0x00000001c80394e0, error=0x0000000000000000) at ViewController.m:53
 frame #0: 0x0000000102dd318c LLDBCode`__41-[ViewController touchesBegan:withEvent:]_block_invoke(.block_descriptor=0x0000000102ec1500) at ViewController.m:45
 ```
 
@@ -525,11 +512,7 @@ Disable breakpoint(s) at the specified class.
 ```stylus
 (lldb) bda -i ViewController
 disable breakpoint 1.8: where = LLDBCode`__41-[ViewController touchesBegan:withEvent:]_block_invoke_4 at ViewController.m:57, address = 0x00000001040e32f8, unresolved, hit count = 1  Options: disabled 
-disable breakpoint 1.14: where = LLDBCode`__41-[ViewController touchesBegan:withEvent:]_block_invoke_2 at ViewController.m:50, address = 0x00000001040e31e0, unresolved, hit count = 0  Options: disabled 
-disable breakpoint 1.18: where = LLDBCode`-[ViewController touchesBegan:withEvent:] at ViewController.m:35, address = 0x00000001040e2fb8, unresolved, hit count = 1  Options: disabled 
-disable breakpoint 1.20: where = LLDBCode`-[ViewController ls_dir:] at ViewController.m:62, address = 0x00000001040e335c, unresolved, hit count = 0  Options: disabled 
-disable breakpoint 1.22: where = LLDBCode`-[ViewController viewDidLoad] at ViewController.m:24, address = 0x00000001040e2ec4, unresolved, hit count = 0  Options: disabled 
-disable breakpoint 1.23: where = LLDBCode`__41-[ViewController touchesBegan:withEvent:]_block_invoke_3 at ViewController.m:53, address = 0x00000001040e3268, unresolved, hit count = 1  Options: disabled 
+...
 disable breakpoint 1.27: where = LLDBCode`__41-[ViewController touchesBegan:withEvent:]_block_invoke at ViewController.m:45, address = 0x00000001040e318c, unresolved, hit count = 1  Options: disabled 
 
 (lldb) bda -i ViewController(extension)
@@ -568,18 +551,7 @@ Dump current iOS App (arm64 only). Typically, dump decrypted ipa from jailbreak 
 (lldb) dapp
 dumping JITDemo, this may take a while
 copy file JITDemo.app/Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib
-copy file JITDemo.app/Base.lproj/LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib
-copy file JITDemo.app/Base.lproj/LaunchScreen.storyboardc/Info.plist
-copy file JITDemo.app/Base.lproj/Main.storyboardc/UIViewController-BYZ-38-t0r.nib
-copy file JITDemo.app/Base.lproj/Main.storyboardc/BYZ-38-t0r-view-8bC-Xf-vdC.nib
-copy file JITDemo.app/Base.lproj/Main.storyboardc/Info.plist
-copy file JITDemo.app/JITDemo
-copy file JITDemo.app/_CodeSignature/CodeResources
-copy file JITDemo.app/Frameworks/LLDBJIT.framework/_CodeSignature/CodeResources
-copy file JITDemo.app/Frameworks/LLDBJIT.framework/LLDBJIT
-copy file JITDemo.app/Frameworks/LLDBJIT.framework/Info.plist
-copy file JITDemo.app/Info.plist
-copy file JITDemo.app/PkgInfo
+...
 copy file JITDemo.app/embedded.mobileprovision
 no file need patch
 Generating "JITDemo.ipa"
@@ -612,17 +584,7 @@ Download dir from home, bundle or group path.
 (lldb) ddir /var/containers/Bundle/Application/7099B2B8-39BE-4204-9BEB-5DF6A75BAA29/JITDemo.app
 dumping JITDemo.app, this may take a while
 1197 bytes written to '/Users/xxx/JITDemo.app/Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib'
-896 bytes written to '/Users/xxx/JITDemo.app/Base.lproj/LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib'
-258 bytes written to '/Users/xxx/JITDemo.app/Base.lproj/LaunchScreen.storyboardc/Info.plist'
-916 bytes written to '/Users/xxx/JITDemo.app/Base.lproj/Main.storyboardc/UIViewController-BYZ-38-t0r.nib'
-1197 bytes written to '/Users/xxx/JITDemo.app/Base.lproj/Main.storyboardc/BYZ-38-t0r-view-8bC-Xf-vdC.nib'
-258 bytes written to '/Users/xxx/JITDemo.app/Base.lproj/Main.storyboardc/Info.plist'
-84224 bytes written to '/Users/xxx/JITDemo.app/JITDemo'
-4717 bytes written to '/Users/xxx/JITDemo.app/_CodeSignature/CodeResources'
-1798 bytes written to '/Users/xxx/JITDemo.app/Frameworks/LLDBJIT.framework/_CodeSignature/CodeResources'
-98608 bytes written to '/Users/xxx/JITDemo.app/Frameworks/LLDBJIT.framework/LLDBJIT'
-750 bytes written to '/Users/xxx/JITDemo.app/Frameworks/LLDBJIT.framework/Info.plist'
-1464 bytes written to '/Users/xxx/JITDemo.app/Info.plist'
+...
 8 bytes written to '/Users/xxx/JITDemo.app/PkgInfo'
 196731 bytes written to '/Users/xxx/JITDemo.app/embedded.mobileprovision'
 ```
@@ -706,22 +668,13 @@ Find blocks in user modules and save block symbols to block_symbol.json
 -----try to lookup block in JITDemo-----
 * using global block var: 0x104a78150 in JITDemo`-[ViewController viewDidLoad] at ViewController.m:39:5
 find a block: 0x104a78190 in JITDemo`-[ViewController viewDidLoad] at ViewController.m:0:0
-find a block: 0x104a781b0 in JITDemo`-[ViewController touchesBegan:withEvent:] at ViewController.m:0:0
-* using global block var: 0x104a78150 in JITDemo`-[ViewController touchesBegan:withEvent:] at ViewController.m:69:5
-find a block: 0x104a781f0 in JITDemo`-[ViewController touchesBegan:withEvent:] at ViewController.m:0:0
-find a block: 0x104a78230 in JITDemo`-[ViewController touchesBegan:withEvent:] at ViewController.m:0:0
+...
 find a stack block @0x104a74e7c in JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke_3 at ViewController.m:0:0
 	stack block func addr 0x104a74f08 JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke_4 at ViewController.m:75:0
 ...
 -----try to lookup block in LLDBJIT-----
 find a block: 0x104b341c0 in LLDBJIT`+[MachoTool findMacho] at MachoTool.m:0:0
-find a block: 0x104b34200 in LLDBJIT`+[MachoTool findMacho] at MachoTool.m:0:0
-find a block: 0x104b34240 in LLDBJIT`+[Image dumpSegments:] at Image.m:0:0
-find a block: 0x104b34280 in LLDBJIT`+[Image dumpApp] at Image.m:0:0
-find a stack block @0x104b2f2f4 in LLDBJIT`+[Image removeFile:] at Image.m:0:0
-	stack block func addr 0x104b2f788 LLDBJIT`__20+[Image removeFile:]_block_invoke at Image.m:746:0
-find a stack block @0x104b2fa3c in LLDBJIT`+[Image dump:slide:regions:] at Image.m:0:0
-	stack block func addr 0x104b30008 LLDBJIT`__28+[Image dump:slide:regions:]_block_invoke at Image.m:791:0
+...
 find a stack block @0x104b32080 in LLDBJIT`+[Image getBlocksInfo:] at Image.m:0:0
 	stack block func addr 0x104b34d40 LLDBJIT`None
 85 block(s) resolved
@@ -739,22 +692,12 @@ Break all blocks in user modules
 (lldb) bblocks
 -----try to lookup block in JITDemo-----
 break block: 0x104a78150 with Breakpoint 4: JITDemo`globalBlock_block_invoke at ViewController.m:16:0, address = 0x104a74990
-break block: 0x104a78190 with Breakpoint 5: JITDemo`__29-[ViewController viewDidLoad]_block_invoke at ViewController.m:42:0, address = 0x104a74ac4
-break block: 0x104a781b0 with Breakpoint 6: JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke at ViewController.m:63:0, address = 0x104a74d1c
-break block: 0x104a781f0 with Breakpoint 7: JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke_2 at ViewController.m:72:0, address = 0x104a74d70
-break block: 0x104a78230 with Breakpoint 8: JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke_3 at ViewController.m:74:0, address = 0x104a74df8
-find a stack block @0x104a74e7c in JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke_3 at ViewController.m:0:0
+...
 break stack block with Breakpoint 9: JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke_4 at ViewController.m:75:0, address = 0x104a74f08
 ...
 -----try to lookup block in LLDBJIT-----
 break block: 0x104b341c0 with Breakpoint 82: LLDBJIT`__22+[MachoTool findMacho]_block_invoke at MachoTool.m:110:0, address = 0x104b2b130
-break block: 0x104b34200 with Breakpoint 83: LLDBJIT`__22+[MachoTool findMacho]_block_invoke_2 at MachoTool.m:140:0, address = 0x104b2b2d8
-break block: 0x104b34240 with Breakpoint 84: LLDBJIT`__22+[Image dumpSegments:]_block_invoke at Image.m:218:0, address = 0x104b2c724
-break block: 0x104b34280 with Breakpoint 85: LLDBJIT`__16+[Image dumpApp]_block_invoke at Image.m:545:0, address = 0x104b2e254
-find a stack block @0x104b2f2f4 in LLDBJIT`+[Image removeFile:] at Image.m:0:0
-break stack block with Breakpoint 86: LLDBJIT`__20+[Image removeFile:]_block_invoke at Image.m:746:0, address = 0x104b2f788
-find a stack block @0x104b2fa3c in LLDBJIT`+[Image dump:slide:regions:] at Image.m:0:0
-break stack block with Breakpoint 87: LLDBJIT`__28+[Image dump:slide:regions:]_block_invoke at Image.m:791:0, address = 0x104b30008
+...
 find a stack block @0x104b32080 in LLDBJIT`+[Image getBlocksInfo:] at Image.m:0:0
 break stack block with Breakpoint 88: LLDBJIT`None, address = 0x104b34d40
 set 85 breakpoints
@@ -767,12 +710,7 @@ or
 (lldb) bblocks JITDemo
 -----try to lookup block in JITDemo-----
 break block: 0x1026ac140 with Breakpoint 87: JITDemo`___lldb_unnamed_symbol75, address = 0x1026a92f4
-break block: 0x1026ac180 with Breakpoint 88: JITDemo`___lldb_unnamed_symbol76, address = 0x1026a93e0
-break block: 0x1026ac1a0 with Breakpoint 89: JITDemo`___lldb_unnamed_symbol77, address = 0x1026a9534
-break block: 0x1026ac1e0 with Breakpoint 90: JITDemo`___lldb_unnamed_symbol78, address = 0x1026a955c
-break block: 0x1026ac250 with Breakpoint 91: JITDemo`___lldb_unnamed_symbol82, address = 0x1026a964c
-find a stack block @0x1026a95a4 in JITDemo`___lldb_unnamed_symbol78
-break stack block with Breakpoint 92: JITDemo`___lldb_unnamed_symbol79, address = 0x1026a9610
+...
 find a stack block @0x1026a9694 in JITDemo`___lldb_unnamed_symbol82
 break stack block with Breakpoint 93: JITDemo`___lldb_unnamed_symbol83, address = 0x1026a9700
 set 7 breakpoints
@@ -849,7 +787,6 @@ Print function starts
 -----parsing module JITDemo-----
 address = 0x1021bc5c8 where = JITDemo`globalBlock_block_invoke at ViewController.m:17
 address = 0x1021bc608 where = JITDemo`+[ViewController load] at ViewController.m:27
-address = 0x1021bc61c where = JITDemo`-[ViewController viewDidLoad] at ViewController.m:31
 ...
 address = 0x1021bdae0 where = JITDemo`-[SceneDelegate .cxx_destruct] at SceneDelegate.m:14
 (lldb) 
