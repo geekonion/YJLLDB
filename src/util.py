@@ -43,6 +43,51 @@ def get_desc_for_address(addr, default_name=None, need_line=True):
     return "{}`{}".format(module_name, sym_name)
 
 
+def try_macho_address(addr, target, only_sec_name=False):
+    return_desc = ""
+    section = addr.GetSection()
+    if not section.IsValid():
+        return ""
+
+    sec_name = section.GetName()
+    if not only_sec_name:
+        tmp_sec = section
+        while tmp_sec.GetParent().IsValid():
+            tmp_sec = tmp_sec.GetParent()
+            sec_name = "{}.{}".format(tmp_sec.GetName(), sec_name)
+
+        module = addr.GetModule()
+        if module.IsValid():
+            sec_name = "{}`{}".format(addr.GetModule().GetFileSpec().GetFilename(), sec_name)
+
+        addr_offset = addr.GetLoadAddress(target) - section.GetLoadAddress(target)
+        sec_name += " + {}".format(hex(addr_offset))
+
+        symbol = addr.GetSymbol()
+        #  Is it a known function?
+        if symbol.IsValid():
+            return_desc += "  {}    ".format(symbol.GetName())
+            start_addr = symbol.GetStartAddress()
+
+            # Symbol address offset, if any
+            addr_offset = addr.GetLoadAddress(target) - start_addr.GetLoadAddress(target)
+            return_desc += " <+{}>".format(addr_offset)
+
+            # Mangled function
+            if options.verbose:
+                if symbol.GetMangledName():
+                    return_desc += ", ({})".format(symbol.GetMangledName())
+
+                return_desc += ", External: {}".format("YES" if symbol.IsSynthetic() else "NO")
+    else:
+        addr_offset = addr.GetLoadAddress(target) - section.GetLoadAddress(target)
+        sec_name += " + {}".format(hex(addr_offset))
+
+    return_desc += sec_name
+
+    return return_desc
+
+
 def exe_script(command_script):
     return exe_command('exp -l objc -O -- ' + command_script)
 
