@@ -74,6 +74,10 @@
 
 ​     \* [func_starts - function starts](#func_starts---function-starts)
 
+​     \* [got - print __got section](#got---print-__got-section)
+
+​     \* [lazy_sym - print __la_symbol_ptr section](#lazy_sym---print-__la_symbol_ptr-section)
+
 ## Installation
 
 1. Clone this repo
@@ -790,6 +794,37 @@ address = 0x1021bc608 where = JITDemo`+[ViewController load] at ViewController.m
 ...
 address = 0x1021bdae0 where = JITDemo`-[SceneDelegate .cxx_destruct] at SceneDelegate.m:14
 (lldb) 
+```
+
+[back to commands list](#Commands-list)
+
+
+
+#### got - print `__got` section
+
+```stylus
+(lldb) got
+-----parsing module JITDemo-----
+address = 0x1ac734ce0 where = Foundation`NSFileModificationDate
+...
+address = 0x180d44900 where = libobjc.A.dylib`objc_msgSend
+address = 0x1814ce1c0 where = libdyld.dylib`dyld_stub_binder
+13 location(s) found
+```
+
+[back to commands list](#Commands-list)
+
+
+
+#### lazy_sym - print `__la_symbol_ptr` section
+
+```stylus
+(lldb) lazy_sym
+-----parsing module JITDemo-----
+address = 0x104c7fe14 where = JITDemo`my_NSHomeDirectory at ViewController.m:63 -> NSHomeDirectory
+...
+address = 0x1815fb950 where = libsystem_kernel.dylib`open -> open
+36 location(s) found
 ```
 
 [back to commands list](#Commands-list)
