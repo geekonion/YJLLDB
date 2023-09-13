@@ -74,46 +74,68 @@ def parse_macho(debugger, command, result, internal_dict):
         result.SetError("\n" + parser.get_usage())
         return
 
-    if args:
-        lookup_module_name = args[0]
-    else:
-        lookup_module_name = ''
-
     target = debugger.GetSelectedTarget()
 
-    bundle_path = target.GetExecutable().GetDirectory()
-    for module in target.module_iter():
-        module_file_spec = module.GetFileSpec()
-        module_dir = module_file_spec.GetDirectory()
-        module_name = module_file_spec.GetFilename()
-
-        if len(lookup_module_name):
-            lib_name = lookup_module_name + '.dylib'
-            if lookup_module_name != module_name and lib_name != module_name:
-                continue
+    is_address = False
+    addr_str = None
+    lookup_module_name = None
+    if len(args) == 1:
+        input_arg = args[0]
+        is_address = input_arg.startswith('0x')
+        if is_address:
+            addr_str = input_arg
         else:
-            if bundle_path not in module_dir:
-                continue
+            lookup_module_name = input_arg
+    else:
+        file_spec = target.GetExecutable()
+        lookup_module_name = file_spec.GetFilename()
 
-        print("-----parsing module %s-----" % module_name)
-        seg = module.FindSection('__TEXT')
-        if not seg:
-            result.AppendMessage('seg __TEXT not found')
-            continue
-
-        header_addr = seg.GetLoadAddress(target)
-        first_sec = seg.GetSubSectionAtIndex(0)
-        sec_addr = first_sec.GetLoadAddress(target)
+    if is_address:
+        header_addr = int(addr_str, 16)
+        header_size = 0x4000
 
         error = lldb.SBError()
-        header_size = sec_addr - header_addr
         header_data = target.ReadMemory(lldb.SBAddress(header_addr, target), header_size, error)
         if not error.Success():
             result.AppendMessage('read header failed! {}'.format(error.GetCString()))
-            continue
+            return
 
         info = MachO.parse_header(header_data)
         print(json.dumps(info, indent=2))
+    else:
+        bundle_path = target.GetExecutable().GetDirectory()
+        for module in target.module_iter():
+            module_file_spec = module.GetFileSpec()
+            module_dir = module_file_spec.GetDirectory()
+            module_name = module_file_spec.GetFilename()
+
+            if len(lookup_module_name):
+                lib_name = lookup_module_name + '.dylib'
+                if lookup_module_name != module_name and lib_name != module_name:
+                    continue
+            else:
+                if bundle_path not in module_dir:
+                    continue
+
+            print("-----parsing module %s-----" % module_name)
+            seg = module.FindSection('__TEXT')
+            if not seg:
+                result.AppendMessage('seg __TEXT not found')
+                continue
+
+            header_addr = seg.GetLoadAddress(target)
+            first_sec = seg.GetSubSectionAtIndex(0)
+            sec_addr = first_sec.GetLoadAddress(target)
+
+            error = lldb.SBError()
+            header_size = sec_addr - header_addr
+            header_data = target.ReadMemory(lldb.SBAddress(header_addr, target), header_size, error)
+            if not error.Success():
+                result.AppendMessage('read header failed! {}'.format(error.GetCString()))
+                continue
+
+            info = MachO.parse_header(header_data)
+            print(json.dumps(info, indent=2))
 
 
 def get_entitlements(debugger, keyword):
