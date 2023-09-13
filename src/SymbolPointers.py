@@ -37,77 +37,108 @@ def dump_got(debugger, command, result, internal_dict):
         return
 
     target = debugger.GetSelectedTarget()
-    if args:
-        lookup_module_name = ''.join(args)
+    byte_order = 'little' if target.GetByteOrder() == lldb.eByteOrderLittle else 'big'
+
+    is_address = False
+    addr_str = None
+    lookup_module_name = None
+    if len(args) == 1:
+        input_arg = args[0]
+        is_address = input_arg.startswith('0x')
+        if is_address:
+            addr_str = input_arg
+        else:
+            lookup_module_name = input_arg
     else:
         file_spec = target.GetExecutable()
         lookup_module_name = file_spec.GetFilename()
 
-    byte_order = 'little' if target.GetByteOrder() == lldb.eByteOrderLittle else 'big'
     total_count = 0
-    for module in target.module_iter():
-        module_file_spec = module.GetFileSpec()
-        module_name = module_file_spec.GetFilename()
+    if is_address:
+        header_addr = int(addr_str, 16)
+        header_size = 0x4000
+        message, count = parse_macho(target, header_addr, header_size, 0, byte_order)
+        total_count += count
 
-        if lookup_module_name not in module_name:
-            continue
-        seg = module.FindSection('__TEXT')
-        if not seg:
-            result.AppendMessage('seg __TEXT not found in {}'.format(module_name))
-            continue
+        result.AppendMessage(message)
+    else:
+        for module in target.module_iter():
+            module_file_spec = module.GetFileSpec()
+            module_name = module_file_spec.GetFilename()
 
-        result.AppendMessage("-----parsing module %s-----" % module_name)
-        header_addr = seg.GetLoadAddress(target)
-        slide = header_addr - seg.GetFileAddress()
-
-        first_sec = seg.GetSubSectionAtIndex(0)
-        sec_addr = first_sec.GetLoadAddress(target)
-
-        error = lldb.SBError()
-        header_size = sec_addr - header_addr
-        header_data = target.ReadMemory(lldb.SBAddress(header_addr, target), header_size, error)
-        if not error.Success():
-            result.AppendMessage('read header failed! {}'.format(error.GetCString()))
-            break
-
-        info = MachO.parse_header(header_data)
-
-        lcs = info['lcs']
-        for lc in lcs:
-            cmd = lc['cmd']
-            if cmd != '19':  # LC_SEGMENT_64
+            if lookup_module_name not in module_name:
+                continue
+            seg = module.FindSection('__TEXT')
+            if not seg:
+                result.AppendMessage('seg __TEXT not found in {}'.format(module_name))
                 continue
 
-            sects = lc['sects']
-            for sect in sects:
-                flags_str = sect.get('flags')
-                if not flags_str:
-                    continue
+            result.AppendMessage("-----parsing module %s-----" % module_name)
+            header_addr = seg.GetLoadAddress(target)
+            slide = header_addr - seg.GetFileAddress()
 
-                # SECTION_TYPE 0x000000ff
-                # S_NON_LAZY_SYMBOL_POINTERS 0x6
-                is_got = int(flags_str, 16) & 0x000000ff == 0x6
-                if not is_got:
-                    continue
+            first_sec = seg.GetSubSectionAtIndex(0)
+            sec_addr = first_sec.GetLoadAddress(target)
+            header_size = sec_addr - header_addr
 
-                addr = int(sect['addr'], 16)
-                size = int(sect['size'], 16)
-                data_start = addr + slide
+            message, count = parse_macho(target, header_addr, header_size, slide, byte_order)
+            total_count += count
 
-                error1 = lldb.SBError()
-                data_bytes = target.ReadMemory(lldb.SBAddress(data_start, target), size, error1)
-                if not error1.Success():
-                    result.AppendMessage('read data failed! {}'.format(error1.GetCString()))
-                    break
+            result.AppendMessage(message)
 
-                ptr_size = target.GetAddressByteSize()
-                for i in range(0, size, ptr_size):
-                    addr = MachO.get_long(data_bytes, i, byte_order)
-                    addr_obj = target.ResolveLoadAddress(addr)
-                    result.AppendMessage('address = 0x{:x} where = {}'.format(addr, addr_obj))
-                    total_count += 1
+    result.AppendMessage('{} location(s) found'.format(total_count))
 
-        result.AppendMessage('{} location(s) found'.format(total_count))
+
+def parse_macho(target, header_addr, header_size, slide, byte_order):
+    message = ''
+    total_count = 0
+
+    error = lldb.SBError()
+    header_data = target.ReadMemory(lldb.SBAddress(header_addr, target), header_size, error)
+    if not error.Success():
+        message += 'read header failed! {}'.format(error.GetCString())
+        return message, total_count
+
+    info = MachO.parse_header(header_data)
+    if slide == 0:
+        slide = header_addr - int(info['text_vmaddr'], 16)
+
+    lcs = info['lcs']
+    for lc in lcs:
+        cmd = lc['cmd']
+        if cmd != '19':  # LC_SEGMENT_64
+            continue
+
+        sects = lc['sects']
+        for sect in sects:
+            flags_str = sect.get('flags')
+            if not flags_str:
+                continue
+
+            # SECTION_TYPE 0x000000ff
+            # S_NON_LAZY_SYMBOL_POINTERS 0x6
+            is_got = int(flags_str, 16) & 0x000000ff == 0x6
+            if not is_got:
+                continue
+
+            addr = int(sect['addr'], 16)
+            size = int(sect['size'], 16)
+            data_start = addr + slide
+
+            error1 = lldb.SBError()
+            data_bytes = target.ReadMemory(lldb.SBAddress(data_start, target), size, error1)
+            if not error1.Success():
+                message += 'read data failed! {}\n'.format(error1.GetCString())
+                break
+
+            ptr_size = target.GetAddressByteSize()
+            for i in range(0, size, ptr_size):
+                addr = MachO.get_long(data_bytes, i, byte_order)
+                addr_obj = target.ResolveLoadAddress(addr)
+                message += 'address = 0x{:x} where = {}\n'.format(addr, addr_obj)
+                total_count += 1
+
+    return message, total_count
 
 
 def dump_lazy_symbol_ptr(debugger, command, result, internal_dict):
