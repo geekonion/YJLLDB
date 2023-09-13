@@ -89,8 +89,11 @@ def parse_lcs(base, offset, n_cmds, macho):
         if cmd == 0x1 or cmd == 0x19:  # 'SEGMENT' or 'SEGMENT_64'
             segment = parse_segment(base, offset, cmd, cmd_size)
             macho['lcs'].append(segment)
-            if segment['name'] == '__LINKEDIT':
+            seg_name = segment['name']
+            if seg_name == '__LINKEDIT':
                 seg_linkedit = segment
+            elif seg_name == '__TEXT':
+                macho['text_vmaddr'] = segment['vmaddr']
         elif cmd in (0x21, 0x2C):  # ('ENCRYPTION_INFO', 'ENCRYPTION_INFO_64')
             macho['lcs'].append(parse_encryption_info(base, offset, cmd, cmd_size))
         elif cmd == 0x28 | 0x80000000:  # LC_MAIN (0x28|LC_REQ_DYLD)
