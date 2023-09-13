@@ -21,12 +21,23 @@ def dump_got(debugger, command, result, internal_dict):
     """
     dump NON_LAZY_SYMBOL_POINTERS of the specified module
     """
+    handle_command(debugger, command, result, 'got')
+
+
+def dump_lazy_symbol_ptr(debugger, command, result, internal_dict):
+    """
+    dump LAZY_SYMBOL_POINTERS of the specified module
+    """
+    handle_command(debugger, command, result, 'lazy_sym')
+
+
+def handle_command(debugger, command, result, name):
     # 去掉转义符
     command = command.replace('\\', '\\\\')
     # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-
     command_args = shlex.split(command, posix=False)
     # 创建parser
-    parser = generate_option_parser('got')
+    parser = generate_option_parser(name)
     # 解析参数，捕获异常
     try:
         # options是所有的选项，key-value形式，args是其余剩余所有参数，不包含options
@@ -37,7 +48,14 @@ def dump_got(debugger, command, result, internal_dict):
         return
 
     target = debugger.GetSelectedTarget()
-    byte_order = 'little' if target.GetByteOrder() == lldb.eByteOrderLittle else 'big'
+
+    if name == 'got':
+        mask = 0x6  # S_NON_LAZY_SYMBOL_POINTERS 0x6
+    elif name == 'lazy_sym':
+        mask = 0x7  # S_LAZY_SYMBOL_POINTERS 0x7
+    else:
+        result.SetError("\n" + parser.get_usage())
+        return
 
     is_address = False
     addr_str = None
@@ -57,7 +75,7 @@ def dump_got(debugger, command, result, internal_dict):
     if is_address:
         header_addr = int(addr_str, 16)
         header_size = 0x4000
-        message, count = parse_macho(target, header_addr, header_size, 0, byte_order)
+        message, count = parse_macho(target, header_addr, header_size, 0, mask)
         total_count += count
 
         result.AppendMessage(message)
@@ -80,8 +98,7 @@ def dump_got(debugger, command, result, internal_dict):
             first_sec = seg.GetSubSectionAtIndex(0)
             sec_addr = first_sec.GetLoadAddress(target)
             header_size = sec_addr - header_addr
-
-            message, count = parse_macho(target, header_addr, header_size, slide, byte_order)
+            message, count = parse_macho(target, header_addr, header_size, slide, mask)
             total_count += count
 
             result.AppendMessage(message)
@@ -89,24 +106,30 @@ def dump_got(debugger, command, result, internal_dict):
     result.AppendMessage('{} location(s) found'.format(total_count))
 
 
-def parse_macho(target, header_addr, header_size, slide, byte_order):
+def parse_macho(target, header_addr, header_size, slide, mask):
     message = ''
     total_count = 0
-
     error = lldb.SBError()
     header_data = target.ReadMemory(lldb.SBAddress(header_addr, target), header_size, error)
     if not error.Success():
-        message += 'read header failed! {}'.format(error.GetCString())
+        message += 'read header failed! {}\n'.format(error.GetCString())
         return message, total_count
 
     info = MachO.parse_header(header_data)
     if slide == 0:
         slide = header_addr - int(info['text_vmaddr'], 16)
 
+    lazy_sym_sec = None
+    linkedit_seg = None
     lcs = info['lcs']
     for lc in lcs:
         cmd = lc['cmd']
+
         if cmd != '19':  # LC_SEGMENT_64
+            continue
+
+        if lc['name'] == '__LINKEDIT':
+            linkedit_seg = lc
             continue
 
         sects = lc['sects']
@@ -116,118 +139,22 @@ def parse_macho(target, header_addr, header_size, slide, byte_order):
                 continue
 
             # SECTION_TYPE 0x000000ff
-            # S_NON_LAZY_SYMBOL_POINTERS 0x6
-            is_got = int(flags_str, 16) & 0x000000ff == 0x6
-            if not is_got:
+            is_lazy_sym = int(flags_str, 16) & 0x000000ff == mask
+            if not is_lazy_sym:
                 continue
 
-            addr = int(sect['addr'], 16)
-            size = int(sect['size'], 16)
-            data_start = addr + slide
+            lazy_sym_sec = sect
 
-            error1 = lldb.SBError()
-            data_bytes = target.ReadMemory(lldb.SBAddress(data_start, target), size, error1)
-            if not error1.Success():
-                message += 'read data failed! {}\n'.format(error1.GetCString())
-                break
-
-            ptr_size = target.GetAddressByteSize()
-            for i in range(0, size, ptr_size):
-                addr = MachO.get_long(data_bytes, i, byte_order)
-                addr_obj = target.ResolveLoadAddress(addr)
-                message += 'address = 0x{:x} where = {}\n'.format(addr, addr_obj)
-                total_count += 1
+    message, count = get_lazy_sym_name(target, slide, lazy_sym_sec, linkedit_seg)
+    total_count += count
 
     return message, total_count
 
 
-def dump_lazy_symbol_ptr(debugger, command, result, internal_dict):
-    """
-    dump LAZY_SYMBOL_POINTERS of the specified module
-    """
-    # 去掉转义符
-    command = command.replace('\\', '\\\\')
-    # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-
-    command_args = shlex.split(command, posix=False)
-    # 创建parser
-    parser = generate_option_parser('lazy_sym')
-    # 解析参数，捕获异常
-    try:
-        # options是所有的选项，key-value形式，args是其余剩余所有参数，不包含options
-        (options, args) = parser.parse_args(command_args)
-    except Exception as error:
-        print(error)
-        result.SetError("\n" + parser.get_usage())
-        return
-
-    target = debugger.GetSelectedTarget()
-    if args:
-        lookup_module_name = ''.join(args)
-    else:
-        file_spec = target.GetExecutable()
-        lookup_module_name = file_spec.GetFilename()
-
+def get_lazy_sym_name(target, slide, lazy_sym_sec, linkedit_seg):
+    message = ''
     total_count = 0
-    for module in target.module_iter():
-        module_file_spec = module.GetFileSpec()
-        module_name = module_file_spec.GetFilename()
 
-        if lookup_module_name not in module_name:
-            continue
-        seg = module.FindSection('__TEXT')
-        if not seg:
-            result.AppendMessage('seg __TEXT not found in {}'.format(module_name))
-            continue
-
-        result.AppendMessage("-----parsing module %s-----" % module_name)
-        header_addr = seg.GetLoadAddress(target)
-        slide = header_addr - seg.GetFileAddress()
-
-        first_sec = seg.GetSubSectionAtIndex(0)
-        sec_addr = first_sec.GetLoadAddress(target)
-
-        error = lldb.SBError()
-        header_size = sec_addr - header_addr
-        header_data = target.ReadMemory(lldb.SBAddress(header_addr, target), header_size, error)
-        if not error.Success():
-            result.AppendMessage('read header failed! {}'.format(error.GetCString()))
-            break
-
-        info = MachO.parse_header(header_data)
-
-        lazy_sym_sec = None
-        linkedit_seg = None
-        lcs = info['lcs']
-        for lc in lcs:
-            cmd = lc['cmd']
-
-            if cmd != '19':  # LC_SEGMENT_64
-                continue
-
-            if lc['name'] == '__LINKEDIT':
-                linkedit_seg = lc
-                continue
-
-            sects = lc['sects']
-            for sect in sects:
-                flags_str = sect.get('flags')
-                if not flags_str:
-                    continue
-
-                # SECTION_TYPE 0x000000ff
-                # S_LAZY_SYMBOL_POINTERS 0x7
-                is_lazy_sym = int(flags_str, 16) & 0x000000ff == 0x7
-                if not is_lazy_sym:
-                    continue
-
-                lazy_sym_sec = sect
-
-        total_count += get_lazy_sym_name(target, result, slide, lazy_sym_sec, linkedit_seg)
-
-        result.AppendMessage('{} location(s) found'.format(total_count))
-
-
-def get_lazy_sym_name(target, result, slide, lazy_sym_sec, linkedit_seg):
     byte_order = 'little' if target.GetByteOrder() == lldb.eByteOrderLittle else 'big'
 
     addr = int(lazy_sym_sec['addr'], 16)
@@ -235,12 +162,11 @@ def get_lazy_sym_name(target, result, slide, lazy_sym_sec, linkedit_seg):
     reserved1 = int(lazy_sym_sec['reserved1'], 16)
     sec_start = addr + slide
 
-    total_count = 0
     error1 = lldb.SBError()
     sec_data = target.ReadMemory(lldb.SBAddress(sec_start, target), size, error1)
     if not error1.Success():
-        result.AppendMessage('read lazy symbol section failed! {}'.format(error1.GetCString()))
-        return 0
+        message += 'read lazy symbol section failed! {}\n'.format(error1.GetCString())
+        return message, total_count
 
     linkedit_vmaddr = 0
     linkedit_offset = 0
@@ -278,20 +204,20 @@ def get_lazy_sym_name(target, result, slide, lazy_sym_sec, linkedit_seg):
     indirect_symbol_indices_data = target.ReadMemory(
         lldb.SBAddress(indirect_symbol_indices_addr, target), indirect_symtab_size, error2)
     if not error2.Success():
-        result.AppendMessage('read indirect symbol indices failed! {}'.format(error2.GetCString()))
-        return 0
+        message += 'read indirect symbol indices failed! {}\n'.format(error2.GetCString())
+        return message, total_count
 
     error3 = lldb.SBError()
     symtab_data = target.ReadMemory(lldb.SBAddress(symtab, target), symtab_size, error3)
     if not error3.Success():
-        result.AppendMessage('read symtab failed! {}'.format(error3.GetCString()))
-        return 0
+        message += 'read symtab failed! {}\n'.format(error3.GetCString())
+        return message, total_count
 
     error4 = lldb.SBError()
     strtab_data = target.ReadMemory(lldb.SBAddress(strtab, target), strtab_size, error4)
     if not error4.Success():
-        result.AppendMessage('read strtab failed! {}'.format(error4.GetCString()))
-        return 0
+        message += 'read strtab failed! {}\n'.format(error4.GetCString())
+        return message, total_count
 
     ptr_size = target.GetAddressByteSize()
     count = int(size / ptr_size)
@@ -311,12 +237,15 @@ def get_lazy_sym_name(target, result, slide, lazy_sym_sec, linkedit_seg):
             strtab_offset = MachO.get_int(symtab_data, symtab_index * 16)
             symbol_name = MachO.get_string(strtab_data, strtab_offset)
             # print(symtab_index, strtab_offset, symbol_name)
-            desc += ' -> ' + symbol_name[1:]
+            pos = 0
+            if symbol_name.startswith('_'):
+                pos = 1
+            desc += ' -> ' + symbol_name[pos:]
 
-        result.AppendMessage('address = 0x{:x} where = {}'.format(addr, desc))
+        message += 'address = 0x{:x} where = {}\n'.format(addr, desc)
         total_count += 1
 
-    return total_count
+    return message, total_count
 
 
 def generate_option_parser(prog):
