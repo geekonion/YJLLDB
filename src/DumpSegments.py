@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+import json
 
 import lldb
 import optparse
@@ -33,11 +34,25 @@ def dump_segments(debugger, command, result, internal_dict):
         return
 
     target = debugger.GetSelectedTarget()
-    if args:
-        lookup_module_name = ''.join(args)
+    is_address = False
+    addr_str = None
+    lookup_module_name = None
+    if len(args) == 1:
+        input_arg = args[0]
+        is_address = input_arg.startswith('0x')
+        if is_address:
+            addr_str = input_arg
+        else:
+            lookup_module_name = input_arg
     else:
         file_spec = target.GetExecutable()
         lookup_module_name = file_spec.GetFilename()
+
+    if is_address:
+        header_addr = int(addr_str, 16)
+        header_size = 0x4000
+        result.AppendMessage(parse_macho(target, header_addr, header_size, 0))
+        return
 
     for module in target.module_iter():
         seg_info = ''
@@ -56,51 +71,59 @@ def dump_segments(debugger, command, result, internal_dict):
 
             first_sec = seg.GetSubSectionAtIndex(0)
             sec_addr = first_sec.GetLoadAddress(target)
-
-            error = lldb.SBError()
             header_size = sec_addr - header_addr
-            header_data = target.ReadMemory(lldb.SBAddress(header_addr, target), header_size, error)
-            if not error.Success():
-                result.AppendMessage('read header failed! {}'.format(error.GetCString()))
-                break
 
-            info = MachO.parse_header(header_data)
-
-            lcs = info['lcs']
-            seg_info += '       [start - end)\t\t\tsize\t\tname\n'
-            for lc in lcs:
-                cmd = lc['cmd']
-                if cmd == '19':  # LC_SEGMENT_64
-                    seg_start = slide + int(lc['vmaddr'], 16)
-                    seg_size = int(lc['vmsize'], 16)
-                    seg_end = seg_start + seg_size
-                    seg_name = lc['name']
-                    seg_info += '-' * 60 + '\n'
-                    seg_info += '[0x{:<9x}-0x{:<9x})\t\t0x{:<9x} {}\n'.\
-                        format(seg_start, seg_end, seg_size, seg_name)
-
-                    sects = lc['sects']
-
-                    if seg_name == '__LINKEDIT':
-                        linkedit_offset = int(lc['offset'], 16)
-                        linkedit_vmaddr = int(lc['vmaddr'], 16)
-
-                        for sect in sects:
-                            dataoff = int(sect['offset'], 16)
-                            datasize = int(sect['size'], 16)
-                            data_start = linkedit_vmaddr + slide + dataoff - linkedit_offset
-                            data_end = data_start + datasize
-                            seg_info += '\t[0x{:<9x}-0x{:<9x})\t0x{:<9x}   {}\n'. \
-                                format(data_start, data_end, datasize, sect['name'])
-                    else:
-                        for sect in sects:
-                            sec_start = slide + int(sect['addr'], 16)
-                            sec_size = int(sect['size'], 16)
-                            sec_end = sec_start + sec_size
-                            seg_info += '\t[0x{:<9x}-0x{:<9x})\t0x{:<9x}   {}\n'.\
-                                format(sec_start, sec_end, sec_size, sect['name'])
+            seg_info += parse_macho(target, header_addr, header_size, slide)
 
         result.AppendMessage(seg_info)
+
+
+def parse_macho(target, header_addr, header_size, slide):
+    error = lldb.SBError()
+    header_data = target.ReadMemory(lldb.SBAddress(header_addr, target), header_size, error)
+    if not error.Success():
+        return 'read header failed! {}\n'.format(error.GetCString())
+
+    info = MachO.parse_header(header_data)
+    if slide == 0:
+        slide = header_addr - int(info['text_vmaddr'], 16)
+
+    lcs = info['lcs']
+    # print(json.dumps(lcs, indent=2))
+    seg_info = '       [start - end)\t\t\tsize\t\tname\n'
+    for lc in lcs:
+        cmd = lc['cmd']
+        if cmd == '19':  # LC_SEGMENT_64
+            seg_start = slide + int(lc['vmaddr'], 16)
+            seg_size = int(lc['vmsize'], 16)
+            seg_end = seg_start + seg_size
+            seg_name = lc['name']
+            seg_info += '-' * 60 + '\n'
+            seg_info += '[0x{:<9x}-0x{:<9x})\t\t0x{:<9x} {}\n'. \
+                format(seg_start, seg_end, seg_size, seg_name)
+
+            sects = lc['sects']
+
+            if seg_name == '__LINKEDIT':
+                linkedit_offset = int(lc['offset'], 16)
+                linkedit_vmaddr = int(lc['vmaddr'], 16)
+
+                for sect in sects:
+                    dataoff = int(sect['offset'], 16)
+                    datasize = int(sect['size'], 16)
+                    data_start = linkedit_vmaddr + slide + dataoff - linkedit_offset
+                    data_end = data_start + datasize
+                    seg_info += '\t[0x{:<9x}-0x{:<9x})\t0x{:<9x}   {}\n'. \
+                        format(data_start, data_end, datasize, sect['name'])
+            else:
+                for sect in sects:
+                    sec_start = slide + int(sect['addr'], 16)
+                    sec_size = int(sect['size'], 16)
+                    sec_end = sec_start + sec_size
+                    seg_info += '\t[0x{:<9x}-0x{:<9x})\t0x{:<9x}   {}\n'. \
+                        format(sec_start, sec_end, sec_size, sect['name'])
+
+    return seg_info
 
 
 def generate_option_parser():
