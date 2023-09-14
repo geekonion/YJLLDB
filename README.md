@@ -80,6 +80,8 @@
 
 ​     \* [read_mem_as_addr](#read_mem_as_addr)
 
+​     \* [read_cstring - read memory as c style string](#read_cstring---read-memory-as-c-style-string)
+
 ## Installation
 
 1. Clone this repo
@@ -863,6 +865,36 @@ address = 0x1815fb950 where = libsystem_kernel.dylib`open -> open
 0x102ee0548: 0x00000000000007c8
 0x102ee0550: 0x0000000102ede2cc "Default Configuration"
 0x102ee0558: 0x0000000000000015
+```
+
+[back to commands list](#Commands-list)
+
+
+
+#### read_cstring - read memory as c style string
+
+```stylus
+(lldb) seg
+...
+	[0x10077b3ae-0x10077b424)	0x76          __objc_classname
+....
+	[0x100782898-0x1007857f0)	0x2f58        String Table
+...
+
+// read __TEXT.__objc_classname
+(lldb) read_cstring 0x10077b3ae 0x10077b424
+0x10077b3ae: "ViewController"
+...
+0x10077b414: "UISceneDelegate"
+9 locations found
+
+// read String Table
+(lldb) read_cstring 0x100782898 0x1007857f0
+0x100782898: " "
+0x10078289a: "_JITDemoVersionNumber"
+...
+0x1007857c8: "__OBJC_PROTOCOL_$_UIWindowSceneDelegate"
+338 locations found
 ```
 
 [back to commands list](#Commands-list)

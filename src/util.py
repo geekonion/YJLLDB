@@ -458,3 +458,23 @@ def get_group_path():
 
     return ret_str
 
+
+def read_mem_as_cstring(target, start_addr, addr_size):
+    ret = ''
+
+    error = lldb.SBError()
+    data_bytes = target.ReadMemory(lldb.SBAddress(start_addr, target), addr_size, error)
+    if not error.Success():
+        ret += 'read memory at 0x{:x} failed! {}'.format(start_addr, error.GetCString())
+        return ret
+
+    string_list = data_bytes.decode().replace('\n', '\\n').split('\x00')[:-1]
+    offset = 0
+    for string in string_list:
+        str_addr = start_addr + offset
+        ret += '0x{:x}: "{}"\n'.format(str_addr, string)
+        offset += 1 + len(string)
+
+    ret += '{} locations found'.format(len(string_list))
+
+    return ret
