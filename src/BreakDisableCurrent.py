@@ -19,7 +19,8 @@ def disable_current_breakpoint(debugger, command, result, internal_dict):
     # thread = process.GetSelectedThread()
 
     for thread in process:
-        if thread.GetStopReason() == lldb.eStopReasonBreakpoint:
+        reason = thread.GetStopReason()
+        if reason == lldb.eStopReasonBreakpoint:
             n_reason = thread.GetStopReasonDataCount()
             # reason data应该成对出现，分别代表breakpoint_id和location_id
             if n_reason % 2 != 0:
@@ -40,6 +41,12 @@ def disable_current_breakpoint(debugger, command, result, internal_dict):
             # lldb.eReturnStatusSuccessContinuingNoResult lldb.eReturnStatusSuccessContinuingResult
             result.SetStatus(lldb.eReturnStatusSuccessContinuingNoResult)
             break
+        elif reason == lldb.eStopReasonSignal:
+            reason_data = thread.GetStopReasonDataAtIndex(0)
+            # <sys/signals.h>
+            if reason_data == 17:  # SIGSTOP
+                debugger.SetAsync(True)
+                process.Continue()
 
 
 def disable_breakpoint(target, thread, result, brkpoint_id, loc_id):
