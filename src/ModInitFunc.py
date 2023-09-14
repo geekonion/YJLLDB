@@ -1,7 +1,8 @@
 # -*- coding: UTF-8 -*-
-import json
 
 import lldb
+import optparse
+import shlex
 import os.path
 import util
 
@@ -20,23 +21,41 @@ def dump_mod_init_func(debugger, command, result, internal_dict):
     """
     dump module init function(s) in user modules
     """
-    target = debugger.GetSelectedTarget()
-    process = target.GetProcess()
-
-    parse_mod_init_func(result, target, process, 'print')
+    parse_mod_init_func(debugger, command, result, 'initfunc')
 
 
 def break_mod_init_func(debugger, command, result, internal_dict):
     """
     break module init function(s) in user modules
     """
+    parse_mod_init_func(debugger, command, result, 'binitfunc')
+
+
+def parse_mod_init_func(debugger, command, result, name):
+    # 去掉转义符
+    command = command.replace('\\', '\\\\')
+    # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-
+    command_args = shlex.split(command, posix=False)
+    # 创建parser
+    parser = generate_option_parser(name)
+    # 解析参数，捕获异常
+    try:
+        # options是所有的选项，key-value形式，args是其余剩余所有参数，不包含options
+        (options, args) = parser.parse_args(command_args)
+    except Exception as error:
+        print(error)
+        result.SetError("\n" + parser.get_usage())
+        return
+
     target = debugger.GetSelectedTarget()
+    if args:
+        lookup_module_name = ''.join(args)
+        lookup_module_name = lookup_module_name.replace("'", "")
+    else:
+        file_spec = target.GetExecutable()
+        lookup_module_name = file_spec.GetFilename()
+
     process = target.GetProcess()
-
-    parse_mod_init_func(result, target, process, 'break')
-
-
-def parse_mod_init_func(result, target, process, action):
     total_count = 0
     bundle_path = target.GetExecutable().GetDirectory()
     for module in target.module_iter():
@@ -47,6 +66,9 @@ def parse_mod_init_func(result, target, process, action):
             continue
 
         if module_name.startswith('libswift'):
+            continue
+
+        if lookup_module_name and lookup_module_name not in module_name:
             continue
 
         print("-----try to lookup init function in %s-----" % module_name)
@@ -70,10 +92,10 @@ def parse_mod_init_func(result, target, process, action):
                         func_ptr = process.ReadPointerFromMemory(sec_addr + idx * ptr_size, error)
                         if error.Success():
                             func_addr = target.ResolveLoadAddress(func_ptr)
-                            if action == 'print':
+                            if name == 'initfunc':
                                 print('address = 0x{:x} {}'.
                                       format(func_ptr, util.get_desc_for_address(func_addr)))
-                            elif action == 'break':
+                            elif name == 'binitfunc':
                                 brkpoint = target.BreakpointCreateBySBAddress(func_addr)
                                 # 判断下断点是否成功
                                 if not brkpoint.IsValid() or brkpoint.num_locations == 0:
@@ -86,5 +108,13 @@ def parse_mod_init_func(result, target, process, action):
 
                     break
 
-    if action == 'break':
+    if name == 'binitfunc':
         result.AppendMessage("set {} breakpoints".format(total_count))
+
+
+def generate_option_parser(prog):
+    usage = "usage: %prog"
+
+    parser = optparse.OptionParser(usage=usage, prog=prog)
+
+    return parser
