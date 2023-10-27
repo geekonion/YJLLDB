@@ -459,7 +459,7 @@ def get_group_path():
     return ret_str
 
 
-def read_mem_as_cstring(target, start_addr, addr_size):
+def read_mem_as_cstring(target, start_addr, addr_size, encoding='utf-8'):
     ret = ''
 
     error = lldb.SBError()
@@ -468,7 +468,7 @@ def read_mem_as_cstring(target, start_addr, addr_size):
         ret += 'read memory at 0x{:x} failed! {}'.format(start_addr, error.GetCString())
         return ret
 
-    string_list = data_bytes.decode().replace('\n', '\\n').split('\x00')[:-1]
+    string_list = data_bytes.decode(encoding).replace('\n', '\\n').split('\x00')[:-1]
     offset = 0
     for string in string_list:
         str_addr = start_addr + offset

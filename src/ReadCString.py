@@ -38,7 +38,10 @@ def read_cstring(debugger, command, result, internal_dict):
     addr_size = end_addr - start_addr
 
     target = debugger.GetSelectedTarget()
-    ret = util.read_mem_as_cstring(target, start_addr, addr_size)
+    if options.encoding:
+        ret = util.read_mem_as_cstring(target, start_addr, addr_size, options.encoding)
+    else:
+        ret = util.read_mem_as_cstring(target, start_addr, addr_size)
     result.AppendMessage(ret)
 
 
@@ -46,5 +49,9 @@ def generate_option_parser():
     usage = "usage: %prog start_addr end_addr"
 
     parser = optparse.OptionParser(usage=usage, prog='read_cstring')
+    parser.add_option("-e", "--encoding",
+                      action="store",
+                      dest="encoding",
+                      help="read memory with encoding, such as: utf-8, ISO-8859-1, ascii, gbk")
 
     return parser
