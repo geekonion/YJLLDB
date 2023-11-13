@@ -52,8 +52,7 @@ def parse_mod_init_func(debugger, command, result, name):
         lookup_module_name = ''.join(args)
         lookup_module_name = lookup_module_name.replace("'", "")
     else:
-        file_spec = target.GetExecutable()
-        lookup_module_name = file_spec.GetFilename()
+        lookup_module_name = None
 
     process = target.GetProcess()
     total_count = 0

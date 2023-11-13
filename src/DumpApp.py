@@ -238,10 +238,10 @@ def get_app_regions(apply_patch):
         NSString *fullpath = [bundlePath stringByAppendingPathComponent:subpath];
         
         if ([subpath hasSuffix:@".framework"]) {
-            NSBundle *bundle = [NSBundle bundleWithPath:fullpath];
-            if (![bundle isLoaded]) {
+            NSBundle *framework_bundle = [NSBundle bundleWithPath:fullpath];
+            if (![framework_bundle isLoaded]) {
                 NSError *error = nil;
-                [bundle loadAndReturnError:&error];
+                [framework_bundle loadAndReturnError:&error];
                 if (error) {
                     NSLog(@"%@", error);
                 }
@@ -312,12 +312,12 @@ def get_app_regions(apply_patch):
         }
         NSString *rel_path = [image_path stringByReplacingOccurrencesOfString:bundlePath withString:@""];
         NSString *exe_name = [rel_path.lastPathComponent stringByDeletingPathExtension];
-        NSDictionary *image = @{@"rel_path": rel_path,
+        NSDictionary *image_info = @{@"rel_path": rel_path,
                                 @"exe_name": exe_name,
                                 @"header": @((uint64_t)mach_header),
                                 @"crypt": cryptRegion
         };
-        [encryptedImages addObject:image];
+        [encryptedImages addObject:image_info];
     }
     
     NSString *app_name = [bundlePath.lastPathComponent stringByDeletingPathExtension];
