@@ -39,6 +39,7 @@ def disable_breakpoint_in_range(debugger, command, result, internal_dict):
         return
 
     range_str = args[0]
+    comps = None
     if '-' in range_str:
         comps = range_str.split('-')
     elif '~' in range_str:
@@ -47,6 +48,7 @@ def disable_breakpoint_in_range(debugger, command, result, internal_dict):
     if not comps or len(comps) != 2:
         result.AppendMessage(parser.get_usage())
         return
+
     start_id = int(comps[0])
     end_id = int(comps[1]) + 1
 
@@ -77,7 +79,9 @@ def disable_breakpoint_in_range(debugger, command, result, internal_dict):
 def generate_option_parser():
     usage = "usage: %prog [options] range\n" + \
             "for example:\n" + \
-            "   %prog 100-150\n"
+            "   %prog 100-150\n" + \
+            "   or\n" + \
+            "   %prog 100~150\n"
 
     parser = optparse.OptionParser(usage=usage, prog='bdr')
 
