@@ -13,7 +13,7 @@ class BreakPointInfo:
 def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand(
         'command script add -h "disable breakpoint(s) at the specified class" -f '
-        'DisableBreakpointAtClass.disable_breakpoint_at bda')
+        'BreakpointDisableAtClass.disable_breakpoint_at bda')
 
 
 def disable_breakpoint_at(debugger, command, result, internal_dict):
