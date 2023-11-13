@@ -46,6 +46,8 @@
 
 ​     \* [bda - breakpoint disable at class](#bda---breakpoint-disable-at-class)
 
+​     \* [bdr - breakpoint disable in range](#bdr---breakpoint-disable-in-range)
+
 ​     \* [dmodule - dump module](#dmodule---dump-module)
 
 ​     \* [dapp - dump App](#dapp---dump-app)
@@ -525,6 +527,21 @@ disable breakpoint 1.27: where = LLDBCode`__41-[ViewController touchesBegan:with
 
 (lldb) bda -i ViewController(extension)
 disable breakpoint 1.23: where = LLDBCode`-[ViewController(extension) test] at ViewController.m:20, address = 0x0000000102ec2e7c, unresolved, hit count = 0  Options: disabled 
+```
+
+[back to commands list](#Commands-list)
+
+
+
+#### bdr - breakpoint disable in range
+
+Disable breakpoint(s) in the specified range.
+
+```stylus
+(lldb) bdr 980~992
+disable breakpoint 980.1: where = LLDBCode`-[Test .cxx_destruct] at Test.m:22, address = 0x00000001049fa1b0, unresolved, hit count = 0  Options: disabled 
+...
+disable breakpoint 991.1: where = LLDBCode`func1 at Test.m:42, address = 0x00000001049faaf8, unresolved, hit count = 0  Options: disabled 
 ```
 
 [back to commands list](#Commands-list)
