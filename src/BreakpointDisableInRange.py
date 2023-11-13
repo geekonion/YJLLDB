@@ -48,7 +48,7 @@ def disable_breakpoint_in_range(debugger, command, result, internal_dict):
         result.AppendMessage(parser.get_usage())
         return
     start_id = int(comps[0])
-    end_id = int(comps[1] + 1)
+    end_id = int(comps[1]) + 1
 
     target_range = range(start_id, end_id)
 
