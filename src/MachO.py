@@ -2,6 +2,7 @@
 
 import json
 import struct
+from datetime import datetime
 
 macho_magics = {
     0xFEEDFACE: (False, False),  # 32 bit, big endian
@@ -94,6 +95,8 @@ def parse_lcs(base, offset, n_cmds, macho):
                 seg_linkedit = segment
             elif seg_name == '__TEXT':
                 macho['text_vmaddr'] = segment['vmaddr']
+        elif cmd == 0xd:  # LC_ID_DYLIB
+            macho['lcs'].append(parse_load_dylib(base, offset, cmd, cmd_size))
         elif cmd in (0x21, 0x2C):  # ('ENCRYPTION_INFO', 'ENCRYPTION_INFO_64')
             macho['lcs'].append(parse_encryption_info(base, offset, cmd, cmd_size))
         elif cmd == 0x28 | 0x80000000:  # LC_MAIN (0x28|LC_REQ_DYLD)
@@ -157,8 +160,9 @@ def parse_lcs(base, offset, n_cmds, macho):
     def sort_comparator(info):
         return int(info['offset'], 16)
 
-    linkedit_secs.sort(key=sort_comparator)
-    seg_linkedit['sects'] = linkedit_secs
+    if seg_linkedit:
+        linkedit_secs.sort(key=sort_comparator)
+        seg_linkedit['sects'] = linkedit_secs
 
 
 def parse_segment(base, m_offset, cmd, cmd_size):
@@ -227,6 +231,27 @@ def parse_section(base, m_offset):
         'flags': '{:X}'.format(flags),
         'reserved1': '{:X}'.format(reserved1),
         'lc_offset': m_offset
+    }
+
+    return output
+
+
+def parse_load_dylib(base, offset, cmd, cmd_size):
+    """Parse dylib load command."""
+    offset += 12  # skip cmd, cmd_size and str offset
+    timestamp = get_int(base, offset)
+    current_version = get_int(base, offset + 4)
+    compatibility_version = get_int(base, offset + 8)
+    name = get_string(base, offset + 12)
+
+    output = {
+        'cmd': '{:X}'.format(cmd),
+        'cmd_size': '{:X}'.format(cmd_size),
+        'name': name,
+        'timestamp': datetime.fromtimestamp(timestamp).strftime(
+            '%Y-%m-%d %H:%M:%S'),
+        'current version': make_version(current_version),
+        'compatibility version': make_version(compatibility_version)
     }
 
     return output
@@ -387,3 +412,13 @@ def get_string(base, offset, length=0):
         pos = base.find(b'\x00', offset)
         length = pos - offset
     return base[offset:offset + length].strip(b'\x00').decode()
+
+
+def make_version(version):
+    """Construct a version number from given bytes."""
+
+    vx = version >> 16
+    vy = (version >> 8) & 0xff
+    vz = version & 0xff
+
+    return '{}.{}.{}'.format(vx, vy, vz)
