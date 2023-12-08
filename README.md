@@ -24,6 +24,8 @@
 
 ​     \* [entitlements - dump entitlements](#entitlements---dump-entitlements)
 
+​     \* [mname - module name](#mname---module-name)
+
 ​     \* [segments - print segments](#segments---print-segments)
 
 ​     \* [main](#main)
@@ -315,6 +317,19 @@ Interlock:
 ```stylus
 (lldb) ent UIKit
 UIKit apparently does not contain code signature
+```
+
+[back to commands list](#Commands-list)
+
+
+
+#### mname - module name
+
+Get module name with header address.
+
+```stylus
+(lldb) mname 0x1043e8000
+LLDBCode
 ```
 
 [back to commands list](#Commands-list)
