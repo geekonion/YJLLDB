@@ -14,13 +14,13 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 
 def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand(
-        'command script add -h "dump current app to mac from jailed device" -f '
+        'command script add -h "dump app to mac from device" -f '
         'DumpApp.dump_app dapp')
 
 
 def dump_app(debugger, command, result, internal_dict):
     """
-    dump current app to mac from jailed device
+    dump app to mac from device
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')

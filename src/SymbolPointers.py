@@ -9,11 +9,11 @@ import MachO
 
 def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand(
-        'command script add -h "dump function starts of the specified module" -f '
+        'command script add -h "dump NON_LAZY_SYMBOL_POINTERS of the specified module" -f '
         'SymbolPointers.dump_got got')
 
     debugger.HandleCommand(
-        'command script add -h "dump function starts of the specified module" -f '
+        'command script add -h "dump LAZY_SYMBOL_POINTERS of the specified module" -f '
         'SymbolPointers.dump_lazy_symbol_ptr lazy_sym')
 
 
