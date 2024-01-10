@@ -4,7 +4,6 @@ import json
 import lldb
 import optparse
 import shlex
-import os
 import util
 
 
@@ -73,10 +72,10 @@ def get_module_regions(module):
     NSMutableString *result = [NSMutableString string];
     if (module_path) {
         unsigned int nclass = 0;
-        const char **names = (const char **)objc_copyClassNamesForImage(module_path, &nclass);
-        if (names) {
+        const char **all_cls_names = (const char **)objc_copyClassNamesForImage(module_path, &nclass);
+        if (all_cls_names) {
             for (unsigned int i = 0; i < nclass; i++) {
-                NSString *className = [NSString stringWithUTF8String:names[i]];
+                NSString *className = [NSString stringWithUTF8String:all_cls_names[i]];
                 Class cls = NSClassFromString(className);
                 if (cls) {
                     [result appendFormat:@"%@ <%p>\n", className, cls];
@@ -84,7 +83,7 @@ def get_module_regions(module):
                     [result appendFormat:@"%@\n", className];
                 }
             }
-            free(names);
+            free(all_cls_names);
         }
     }
     

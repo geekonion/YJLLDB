@@ -353,8 +353,7 @@ def get_group_path():
         }
 
         NSString *module_name = [[NSString stringWithUTF8String:name] lastPathComponent];
-        NSRange range = [module_name rangeOfString:exe_name options:NSCaseInsensitiveSearch];
-        if (range.location != NSNotFound) {
+        if ([module_name isEqualToString:exe_name]) {
             mach_header = (const mach_header_t *)_dyld_get_image_header(i);
             slide = (intptr_t)_dyld_get_image_vmaddr_slide(i);
             break;
@@ -446,13 +445,14 @@ def get_group_path():
         }
     }
 
-    NSString *group_path = nil;
+    NSString *result = nil;
     if (groupID_c) {
         NSString *groupID = [NSString stringWithUTF8String:groupID_c];
         free(groupID_c);
-        group_path = [(NSURL *)[[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:groupID] path];
+        result = [(NSURL *)[[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:groupID] path];
+        result = [groupID stringByAppendingFormat:@": %@", result];
     }
-    group_path;
+    result;
     '''
     ret_str = exe_script(command_script)
 
