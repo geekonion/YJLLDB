@@ -3,6 +3,7 @@
 import json
 import struct
 from datetime import datetime
+from util import get_int, get_long, get_string
 
 macho_magics = {
     0xFEEDFACE: (False, False),  # 32 bit, big endian
@@ -11,7 +12,7 @@ macho_magics = {
     0xCFFAEDFE: (True, True),  # 64 bit, little endian
 }
 g_is_64_bit = True
-g_byteorder = 'big'
+g_byteorder = 'little'
 g_endian = '<'
 
 
@@ -391,27 +392,6 @@ def parse_fat(header):
         machos.append(macho)
 
     return {'fat': {'n_machos': n_machos, 'machos': machos}}
-
-
-def get_int(base, offset, byteorder=None):
-    if byteorder:
-        return int.from_bytes(base[offset:offset + 4], byteorder=byteorder)
-    else:
-        return int.from_bytes(base[offset:offset + 4], byteorder=g_byteorder)
-
-
-def get_long(base, offset, byteorder=None):
-    if byteorder:
-        return int.from_bytes(base[offset:offset + 8], byteorder=byteorder)
-    else:
-        return int.from_bytes(base[offset:offset + 8], byteorder=g_byteorder)
-
-
-def get_string(base, offset, length=0):
-    if length == 0:
-        pos = base.find(b'\x00', offset)
-        length = pos - offset
-    return base[offset:offset + length].strip(b'\x00').decode()
 
 
 def make_version(version):

@@ -5,6 +5,7 @@ import shlex
 import lldb
 import os
 
+g_byteorder = 'little'
 g_arm64_nop_bytes = b'\x1f\x20\x03\xd5'
 g_x64_nops = {
     1: b'\x90',
@@ -465,3 +466,24 @@ def read_mem_as_cstring(target, start_addr, addr_size, encoding='utf-8'):
     ret += '{} locations found'.format(len(string_list))
 
     return ret
+
+
+def get_int(base, offset, byteorder=None):
+    if byteorder:
+        return int.from_bytes(base[offset:offset + 4], byteorder=byteorder)
+    else:
+        return int.from_bytes(base[offset:offset + 4], byteorder=g_byteorder)
+
+
+def get_long(base, offset, byteorder=None):
+    if byteorder:
+        return int.from_bytes(base[offset:offset + 8], byteorder=byteorder)
+    else:
+        return int.from_bytes(base[offset:offset + 8], byteorder=g_byteorder)
+
+
+def get_string(base, offset, length=0):
+    if length == 0:
+        pos = base.find(b'\x00', offset)
+        length = pos - offset
+    return base[offset:offset + length].strip(b'\x00').decode()
