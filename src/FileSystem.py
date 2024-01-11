@@ -9,18 +9,18 @@ import util
 def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand('command script add -h "list directory contents, just like ls -lh on mac."'
                            ' -f FileSystem.execute_ls ls')
-    debugger.HandleCommand('command script add -h "print Home directory path."'
-                           ' -f FileSystem.show_home_directory home_dir')
-    debugger.HandleCommand('command script add -h "print bundle path."'
-                           ' -f FileSystem.show_bundle_directory bundle_dir')
-    debugger.HandleCommand('command script add -h "print Documents path."'
-                           ' -f FileSystem.show_doc_directory doc_dir')
-    debugger.HandleCommand('command script add -h "print Library path."'
-                           ' -f FileSystem.show_library_directory lib_dir')
-    debugger.HandleCommand('command script add -h "print tmp path."'
-                           ' -f FileSystem.show_tmp_directory tmp_dir')
-    debugger.HandleCommand('command script add -h "print Caches path."'
-                           ' -f FileSystem.show_caches_directory caches_dir')
+    # debugger.HandleCommand('command script add -h "print Home directory path."'
+    #                        ' -f FileSystem.show_home_directory home_dir')
+    # debugger.HandleCommand('command script add -h "print bundle path."'
+    #                        ' -f FileSystem.show_bundle_directory bundle_dir')
+    # debugger.HandleCommand('command script add -h "print Documents path."'
+    #                        ' -f FileSystem.show_doc_directory doc_dir')
+    # debugger.HandleCommand('command script add -h "print Library path."'
+    #                        ' -f FileSystem.show_library_directory lib_dir')
+    # debugger.HandleCommand('command script add -h "print tmp path."'
+    #                        ' -f FileSystem.show_tmp_directory tmp_dir')
+    # debugger.HandleCommand('command script add -h "print Caches path."'
+    #                        ' -f FileSystem.show_caches_directory caches_dir')
     debugger.HandleCommand('command script add -h "print group path."'
                            ' -f FileSystem.show_group_path group_dir')
 
