@@ -3,9 +3,8 @@
 import lldb
 import optparse
 import shlex
-import os
 import util
-import MachOJIT
+import MachOHelper
 
 extra_offset = 0
 base_num_frames = 0
@@ -54,36 +53,24 @@ def trace_all_functions_in_module(debugger, command, result, internal_dict):
     lookup_module_name = lookup_module_name.replace("'", "")
     target = debugger.GetSelectedTarget()
 
-    total_count = 0
-    module_found = False
     if options.oneshot:
         global oneshot
         oneshot = True
 
-    for module in target.module_iter():
-        module_file_spec = module.GetFileSpec()
+    funcs, module_file_spec = MachOHelper.get_function_starts(result, target, lookup_module_name)
+    if not funcs:
+        result.AppendMessage("module {} not found".format(lookup_module_name))
+    else:
         name = module_file_spec.GetFilename()
+        result.AppendMessage("-----traces functions in %s-----" % name)
 
-        lib_name = lookup_module_name + '.dylib'
-        if lookup_module_name != name and lib_name != name:
-            continue
-
-        module_found = True
+        total_count = 0
+        func_names = set()
         module_list = lldb.SBFileSpecList()
         module_list.Append(module_file_spec)
         comp_unit_list = lldb.SBFileSpecList()
-        print("-----traces functions in %s-----" % name)
-        func_names = set()
 
-        addr_str = MachOJIT.get_function_starts(lookup_module_name)
-        if not addr_str:
-            continue
-        if "returned empty description" in addr_str:
-            break
-
-        addresses = addr_str.split(';')
-        for address in addresses:
-            addr = int(address, 16)
+        for addr in funcs:
             addr_obj = target.ResolveLoadAddress(addr)
             symbol = addr_obj.GetSymbol()
             # 2为Code，5为Trampoline，即调用的系统函数
@@ -124,11 +111,11 @@ def trace_all_functions_in_module(debugger, command, result, internal_dict):
                 # 使用符号路径过滤系统库函数
                 if ".platform/Developer/SDKs/" in str(sym_start_addr.GetLineEntry().GetFileSpec()):
                     if options.verbose:
-                        print(f"ignore function {sym_name} at {sym_start_addr.GetLineEntry()}")
+                        result.AppendMessage(f"ignore function {sym_name} at {sym_start_addr.GetLineEntry()}")
                     continue
 
             if options.verbose:
-                print(sym_start_addr.GetLineEntry())
+                result.AppendMessage(sym_start_addr.GetLineEntry())
 
             if options.individual:
                 brkpoint = target.BreakpointCreateBySBAddress(sym_start_addr)
@@ -149,16 +136,18 @@ def trace_all_functions_in_module(debugger, command, result, internal_dict):
                         brkpoint.SetOneShot(True)
 
                     addr = sym_start_addr.GetLoadAddress(target)
-                    print("begin trace with Breakpoint {}: where = {}`{}, address = 0x{:x}"
-                          .format(brkpoint.GetID(), name, sym_name, addr))
+                    result.AppendMessage("begin trace with Breakpoint {}: where = {}`{}, address = 0x{:x}"
+                                         .format(brkpoint.GetID(), name, sym_name, addr))
             else:
                 func_names.add(sym_name)
 
-        if not options.individual:
+        if options.individual:
+            result.AppendMessage("begin trace with {} breakpoint".format(total_count))
+        else:
             # BreakpointCreateByNames(SBTarget self, char const ** symbol_name, uint32_t num_symbol,
             # uint32_t name_type_mask, SBFileSpecList module_list, SBFileSpecList comp_unit_list) -> SBBreakpoint...
             n_func_names = len(func_names)
-            print(f"will trace {n_func_names} names")
+            result.AppendMessage(f"will trace {n_func_names} names")
             if n_func_names > 0:
                 brkpoint = target.BreakpointCreateByNames(list(func_names),
                                                           n_func_names,
@@ -179,13 +168,6 @@ def trace_all_functions_in_module(debugger, command, result, internal_dict):
                         brkpoint.SetCommandLineCommands(commands)
                     result.AppendMessage("begin trace with Breakpoint {}: {} locations"
                                          .format(brkpoint.GetID(), brkpoint.GetNumLocations()))
-        break
-
-    if module_found:
-        if options.individual:
-            result.AppendMessage("begin trace with {} breakpoint".format(total_count))
-    else:
-        result.AppendMessage("module {} not found".format(lookup_module_name))
 
 
 def breakpoint_handler(frame, bp_loc, dict):
@@ -194,8 +176,6 @@ def breakpoint_handler(frame, bp_loc, dict):
         bp_loc.SetEnabled(False)
 
     thread = frame.GetThread()
-    process = thread.GetProcess()
-    target = process.GetTarget()
 
     current_num_frames = thread.GetNumFrames()
     global extra_offset

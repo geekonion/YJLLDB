@@ -3,9 +3,7 @@
 import lldb
 import optparse
 import shlex
-import os
-import util
-import MachOJIT
+import MachOHelper
 
 
 def __lldb_init_module(debugger, internal_dict):
@@ -46,31 +44,20 @@ def break_all_functions_in_module(debugger, command, result, internal_dict):
     lookup_module_name = lookup_module_name.replace("'", "")
     target = debugger.GetSelectedTarget()
 
-    total_count = 0
-    module_found = False
-
-    for module in target.module_iter():
-        module_file_spec = module.GetFileSpec()
+    funcs, module_file_spec = MachOHelper.get_function_starts(result, target, lookup_module_name)
+    if not funcs:
+        result.AppendMessage("module {} not found".format(lookup_module_name))
+    else:
         name = module_file_spec.GetFilename()
+        result.AppendMessage("-----break functions in %s-----" % name)
 
-        lib_name = lookup_module_name + '.dylib'
-        if lookup_module_name != name and lib_name != name:
-            continue
-
-        module_found = True
+        total_count = 0
+        func_names = set()
         module_list = lldb.SBFileSpecList()
         module_list.Append(module_file_spec)
         comp_unit_list = lldb.SBFileSpecList()
-        print("-----break functions in %s-----" % name)
-        func_names = set()
-        addr_str = MachOJIT.get_function_starts(lookup_module_name)
-        if not addr_str:
-            continue
-        if "returned empty description" in addr_str:
-            break
-        addresses = addr_str.split(';')
-        for address in addresses:
-            addr = int(address, 16)
+
+        for addr in funcs:
             addr_obj = target.ResolveLoadAddress(addr)
             symbol = addr_obj.GetSymbol()
 
@@ -102,11 +89,13 @@ def break_all_functions_in_module(debugger, command, result, internal_dict):
             else:
                 func_names.add(sym_name)
 
-        if not options.individual:
+        if options.individual:
+            result.AppendMessage("set {} breakpoints".format(total_count))
+        else:
             # BreakpointCreateByNames(SBTarget self, char const ** symbol_name, uint32_t num_symbol,
             # uint32_t name_type_mask, SBFileSpecList module_list, SBFileSpecList comp_unit_list) -> SBBreakpoint...
             n_func_names = len(func_names)
-            print(f"will set breakpoint for {n_func_names} names")
+            result.AppendMessage(f"will set breakpoint for {n_func_names} names")
             if n_func_names > 0:
                 brkpoint = target.BreakpointCreateByNames(list(func_names),
                                                           n_func_names,
@@ -119,13 +108,6 @@ def break_all_functions_in_module(debugger, command, result, internal_dict):
                 else:
                     result.AppendMessage("Breakpoint {}: {} locations"
                                          .format(brkpoint.GetID(), brkpoint.GetNumLocations()))
-        break
-
-    if module_found:
-        if options.individual:
-            result.AppendMessage("set {} breakpoints".format(total_count))
-    else:
-        result.AppendMessage("module {} not found".format(lookup_module_name))
 
 
 def generate_option_parser():
