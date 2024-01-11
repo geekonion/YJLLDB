@@ -202,11 +202,8 @@ def split_path(path_str):
 
 def get_bundle_directory():
     command_script = '@import Foundation;'
-    # const char *path = (const char *)[[(NSBundle *)[NSBundle mainBundle] bundlePath] UTF8String];
     command_script += r'''
-    NSString *path = (NSString *)[(NSBundle *)[NSBundle mainBundle] bundlePath];
-
-    path
+    (NSString *)[(NSBundle *)[NSBundle mainBundle] bundlePath];
     '''
     ret_str = exe_script(command_script)
 
@@ -216,9 +213,7 @@ def get_bundle_directory():
 def get_home_directory():
     command_script = '@import Foundation;'
     command_script += r'''
-    NSString *path = (NSString *)NSHomeDirectory();
-
-    path
+    (NSString *)NSHomeDirectory();
     '''
     ret_str = exe_script(command_script)
 
@@ -228,9 +223,7 @@ def get_home_directory():
 def get_doc_directory():
     command_script = '@import Foundation;'
     command_script += r'''
-    NSString *path = (NSString *)[NSHomeDirectory() stringByAppendingPathComponent:@"Documents"];
-
-    path
+    (NSString *)[NSHomeDirectory() stringByAppendingPathComponent:@"Documents"];
     '''
     ret_str = exe_script(command_script)
 
@@ -240,9 +233,7 @@ def get_doc_directory():
 def get_library_directory():
     command_script = '@import Foundation;'
     command_script += r'''
-    NSString *path = (NSString *)[NSHomeDirectory() stringByAppendingPathComponent:@"Library"];
-
-    path
+    (NSString *)[NSHomeDirectory() stringByAppendingPathComponent:@"Library"];
     '''
     ret_str = exe_script(command_script)
 
@@ -252,9 +243,7 @@ def get_library_directory():
 def get_tmp_directory():
     command_script = '@import Foundation;'
     command_script += r'''
-    NSString *path = (NSString *)[NSHomeDirectory() stringByAppendingPathComponent:@"tmp"];
-
-    path
+    (NSString *)[NSHomeDirectory() stringByAppendingPathComponent:@"tmp"];
     '''
     ret_str = exe_script(command_script)
 
@@ -264,9 +253,7 @@ def get_tmp_directory():
 def get_caches_directory():
     command_script = '@import Foundation;'
     command_script += r'''
-    NSString *path = (NSString *)[NSHomeDirectory() stringByAppendingPathComponent:@"Library/Caches"];
-
-    path
+    (NSString *)[NSHomeDirectory() stringByAppendingPathComponent:@"Library/Caches"];
     '''
     ret_str = exe_script(command_script)
 
