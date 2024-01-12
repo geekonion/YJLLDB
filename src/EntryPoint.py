@@ -69,11 +69,13 @@ def handle_command(debugger, command, result, action):
 
     info = MachO.parse_header(header_data)
 
+    lc_main_not_found = True
     lcs = info['lcs']
     for lc in lcs:
         if lc['cmd'] != '80000028':  # LC_MAIN
             continue
 
+        lc_main_not_found = False
         entryoff = int(lc['entryoff'], 16)
         main_load_addr = header_addr + entryoff
 
@@ -90,6 +92,9 @@ def handle_command(debugger, command, result, action):
                                      .format(brkpoint.GetID(), util.get_desc_for_address(main_addr), main_load_addr)
                                      )
         break
+
+    if lc_main_not_found:
+        result.AppendMessage("LC_MAIN not found")
 
 
 def generate_option_parser():

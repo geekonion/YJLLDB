@@ -56,6 +56,8 @@ def parse_mod_init_func(debugger, command, result, name):
 
     process = target.GetProcess()
     total_count = 0
+    sec_mod_init_func_not_found = True
+    module_name = None
     bundle_path = target.GetExecutable().GetDirectory()
     for module in target.module_iter():
         module_file_spec = module.GetFileSpec()
@@ -81,6 +83,7 @@ def parse_mod_init_func(debugger, command, result, name):
                 sec = seg.GetSubSectionAtIndex(i)
                 sec_name = sec.GetName()
                 if sec_name == '__mod_init_func':
+                    sec_mod_init_func_not_found = False
                     sec_addr = sec.GetLoadAddress(target)
                     error = lldb.SBError()
                     sec_size = sec.GetByteSize()
@@ -105,7 +108,16 @@ def parse_mod_init_func(debugger, command, result, name):
                                           .format(brkpoint.GetID(), util.get_desc_for_address(func_addr), func_ptr)
                                           )
 
+                    # __mod_init_func
                     break
+            # segments
+            break
+        # modules
+        break
+
+    if sec_mod_init_func_not_found:
+        result.AppendMessage('{} apparently does not contain __mod_init_func'.format(module_name))
+        return
 
     if name == 'binitfunc':
         result.AppendMessage("set {} breakpoints".format(total_count))

@@ -3,7 +3,6 @@
 import lldb
 import optparse
 import shlex
-import os
 
 
 class Module:
@@ -16,8 +15,8 @@ class Module:
 
 def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand(
-        'command script add -h "List current executable and dependent shared library images, sorted by load address." -f '
-        'ImageList.image_list image_list')
+        'command script add -h "List current executable and dependent shared library images, '
+        'sorted by load address." -f ImageList.image_list image_list')
 
 
 def image_list(debugger, command, result, internal_dict):
@@ -70,7 +69,7 @@ def image_list(debugger, command, result, internal_dict):
         if pos == -1:
             module_path = platform_file_path
         else:
-            path_start =  pos + symbol_comp_len - 1
+            path_start = pos + symbol_comp_len - 1
             module_path = platform_file_path[path_start:]
         mod = Module()
         mod.path = module_path
@@ -80,7 +79,7 @@ def image_list(debugger, command, result, internal_dict):
         mod.linkedit_size = linkedit_size
         modules.append(mod)
 
-    sorted_modules = sorted(modules, key=lambda module: module.load_address)
+    sorted_modules = sorted(modules, key=lambda tmp_module: tmp_module.load_address)
 
     print("index     load addr(slide)     vmsize path")
     for idx, module in enumerate(sorted_modules):
