@@ -70,18 +70,26 @@ def get_entitlements(result, target, lookup_module_name):
     entitlements = None
     module_file_spec, header_addr, slide, segment_info = get_segment_info(result, target, lookup_module_name, '__LINKEDIT')
     if not module_file_spec:
+        result.AppendMessage('module {} not found'.format(lookup_module_name))
+        return entitlements
+
+    if not segment_info:
+        result.AppendMessage('segment __LINKEDIT not found')
         return entitlements
 
     byte_order = 'little' if target.GetByteOrder() == lldb.eByteOrderLittle else 'big'
     linkedit_offset = int(segment_info['offset'], 16)
     linkedit_vmaddr = int(segment_info['vmaddr'], 16)
 
+    code_signature_not_found = True
+    ent_not_found = True
     sects = segment_info['sects']
     for sect in sects:
         sec_name = sect['name']
         if sec_name != 'Code Signature':
             continue
 
+        code_signature_not_found = False
         dataoff = int(sect['offset'], 16)
         datasize = int(sect['size'], 16)
         data_start = linkedit_vmaddr + slide + dataoff - linkedit_offset
@@ -92,16 +100,17 @@ def get_entitlements(result, target, lookup_module_name):
             result.AppendMessage('read header failed! {}'.format(error.GetCString()))
             break
 
-        magic, length, count = get_cs_super_blob(sign_data, 0, byte_order)
+        magic, length, cnt = get_cs_super_blob(sign_data, 0, byte_order)
         if magic == 0xfade0cc0:  # CSMAGIC_EMBEDDED_SIGNATURE
             size_of_cs_blob_index = 8  # size of struct CS_BlobIndex
-            for idx in range(count):
+            for idx in range(cnt):
                 offset = idx * size_of_cs_blob_index
                 data_type, data_offset = get_cs_blob_index(sign_data, 12 + offset, byte_order)
                 # print("data_type {}, data_offset {}".format(data_type, data_offset))
                 magic, length = get_cs_blob(sign_data, data_offset, byte_order)
                 # print("magic {}, length {}".format(magic, length))
                 if magic == 0xfade7171:  # kSecCodeMagicEntitlement
+                    ent_not_found = False
                     header_len = 8
                     ent_len = length - header_len
                     if ent_len > 0:
@@ -109,6 +118,12 @@ def get_entitlements(result, target, lookup_module_name):
                         # print("ent {}".format(entitlements))
 
                     break
+
+    if code_signature_not_found:
+        entitlements = '{} apparently does not contain code signature'.format(module_file_spec.GetFilename())
+
+    if ent_not_found:
+        entitlements = '{} apparently does not contain any entitlements'.format(module_file_spec.GetFilename())
 
     return entitlements
 
@@ -119,19 +134,21 @@ def get_segment_info(result, target, lookup_module_name, target_seg_name):
     slide = 0
     segment_info = None
 
+    module_found = False
     for module in target.module_iter():
         module_file_spec = module.GetFileSpec()
         module_name = module_file_spec.GetFilename()
 
-        if lookup_module_name not in module_name:
+        lib_name = lookup_module_name + '.dylib'
+        if lookup_module_name != module_name and lib_name != module_name:
             continue
 
+        module_found = True
         seg = module.FindSection('__TEXT')
         if not seg:
             result.AppendWarning('seg __TEXT not found in {}'.format(module_name))
             continue
 
-        result.AppendMessage("-----parsing module %s-----" % module_name)
         header_addr = seg.GetLoadAddress(target)
         slide = header_addr - seg.GetFileAddress()
 
@@ -162,5 +179,8 @@ def get_segment_info(result, target, lookup_module_name, target_seg_name):
             break
         # modules
         break
+
+    if not module_found:
+        module_file_spec = None
 
     return module_file_spec, header_addr, slide, segment_info

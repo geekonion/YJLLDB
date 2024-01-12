@@ -82,6 +82,9 @@ def parse_entitlements(debugger, command, result, field):
     module_name = module_name.replace("'", "")
     entitlements = MachOHelper.get_entitlements(result, target, module_name)
     # entitlements = get_entitlements(debugger, module_name)
+    if 'does not contain' in entitlements:
+        return entitlements
+
     if field == 'entitlements':
         return entitlements
     elif field == 'group_id':
