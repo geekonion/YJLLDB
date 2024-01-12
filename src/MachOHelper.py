@@ -2,6 +2,7 @@
 
 import lldb
 import MachO
+from util import get_cs_super_blob, get_cs_blob_index, get_cs_blob, get_string
 
 
 def get_function_starts(result, target, lookup_module_name):
@@ -63,6 +64,53 @@ def get_function_starts(result, target, lookup_module_name):
         break
 
     return funcs, module_file_spec
+
+
+def get_entitlements(result, target, lookup_module_name):
+    entitlements = None
+    module_file_spec, header_addr, slide, segment_info = get_segment_info(result, target, lookup_module_name, '__LINKEDIT')
+    if not module_file_spec:
+        return entitlements
+
+    byte_order = 'little' if target.GetByteOrder() == lldb.eByteOrderLittle else 'big'
+    linkedit_offset = int(segment_info['offset'], 16)
+    linkedit_vmaddr = int(segment_info['vmaddr'], 16)
+
+    sects = segment_info['sects']
+    for sect in sects:
+        sec_name = sect['name']
+        if sec_name != 'Code Signature':
+            continue
+
+        dataoff = int(sect['offset'], 16)
+        datasize = int(sect['size'], 16)
+        data_start = linkedit_vmaddr + slide + dataoff - linkedit_offset
+
+        error = lldb.SBError()
+        sign_data = target.ReadMemory(lldb.SBAddress(data_start, target), datasize, error)
+        if not error.Success():
+            result.AppendMessage('read header failed! {}'.format(error.GetCString()))
+            break
+
+        magic, length, count = get_cs_super_blob(sign_data, 0, byte_order)
+        if magic == 0xfade0cc0:  # CSMAGIC_EMBEDDED_SIGNATURE
+            size_of_cs_blob_index = 8  # size of struct CS_BlobIndex
+            for idx in range(count):
+                offset = idx * size_of_cs_blob_index
+                data_type, data_offset = get_cs_blob_index(sign_data, 12 + offset, byte_order)
+                # print("data_type {}, data_offset {}".format(data_type, data_offset))
+                magic, length = get_cs_blob(sign_data, data_offset, byte_order)
+                # print("magic {}, length {}".format(magic, length))
+                if magic == 0xfade7171:  # kSecCodeMagicEntitlement
+                    header_len = 8
+                    ent_len = length - header_len
+                    if ent_len > 0:
+                        entitlements = get_string(sign_data, data_offset + header_len, ent_len)
+                        # print("ent {}".format(entitlements))
+
+                    break
+
+    return entitlements
 
 
 def get_segment_info(result, target, lookup_module_name, target_seg_name):

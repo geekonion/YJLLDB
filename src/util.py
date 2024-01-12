@@ -4,6 +4,7 @@ import json
 import shlex
 import lldb
 import os
+import xml.etree.ElementTree as ElementTree
 
 g_byteorder = 'little'
 g_arm64_nop_bytes = b'\x1f\x20\x03\xd5'
@@ -487,3 +488,95 @@ def get_string(base, offset, length=0):
         pos = base.find(b'\x00', offset)
         length = pos - offset
     return base[offset:offset + length].strip(b'\x00').decode()
+
+
+def swap32(num):
+    return (((num << 24) & 0xFF000000) |
+            ((num << 8) & 0x00FF0000) |
+            ((num >> 8) & 0x0000FF00) |
+            ((num >> 24) & 0x000000FF))
+
+
+def get_cs_super_blob(base, offset, byteorder=None):
+    magic = swap32(get_int(base, offset, byteorder))
+    length = get_int(base, offset + 4, byteorder)
+    count = swap32(get_int(base, offset + 8, byteorder))
+
+    return magic, length, count
+
+
+def get_cs_blob_index(base, offset, byteorder=None):
+    data_type = get_int(base, offset, byteorder)
+    data_offset = swap32(get_int(base, offset + 4, byteorder))
+
+    return data_type, data_offset
+
+
+def get_cs_blob(base, offset, byteorder=None):
+    magic = swap32(get_int(base, offset, byteorder))
+    length = swap32(get_int(base, offset + 4, byteorder))
+
+    return magic, length
+
+
+# def parse_info_plist_demo():
+#     info_plist = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>BuildMachineOSBuild</key><string>23C71</string><key>CFBundleDevelopmentRegion</key><string>en</string><key>CFBundleExecutable</key><string>JITDemo</string><key>CFBundleIdentifier</key><string>com.bangcle.LLDBCode</string><key>CFBundleInfoDictionaryVersion</key><string>6.0</string><key>CFBundleName</key><string>JITDemo</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleShortVersionString</key><string>1.0</string><key>CFBundleSupportedPlatforms</key><array><string>iPhoneOS</string></array><key>CFBundleVersion</key><string>1</string><key>DTCompiler</key><string>com.apple.compilers.llvm.clang.1_0</string><key>DTPlatformBuild</key><string>21C52</string><key>DTPlatformName</key><string>iphoneos</string><key>DTPlatformVersion</key><string>17.2</string><key>DTSDKBuild</key><string>21C52</string><key>DTSDKName</key><string>iphoneos17.2</string><key>DTXcode</key><string>1510</string><key>DTXcodeBuild</key><string>15C65</string><key>LSRequiresIPhoneOS</key><true/><key>MinimumOSVersion</key><string>11.0</string><key>UIApplicationSceneManifest</key><dict><key>UIApplicationSupportsMultipleScenes</key><false/><key>UISceneConfigurations</key><dict><key>UIWindowSceneSessionRoleApplication</key><array><dict><key>UISceneConfigurationName</key><string>Default Configuration</string><key>UISceneDelegateClassName</key><string>SceneDelegate</string><key>UISceneStoryboardFile</key><string>Main</string></dict></array></dict></dict><key>UIApplicationSupportsIndirectInputEvents</key><true/><key>UIDeviceFamily</key><array><integer>1</integer><integer>2</integer></array><key>UILaunchStoryboardName</key><string>LaunchScreen</string><key>UIMainStoryboardFile</key><string>Main</string><key>UIRequiredDeviceCapabilities</key><array><string>arm64</string></array><key>UISupportedInterfaceOrientations~ipad</key><array><string>UIInterfaceOrientationPortrait</string><string>UIInterfaceOrientationPortraitUpsideDown</string><string>UIInterfaceOrientationLandscapeLeft</string><string>UIInterfaceOrientationLandscapeRight</string></array><key>UISupportedInterfaceOrientations~iphone</key><array><string>UIInterfaceOrientationPortrait</string><string>UIInterfaceOrientationLandscapeLeft</string><string>UIInterfaceOrientationLandscapeRight</string></array></dict></plist>'
+#     info_dict = util.parse_info_plist(info_plist)
+#     info_json = json.dumps(info_dict, indent=2)
+#     print(info_json)
+
+
+def parse_info_plist(input_str):
+    xml_dict = None
+    root = ElementTree.fromstring(input_str)
+    for element in root:
+        if element.tag == 'dict':
+            xml_dict = xml_to_obj(element)
+
+    return xml_dict
+
+
+def xml_to_obj(element):
+    obj = None
+    # print("1 tag {}, text {}, attr {}".format(element.tag, element.text, element.attrib))
+    if element.tag == 'dict':
+        tmp_dict = {}
+        key = None
+        for child in element:
+            # print("2 tag {}, text {}, attr {}".format(child.tag, child.text, child.attrib))
+            if child.tag == 'key':
+                key = child.text
+            elif child.tag == 'string':
+                tmp_dict[key] = child.text
+            elif child.tag == 'integer':
+                tmp_dict[key] = child.text
+            elif child.tag == 'true':
+                tmp_dict[key] = True
+            elif child.tag == 'false':
+                tmp_dict[key] = False
+            elif child.tag == 'dict':
+                tmp_dict[key] = xml_to_obj(child)
+            elif child.tag == 'array':
+                tmp_dict[key] = xml_to_obj(child)
+            else:
+                print("dict need parse tag {}, text {}, attr {}".format(child.tag, child.text, child.attrib))
+                key = None
+
+        obj = tmp_dict
+    elif element.tag == 'array':
+        tmp_array = []
+        for child in element:
+            # print("3 tag {}, text {}, attr {}".format(child.tag, child.text, child.attrib))
+            if child.tag == 'string':
+                tmp_array.append(child.text)
+            elif child.tag == 'integer':
+                tmp_array.append(child.text)
+            elif child.tag == 'dict':
+                tmp_array.append(xml_to_obj(child))
+            else:
+                print("array need parse tag {}, text {}, attr {}".format(child.tag, child.text, child.attrib))
+        obj = tmp_array
+    else:
+        print("other need parse tag {}, text {}, attr {}".format(element.tag, element.text, element.attrib))
+
+    return obj
