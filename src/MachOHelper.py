@@ -121,8 +121,7 @@ def get_entitlements(result, target, lookup_module_name):
 
     if code_signature_not_found:
         entitlements = '{} apparently does not contain code signature'.format(module_file_spec.GetFilename())
-
-    if ent_not_found:
+    elif ent_not_found:
         entitlements = '{} apparently does not contain any entitlements'.format(module_file_spec.GetFilename())
 
     return entitlements
