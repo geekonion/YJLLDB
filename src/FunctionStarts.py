@@ -39,7 +39,7 @@ def dump_function_starts(debugger, command, result, internal_dict):
         file_spec = target.GetExecutable()
         lookup_module_name = file_spec.GetFilename()
 
-    funcs, module_file_spec = MachOHelper.get_function_starts(result, target, lookup_module_name)
+    funcs, module_file_spec = MachOHelper.get_function_starts(lookup_module_name)
     if not funcs:
         result.AppendMessage("module {} not found".format(lookup_module_name))
     else:

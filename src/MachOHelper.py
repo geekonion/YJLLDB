@@ -5,9 +5,10 @@ import MachO
 from util import get_cs_super_blob, get_cs_blob_index, get_cs_blob, get_string
 
 
-def get_function_starts(result, target, lookup_module_name):
+def get_function_starts(lookup_module_name):
     funcs = None
-    module_file_spec, header_addr, slide, segment_info = get_segment_info(result, target, lookup_module_name, '__LINKEDIT')
+    target = lldb.debugger.GetSelectedTarget()
+    module_file_spec, header_addr, slide, segment_info = get_segment_info(target, lookup_module_name, '__LINKEDIT')
     if not module_file_spec:
         return funcs, module_file_spec
 
@@ -29,7 +30,7 @@ def get_function_starts(result, target, lookup_module_name):
         error1 = lldb.SBError()
         data_bytes = target.ReadMemory(lldb.SBAddress(data_start, target), datasize, error1)
         if not error1.Success():
-            result.AppendWarning('read data failed! {}'.format(error1.GetCString()))
+            print('read data failed! {}'.format(error1.GetCString()))
             break
 
         file_offset = 0
@@ -66,15 +67,16 @@ def get_function_starts(result, target, lookup_module_name):
     return funcs, module_file_spec
 
 
-def get_entitlements(result, target, lookup_module_name):
+def get_entitlements(lookup_module_name):
     entitlements = None
-    module_file_spec, header_addr, slide, segment_info = get_segment_info(result, target, lookup_module_name, '__LINKEDIT')
+    target = lldb.debugger.GetSelectedTarget()
+    module_file_spec, header_addr, slide, segment_info = get_segment_info(target, lookup_module_name, '__LINKEDIT')
     if not module_file_spec:
-        result.AppendMessage('module {} not found'.format(lookup_module_name))
+        print('module {} not found'.format(lookup_module_name))
         return entitlements
 
     if not segment_info:
-        result.AppendMessage('segment __LINKEDIT not found')
+        print('segment __LINKEDIT not found')
         return entitlements
 
     byte_order = 'little' if target.GetByteOrder() == lldb.eByteOrderLittle else 'big'
@@ -97,7 +99,7 @@ def get_entitlements(result, target, lookup_module_name):
         error = lldb.SBError()
         sign_data = target.ReadMemory(lldb.SBAddress(data_start, target), datasize, error)
         if not error.Success():
-            result.AppendMessage('read header failed! {}'.format(error.GetCString()))
+            print('read header failed! {}'.format(error.GetCString()))
             break
 
         magic, length, cnt = get_cs_super_blob(sign_data, 0, byte_order)
@@ -127,13 +129,13 @@ def get_entitlements(result, target, lookup_module_name):
     return entitlements
 
 
-def get_segment_info(result, target, lookup_module_name, target_seg_name):
+def get_segment_info(target, lookup_module_name, target_seg_name):
     module_file_spec = None
     header_addr = 0
     slide = 0
     segment_info = None
-
     module_found = False
+
     for module in target.module_iter():
         module_file_spec = module.GetFileSpec()
         module_name = module_file_spec.GetFilename()
@@ -145,7 +147,7 @@ def get_segment_info(result, target, lookup_module_name, target_seg_name):
         module_found = True
         seg = module.FindSection('__TEXT')
         if not seg:
-            result.AppendWarning('seg __TEXT not found in {}'.format(module_name))
+            print('seg __TEXT not found in {}'.format(module_name))
             continue
 
         header_addr = seg.GetLoadAddress(target)
@@ -158,7 +160,7 @@ def get_segment_info(result, target, lookup_module_name, target_seg_name):
         header_size = sec_addr - header_addr
         header_data = target.ReadMemory(lldb.SBAddress(header_addr, target), header_size, error)
         if not error.Success():
-            result.AppendWarning('read header failed! {}'.format(error.GetCString()))
+            print('read header failed! {}'.format(error.GetCString()))
             break
 
         info = MachO.parse_header(header_data)
