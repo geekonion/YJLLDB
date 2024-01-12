@@ -226,7 +226,7 @@ def get_lazy_sym_name(target, slide, lazy_sym_sec, linkedit_seg):
         addr_obj = target.ResolveLoadAddress(addr)
         desc = '{}'.format(addr_obj)
         if not desc:
-            desc = util.try_macho_address(addr_obj, target, True)
+            desc = util.try_macho_address(addr_obj, target, False, True)
 
         symtab_index = MachO.get_int(indirect_symbol_indices_data, i * 4)
 

@@ -1,7 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-import json
-import shlex
 import lldb
 import os
 import xml.etree.ElementTree as ElementTree
@@ -45,7 +43,7 @@ def get_desc_for_address(addr, default_name=None, need_line=True):
     return "{}`{}".format(module_name, sym_name)
 
 
-def try_macho_address(addr, target, only_sec_name=False):
+def try_macho_address(addr, target, verbose, only_sec_name=False):
     return_desc = ""
     section = addr.GetSection()
     if not section.IsValid():
@@ -76,7 +74,7 @@ def try_macho_address(addr, target, only_sec_name=False):
             return_desc += " <+{}>".format(addr_offset)
 
             # Mangled function
-            if options.verbose:
+            if verbose:
                 if symbol.GetMangledName():
                     return_desc += ", ({})".format(symbol.GetMangledName())
 
