@@ -91,13 +91,17 @@ def parse_entitlements(debugger, command, result, field):
         return entitlements
     elif field == 'group_id':
         ent_dict = util.parse_info_plist(entitlements)
-        return '{}'.format(ent_dict['com.apple.security.application-groups'])
+        group_ids = ent_dict.get('com.apple.security.application-groups')
+        if group_ids:
+            return '{}'.format(group_ids)
+        else:
+            return 'group id not found'
     elif field == 'bundle_id':
         ent_dict = util.parse_info_plist(entitlements)
-        return '{}'.format(ent_dict['application-identifier'])
+        return '{}'.format(ent_dict.get('application-identifier'))
     elif field == 'team_id':
         ent_dict = util.parse_info_plist(entitlements)
-        return '{}'.format(ent_dict['com.apple.developer.team-identifier'])
+        return '{}'.format(ent_dict.get('com.apple.developer.team-identifier'))
 
 
 def show_executable_name(debugger, command, result, internal_dict):

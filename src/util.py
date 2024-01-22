@@ -270,19 +270,21 @@ def get_group_path():
         return entitlements
 
     ent_dict = parse_info_plist(entitlements)
-    group_ids = ent_dict['com.apple.security.application-groups']
-
+    group_ids = ent_dict.get('com.apple.security.application-groups')
     ret_str = ''
-    for group_id in group_ids:
-        command_script = '@import Foundation;'
-        command_script += 'NSString *groupID = @"' + group_id + '";'
-        command_script += r'''
-        NSString *result = [(NSURL *)[[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:groupID] path];
-        result = [groupID stringByAppendingFormat:@": %@", result];
-        
-        result;
-        '''
-        ret_str += exe_script(command_script) + '\n'
+    if group_ids:
+        for group_id in group_ids:
+            command_script = '@import Foundation;'
+            command_script += 'NSString *groupID = @"' + group_id + '";'
+            command_script += r'''
+            NSString *result = [(NSURL *)[[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:groupID] path];
+            result = [groupID stringByAppendingFormat:@": %@", result];
+
+            result;
+            '''
+            ret_str += exe_script(command_script) + '\n'
+    else:
+        ret_str = 'group id not found'
 
     return ret_str
 
