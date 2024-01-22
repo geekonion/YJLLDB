@@ -4,7 +4,6 @@ import json
 import lldb
 import optparse
 import shlex
-import util
 import MachO
 
 

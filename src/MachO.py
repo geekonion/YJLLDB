@@ -3,7 +3,7 @@
 import json
 import struct
 from datetime import datetime
-from util import get_int, get_long, get_string
+from common import get_int, get_long, get_string
 
 macho_magics = {
     0xFEEDFACE: (False, False),  # 32 bit, big endian

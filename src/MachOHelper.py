@@ -2,7 +2,7 @@
 
 import lldb
 import MachO
-from util import get_cs_super_blob, get_cs_blob_index, get_cs_blob, get_string
+from common import get_cs_super_blob, get_cs_blob_index, get_cs_blob, get_string
 
 
 def get_function_starts(lookup_module_name):
