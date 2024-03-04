@@ -119,7 +119,7 @@ def parse_macho(target, header_addr, header_size, slide, mask):
     if slide == 0:
         slide = header_addr - int(info['text_vmaddr'], 16)
 
-    lazy_sym_sec = None
+    target_sym_sec = None
     linkedit_seg = None
     lcs = info['lcs']
     for lc in lcs:
@@ -143,23 +143,26 @@ def parse_macho(target, header_addr, header_size, slide, mask):
             if not is_lazy_sym:
                 continue
 
-            lazy_sym_sec = sect
+            target_sym_sec = sect
 
-    message, count = get_lazy_sym_name(target, slide, lazy_sym_sec, linkedit_seg)
-    total_count += count
+    if target_sym_sec:
+        message, count = get_lazy_sym_name(target, slide, target_sym_sec, linkedit_seg)
+        total_count += count
+    else:
+        message = 'section not found'
 
     return message, total_count
 
 
-def get_lazy_sym_name(target, slide, lazy_sym_sec, linkedit_seg):
+def get_lazy_sym_name(target, slide, target_sym_sec, linkedit_seg):
     message = ''
     total_count = 0
 
     byte_order = 'little' if target.GetByteOrder() == lldb.eByteOrderLittle else 'big'
 
-    addr = int(lazy_sym_sec['addr'], 16)
-    size = int(lazy_sym_sec['size'], 16)
-    reserved1 = int(lazy_sym_sec['reserved1'], 16)
+    addr = int(target_sym_sec['addr'], 16)
+    size = int(target_sym_sec['size'], 16)
+    reserved1 = int(target_sym_sec['reserved1'], 16)
     sec_start = addr + slide
 
     error1 = lldb.SBError()
