@@ -8,6 +8,7 @@ import os.path
 import shutil
 import subprocess
 import util
+import MachO
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -53,11 +54,11 @@ def dump_app(debugger, command, result, internal_dict):
             result.AppendMessage("dump failure")
 
 
-def dump_region(base, offset, size, output_path):
+def dump_region(addr, size, output_path):
     res = lldb.SBCommandReturnObject()
     interpreter = lldb.debugger.GetCommandInterpreter()
     cmd = 'memory read --force --outfile {} --binary --count {} {}' \
-        .format(output_path, size, base + offset)
+        .format(output_path, size, addr)
     interpreter.HandleCommand(cmd, res)
 
 
@@ -98,10 +99,12 @@ def dump_app_with_info(app_info, output_dir):
     if len(encrypted_images) == 0:
         print("no file need patch")
     else:
+        target = lldb.debugger.GetSelectedTarget()
         for idx, region_info in enumerate(encrypted_images):
             # print('{} {}'.format(idx, region_info))
             rel_path = region_info.get("rel_path")
             exe_name = region_info.get("exe_name")
+            slide = int(region_info.get("slide"))
             header = int(region_info.get("header"))
             crypt_region = region_info.get("crypt")
             comps = crypt_region.split('-')
@@ -110,8 +113,64 @@ def dump_app_with_info(app_info, output_dir):
             crypt_id_off = int(comps[2], 16)
             decrypted_path = datas_dir + '/' + exe_name + '_text_data'
 
+            error = lldb.SBError()
+            header_size = 0x4000
+            header_data = target.ReadMemory(lldb.SBAddress(header, target), header_size, error)
+            if not error.Success():
+                print('read header failed! {}'.format(error.GetCString()))
+                continue
+
+            sec_text_off = 0
+            sec_text_addr = 0
+            sec_text_size = 0
+            info = MachO.parse_header(header_data)
+            lcs = info['lcs']
+            for lc in lcs:
+                cmd = lc['cmd']
+                if cmd == '19':  # LC_SEGMENT_64
+                    seg_name = lc['name']
+                    if seg_name != '__TEXT':
+                        continue
+
+                sects = lc['sects']
+                for sect in sects:
+                    sec_name = sect['name']
+                    if sec_name != '__text':
+                        continue
+
+                    sec_text_addr = int(sect['addr'], 16)
+                    sec_text_off = int(sect['offset'], 16)
+                    sec_text_size = int(sect['size'], 16)
+
+                    break
+
+                break
+
+            # print(json.dumps(info, indent=2))
+            crypt_start = header + crypt_off
+            crypt_end = crypt_start + crypt_size
+            sec_text_start = slide + sec_text_addr
+            sec_text_end = sec_text_start + sec_text_size
+            if crypt_start < sec_text_start and sec_text_start < crypt_end < sec_text_end:
+                print("section __text contains crypted region suffix")
+                dump_addr = crypt_off
+                dump_size = sec_text_size - dump_addr
+                patch_off = crypt_off
+            elif crypt_start > sec_text_start and crypt_end < sec_text_end:
+                print("section __text contains crypted region")
+                dump_addr = sec_text_start
+                dump_size = sec_text_size
+                patch_off = sec_text_off
+            else:
+                if not (crypt_start < sec_text_start and crypt_end > sec_text_end):
+                    print("unexpected: crypt_off {}, crypt_size {}, text vmaddr {}, text size {}".
+                          format(crypt_off, crypt_size, sec_text_addr, sec_text_size))
+                dump_addr = crypt_start
+                dump_size = crypt_size
+                patch_off = crypt_off
+
             print("patching {}.app{}".format(app_name, rel_path))
-            dump_region(header, crypt_off, crypt_size, decrypted_path)
+            dump_region(dump_addr, dump_size, decrypted_path)
 
             exe_path = datas_dir + '/' + app_name + '.app' + rel_path
             # thin
@@ -120,7 +179,7 @@ def dump_app_with_info(app_info, output_dir):
             # patch crypted data
             with open(exe_path, 'rb+') as macho_file:
                 with open(decrypted_path, 'rb') as decrypted_file:
-                    macho_file.seek(crypt_off)
+                    macho_file.seek(patch_off)
                     macho_file.write(decrypted_file.read())
                     macho_file.flush()
 
@@ -310,10 +369,12 @@ def get_app_regions(apply_patch):
         if (!cryptRegion.length) {
             continue;
         }
+        intptr_t slide = (intptr_t)_dyld_get_image_vmaddr_slide(i);
         NSString *rel_path = [image_path stringByReplacingOccurrencesOfString:bundlePath withString:@""];
         NSString *exe_name = [rel_path.lastPathComponent stringByDeletingPathExtension];
         NSDictionary *image_info = @{@"rel_path": rel_path,
                                 @"exe_name": exe_name,
+                                @"slide": @(slide),
                                 @"header": @((uint64_t)mach_header),
                                 @"crypt": cryptRegion
         };
