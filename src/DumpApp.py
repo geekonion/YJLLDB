@@ -151,7 +151,7 @@ def dump_app_with_info(app_info, output_dir):
             crypt_end = crypt_start + crypt_size
             sec_text_start = slide + sec_text_addr
             sec_text_end = sec_text_start + sec_text_size
-            if crypt_start < sec_text_start and sec_text_start < crypt_end < sec_text_end:
+            if crypt_start <= sec_text_start and sec_text_start < crypt_end < sec_text_end:
                 print("section __text contains crypted region suffix")
                 dump_addr = crypt_off
                 dump_size = sec_text_size - dump_addr
@@ -162,7 +162,7 @@ def dump_app_with_info(app_info, output_dir):
                 dump_size = sec_text_size
                 patch_off = sec_text_off
             else:
-                if not (crypt_start < sec_text_start and crypt_end > sec_text_end):
+                if not (crypt_start <= sec_text_start and crypt_end > sec_text_end):
                     print("unexpected: crypt_off {}, crypt_size {}, text vmaddr {}, text size {}".
                           format(crypt_off, crypt_size, sec_text_addr, sec_text_size))
                 dump_addr = crypt_start
