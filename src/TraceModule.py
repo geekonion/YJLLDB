@@ -42,15 +42,20 @@ def trace_all_functions_in_module(debugger, command, result, internal_dict):
         return
 
     if args:
-        lookup_module_name = ''.join(args)
+        lookup_module_name_or_addr = ''.join(args)
     else:
-        lookup_module_name = None
+        lookup_module_name_or_addr = None
 
-    if not lookup_module_name:
+    if not lookup_module_name_or_addr:
         result.AppendMessage(parser.get_usage())
         return
 
-    lookup_module_name = lookup_module_name.replace("'", "")
+    lookup_module_name_or_addr = lookup_module_name_or_addr.replace("'", "")
+    is_addr = lookup_module_name_or_addr.startswith("0x")
+    module_addr = 0
+    if is_addr:
+        module_addr = int(lookup_module_name_or_addr, 16)
+
     target = debugger.GetSelectedTarget()
 
     total_count = 0
@@ -59,14 +64,28 @@ def trace_all_functions_in_module(debugger, command, result, internal_dict):
         global oneshot
         oneshot = True
 
+    module_count = 0
     for module in target.module_iter():
         module_file_spec = module.GetFileSpec()
         name = module_file_spec.GetFilename()
 
-        if lookup_module_name != name:
+        if is_addr:
+            header_addr = 0
+            for seg in module.section_iter():
+                seg_name = seg.GetName()
+                if seg_name == '__PAGEZERO':
+                    continue
+                elif seg_name == '__TEXT':
+                    header_addr = seg.GetLoadAddress(target)
+                    break
+
+            if header_addr != module_addr:
+                continue
+        elif lookup_module_name_or_addr != name:
             continue
 
         module_found = True
+        module_count += 1
         print("-----trace functions in %s-----" % name)
         func_names = set()
         module_list = lldb.SBFileSpecList()
@@ -166,13 +185,17 @@ def trace_all_functions_in_module(debugger, command, result, internal_dict):
                         brkpoint.SetCommandLineCommands(commands)
                     result.AppendMessage("begin trace with Breakpoint {}: {} locations"
                                          .format(brkpoint.GetID(), brkpoint.GetNumLocations()))
-        break
+        if not is_addr:
+            break
 
     if module_found:
         if options.individual:
             result.AppendMessage("begin trace with {} breakpoint".format(total_count))
     else:
-        result.AppendMessage("module {} not found".format(lookup_module_name))
+        result.AppendMessage("module {} not found".format(lookup_module_name_or_addr))
+
+    if module_count > 1:
+        result.AppendMessage("{} modules {} found".format(module_count, lookup_module_name_or_addr))
 
 
 def breakpoint_handler(frame, bp_loc, dict):
@@ -181,8 +204,6 @@ def breakpoint_handler(frame, bp_loc, dict):
         bp_loc.SetEnabled(False)
 
     thread = frame.GetThread()
-    process = thread.GetProcess()
-    target = process.GetTarget()
 
     current_num_frames = thread.GetNumFrames()
     global extra_offset
@@ -243,7 +264,7 @@ def breakpoint_handler(frame, bp_loc, dict):
 
 
 def generate_option_parser():
-    usage = "usage: %prog [options] ModuleName\n" + \
+    usage = "usage: %prog [options] ModuleName or LoadAddress\n" + \
             "By default, only OC methods are traced. To trace swift module, you need to add the -a option."
 
     parser = optparse.OptionParser(usage=usage, prog='mtrace')
