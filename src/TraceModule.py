@@ -185,7 +185,7 @@ def trace_all_functions_in_module(debugger, command, result, internal_dict):
                         brkpoint.SetCommandLineCommands(commands)
                     result.AppendMessage("begin trace with Breakpoint {}: {} locations"
                                          .format(brkpoint.GetID(), brkpoint.GetNumLocations()))
-        if not is_addr:
+        if is_addr:
             break
 
     if module_found:
