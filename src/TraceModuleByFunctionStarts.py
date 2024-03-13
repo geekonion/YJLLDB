@@ -42,27 +42,27 @@ def trace_all_functions_in_module(debugger, command, result, internal_dict):
         return
 
     if args:
-        lookup_module_name = ''.join(args)
+        lookup_module_name_or_addr = ''.join(args)
     else:
-        lookup_module_name = None
+        lookup_module_name_or_addr = None
 
-    if not lookup_module_name:
+    if not lookup_module_name_or_addr:
         result.AppendMessage(parser.get_usage())
         return
 
-    lookup_module_name = lookup_module_name.replace("'", "")
+    lookup_module_name_or_addr = lookup_module_name_or_addr.replace("'", "")
 
     if options.oneshot:
         global oneshot
         oneshot = True
 
-    funcs, module_file_spec = MachOHelper.get_function_starts(lookup_module_name)
-    if not funcs:
-        result.AppendMessage("module {} not found".format(lookup_module_name))
+    funcs, module_file_spec = MachOHelper.get_function_starts(lookup_module_name_or_addr)
+    if not module_file_spec:
+        result.AppendMessage("module {} not found".format(lookup_module_name_or_addr))
     else:
         target = debugger.GetSelectedTarget()
         name = module_file_spec.GetFilename()
-        result.AppendMessage("-----traces functions in %s-----" % name)
+        print("-----traces functions in %s-----" % name)
 
         total_count = 0
         func_names = set()
@@ -236,7 +236,7 @@ def breakpoint_handler(frame, bp_loc, dict):
 
 
 def generate_option_parser():
-    usage = "usage: %prog [options] ModuleName\n" + \
+    usage = "usage: %prog [options] ModuleName or LoadAddress\n" + \
         "By default, only OC methods are traced. To trace swift module, you need to add the -a option."
 
     parser = optparse.OptionParser(usage=usage, prog='mtrace_fs')

@@ -5,10 +5,10 @@ import MachO
 from common import get_cs_super_blob, get_cs_blob_index, get_cs_blob, get_string
 
 
-def get_function_starts(lookup_module_name):
+def get_function_starts(lookup_module_name_or_addr):
     funcs = None
     target = lldb.debugger.GetSelectedTarget()
-    module_file_spec, header_addr, slide, segment_info = get_segment_info(target, lookup_module_name, '__LINKEDIT')
+    module_file_spec, header_addr, slide, segment_info = get_segment_info(target, lookup_module_name_or_addr, '__LINKEDIT')
     if not module_file_spec:
         return funcs, module_file_spec
 
@@ -129,20 +129,38 @@ def get_entitlements(lookup_module_name):
     return entitlements
 
 
-def get_segment_info(target, lookup_module_name, target_seg_name):
+def get_segment_info(target, lookup_module_name_or_addr, target_seg_name):
     module_file_spec = None
     header_addr = 0
     slide = 0
     segment_info = None
     module_found = False
 
+    is_addr = lookup_module_name_or_addr.startswith("0x")
+    module_addr = 0
+    if is_addr:
+        module_addr = int(lookup_module_name_or_addr, 16)
+
     for module in target.module_iter():
         module_file_spec = module.GetFileSpec()
         module_name = module_file_spec.GetFilename()
 
-        lib_name = lookup_module_name + '.dylib'
-        if lookup_module_name != module_name and lib_name != module_name:
-            continue
+        if is_addr:
+            header_addr = 0
+            for seg in module.section_iter():
+                seg_name = seg.GetName()
+                if seg_name == '__PAGEZERO':
+                    continue
+                elif seg_name == '__TEXT':
+                    header_addr = seg.GetLoadAddress(target)
+                    break
+
+            if header_addr != module_addr:
+                continue
+        else:
+            lib_name = lookup_module_name_or_addr + '.dylib'
+            if lookup_module_name_or_addr != module_name and lib_name != module_name:
+                continue
 
         module_found = True
         seg = module.FindSection('__TEXT')
