@@ -13,6 +13,8 @@ def get_function_starts(lookup_module_name_or_addr):
         return funcs, module_file_spec
 
     funcs = []
+    func_starts = []
+    func_size_list = []
     byte_order = 'little' if target.GetByteOrder() == lldb.eByteOrderLittle else 'big'
     linkedit_offset = int(segment_info['offset'], 16)
     linkedit_vmaddr = int(segment_info['vmaddr'], 16)
@@ -35,6 +37,7 @@ def get_function_starts(lookup_module_name_or_addr):
 
         file_offset = 0
         idx = 0
+        func_size = 0
         while idx < datasize:
             offset = 0
             bit = 0
@@ -58,9 +61,20 @@ def get_function_starts(lookup_module_name_or_addr):
                     break
 
             if offset > 0:
+                if file_offset != 0:
+                    func_size = offset
                 file_offset += offset
                 func_start = header_addr + file_offset
-                funcs.append(func_start)
+                func_starts.append(func_start)
+                if func_size > 0:
+                    func_size_list.append(func_size)
+
+        max_idx = len(func_starts) - 1
+        for index, func_start in enumerate(func_starts):
+            if index < max_idx:
+                funcs.append((func_start, func_size_list[index]))
+            else:
+                funcs.append((func_start, 0))
         # sects
         break
 

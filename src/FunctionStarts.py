@@ -3,7 +3,6 @@
 import lldb
 import optparse
 import shlex
-import util
 import MachOHelper
 
 
@@ -44,9 +43,9 @@ def dump_function_starts(debugger, command, result, internal_dict):
         result.AppendMessage("module {} not found".format(lookup_module_name))
     else:
         total_count = 0
-        for func_start in funcs:
+        for func_start, func_size in funcs:
             func_addr = target.ResolveLoadAddress(func_start)
-            result.AppendMessage('address = 0x{:x} where = {}'.format(func_start, func_addr))
+            result.AppendMessage('address = 0x{:x} size = {} where = {}'.format(func_start, func_size, func_addr))
             total_count += 1
 
         result.AppendMessage('{} function(s) found'.format(total_count))

@@ -57,7 +57,7 @@ def break_all_functions_in_module(debugger, command, result, internal_dict):
         module_list.Append(module_file_spec)
         comp_unit_list = lldb.SBFileSpecList()
 
-        for addr in funcs:
+        for addr, func_size in funcs:
             addr_obj = target.ResolveLoadAddress(addr)
             symbol = addr_obj.GetSymbol()
 
