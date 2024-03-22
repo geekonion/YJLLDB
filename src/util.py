@@ -4,6 +4,7 @@ import lldb
 import os
 import xml.etree.ElementTree as ElementTree
 from MachOHelper import get_entitlements
+import subprocess
 
 g_arm64_nop_bytes = b'\x1f\x20\x03\xd5'
 g_x64_nops = {
@@ -371,3 +372,14 @@ def xml_to_obj(element):
         print("other need parse tag {}, text {}, attr {}".format(element.tag, element.text, element.attrib))
 
     return obj
+
+
+def exe_shell_command(cmd, log=False, cwd=None):
+    """
+    执行命令，截获控制台输出
+    """
+    obj = subprocess.Popen(cmd, shell=True, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = obj.communicate()
+    code = obj.wait()
+
+    return code, out, err
