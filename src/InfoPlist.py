@@ -48,7 +48,7 @@ def show_info_plist(debugger, command, result, field):
                 print("Info.plist not found")
                 continue
 
-            code, out, err = util.execute_cmd('/usr/local/bin/plistutil -i ' + info_plist_path)
+            code, out, err = util.exe_shell_command('/usr/local/bin/plistutil -i ' + info_plist_path)
             if code == 0:
                 print(out.decode())
             else:
