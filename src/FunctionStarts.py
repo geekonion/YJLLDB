@@ -43,6 +43,9 @@ def dump_function_starts(debugger, command, result, internal_dict):
         result.AppendMessage("module {} not found".format(lookup_module_name))
     else:
         total_count = 0
+        if options.sort:
+            funcs = sorted(funcs, key=lambda x: x[1])
+
         for func_start, func_size in funcs:
             func_addr = target.ResolveLoadAddress(func_start)
             result.AppendMessage('address = 0x{:x} size = {} where = {}'.format(func_start, func_size, func_addr))
@@ -55,5 +58,11 @@ def generate_option_parser():
     usage = "usage: %prog ModuleName\n"
 
     parser = optparse.OptionParser(usage=usage, prog='func_starts')
+
+    parser.add_option("-s", "--sort",
+                      action='store_true',
+                      default=False,
+                      dest="sort",
+                      help="sort functions by function size")
 
     return parser

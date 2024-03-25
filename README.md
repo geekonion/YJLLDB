@@ -1,6 +1,6 @@
 ## YJLLDB
 
-一些用于调试iOS应用的lldb命令。Some very useful lldb commands for iOS debugging.
+一些用于调试iOS应用的lldb命令。Some very useful lldb commands for iOS debugging and reverse engineering.
 
 
 
