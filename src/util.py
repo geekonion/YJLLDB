@@ -311,6 +311,26 @@ def read_mem_as_cstring(target, start_addr, addr_size, encoding='utf-8'):
     return ret
 
 
+def find_c_string_from_mem_region(target, start_addr, addr_size, keyword, encoding='utf-8'):
+    ret = -1
+
+    error = lldb.SBError()
+    data_bytes = target.ReadMemory(lldb.SBAddress(start_addr, target), addr_size, error)
+    if not error.Success():
+        print('read memory at 0x{:x} failed! {}'.format(start_addr, error.GetCString()))
+        return ret
+
+    keyword_bytes = keyword.encode()
+    if not keyword_bytes.endswith(b'\0'):
+        keyword_bytes += b'\0'
+
+    pos = data_bytes.find(keyword_bytes)
+    if pos != -1:
+        ret = start_addr + pos
+
+    return ret
+
+
 # def parse_info_plist_demo():
 #     info_plist = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>BuildMachineOSBuild</key><string>23C71</string><key>CFBundleDevelopmentRegion</key><string>en</string><key>CFBundleExecutable</key><string>JITDemo</string><key>CFBundleIdentifier</key><string>com.bangcle.LLDBCode</string><key>CFBundleInfoDictionaryVersion</key><string>6.0</string><key>CFBundleName</key><string>JITDemo</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleShortVersionString</key><string>1.0</string><key>CFBundleSupportedPlatforms</key><array><string>iPhoneOS</string></array><key>CFBundleVersion</key><string>1</string><key>DTCompiler</key><string>com.apple.compilers.llvm.clang.1_0</string><key>DTPlatformBuild</key><string>21C52</string><key>DTPlatformName</key><string>iphoneos</string><key>DTPlatformVersion</key><string>17.2</string><key>DTSDKBuild</key><string>21C52</string><key>DTSDKName</key><string>iphoneos17.2</string><key>DTXcode</key><string>1510</string><key>DTXcodeBuild</key><string>15C65</string><key>LSRequiresIPhoneOS</key><true/><key>MinimumOSVersion</key><string>11.0</string><key>UIApplicationSceneManifest</key><dict><key>UIApplicationSupportsMultipleScenes</key><false/><key>UISceneConfigurations</key><dict><key>UIWindowSceneSessionRoleApplication</key><array><dict><key>UISceneConfigurationName</key><string>Default Configuration</string><key>UISceneDelegateClassName</key><string>SceneDelegate</string><key>UISceneStoryboardFile</key><string>Main</string></dict></array></dict></dict><key>UIApplicationSupportsIndirectInputEvents</key><true/><key>UIDeviceFamily</key><array><integer>1</integer><integer>2</integer></array><key>UILaunchStoryboardName</key><string>LaunchScreen</string><key>UIMainStoryboardFile</key><string>Main</string><key>UIRequiredDeviceCapabilities</key><array><string>arm64</string></array><key>UISupportedInterfaceOrientations~ipad</key><array><string>UIInterfaceOrientationPortrait</string><string>UIInterfaceOrientationPortraitUpsideDown</string><string>UIInterfaceOrientationLandscapeLeft</string><string>UIInterfaceOrientationLandscapeRight</string></array><key>UISupportedInterfaceOrientations~iphone</key><array><string>UIInterfaceOrientationPortrait</string><string>UIInterfaceOrientationLandscapeLeft</string><string>UIInterfaceOrientationLandscapeRight</string></array></dict></plist>'
 #     info_dict = util.parse_info_plist(info_plist)
