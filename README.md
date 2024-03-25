@@ -86,6 +86,10 @@
 
 ​     \* [read_cstring - read memory as c style string](#read_cstring---read-memory-as-c-style-string)
 
+​     \* [info_plist](#info_plist---print-Info.plist)
+
+​     \* [ffunc - find function](#ffunc---find-function)
+
 ## Installation
 
 1. Clone this repo
@@ -927,6 +931,54 @@ address = 0x1815fb950 where = libsystem_kernel.dylib`open -> open
 ...
 0x1007857c8: "__OBJC_PROTOCOL_$_UIWindowSceneDelegate"
 338 locations found
+```
+
+[back to commands list](#Commands-list)
+
+
+
+#### info_plist - print Info.plist
+
+```stylus
+(lldb) info_plist
+-----parsing module Demo-----
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	...
+</dict>
+</plist>
+```
+
+[back to commands list](#Commands-list)
+
+
+
+#### ffunc - find function
+
+find function by callee function name
+
+```stylus
+(lldb) ffunc -n task_info -i 5900
+-----parsing module Demo-----
+	function call found at: 0x1057c09b0, where = Demo`___lldb_unnamed_symbol255344 + 88
+```
+
+find function by callee funcation address
+
+```stylus
+(lldb) ffunc -a 0x1005106a0 -i 5000
+-----parsing module Demo-----
+	function call found at: 0x10050dcd8, where = Demo`test_func + 2360
+```
+
+find function by c string
+
+```stylus
+(lldb) ffunc -k test -i 700 -x 800
+-----parsing module Demo-----
+	keyword test found at 0x105bb5227
 ```
 
 [back to commands list](#Commands-list)
