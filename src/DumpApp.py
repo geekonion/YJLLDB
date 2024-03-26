@@ -22,6 +22,7 @@ def __lldb_init_module(debugger, internal_dict):
 def dump_app(debugger, command, result, internal_dict):
     """
     dump app to mac from device
+    implemented in YJLLDB/src/DumpApp.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')

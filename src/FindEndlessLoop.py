@@ -19,6 +19,7 @@ def __lldb_init_module(debugger, internal_dict):
 def find_endless_loop(debugger, command, result, internal_dict):
     """
     find endless loop
+    implemented in YJLLDB/src/FindEndlessLoop.py
     """
 
     target = debugger.GetSelectedTarget()

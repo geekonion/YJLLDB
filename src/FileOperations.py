@@ -26,6 +26,7 @@ def __lldb_init_module(debugger, internal_dict):
 def download_file(debugger, command, result, internal_dict):
     """
     download file from device
+    implemented in YJLLDB/src/FileOperations.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')
@@ -58,6 +59,7 @@ def download_file(debugger, command, result, internal_dict):
 def download_dir(debugger, command, result, internal_dict):
     """
     download directory from device
+    implemented in YJLLDB/src/FileOperations.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')
@@ -90,6 +92,7 @@ def download_dir(debugger, command, result, internal_dict):
 def upload_file(debugger, command, result, internal_dict):
     """
     upload local file to remote device
+    implemented in YJLLDB/src/FileOperations.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')
@@ -129,6 +132,7 @@ def upload_file(debugger, command, result, internal_dict):
 def remove_file(debugger, command, result, internal_dict):
     """
     remove file or directory on remote device
+    implemented in YJLLDB/src/FileOperations.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')

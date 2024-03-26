@@ -16,6 +16,7 @@ def __lldb_init_module(debugger, internal_dict):
 def break_method(debugger, command, result, internal_dict):
     """
     break method in user modules
+    implemented in YJLLDB/src/BreakMethod.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')

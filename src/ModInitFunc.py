@@ -20,6 +20,7 @@ def __lldb_init_module(debugger, internal_dict):
 def dump_mod_init_func(debugger, command, result, internal_dict):
     """
     dump module init function(s) in user modules
+    implemented in YJLLDB/src/ModInitFunc.py
     """
     parse_mod_init_func(debugger, command, result, 'initfunc')
 
@@ -27,6 +28,7 @@ def dump_mod_init_func(debugger, command, result, internal_dict):
 def break_mod_init_func(debugger, command, result, internal_dict):
     """
     break module init function(s) in user modules
+    implemented in YJLLDB/src/ModInitFunc.py
     """
     parse_mod_init_func(debugger, command, result, 'binitfunc')
 

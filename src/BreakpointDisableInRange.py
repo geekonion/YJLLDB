@@ -19,6 +19,7 @@ def __lldb_init_module(debugger, internal_dict):
 def disable_breakpoint_in_range(debugger, command, result, internal_dict):
     """
     disable breakpoint(s) in the specified range
+    implemented in YJLLDB/src/BreakpointDisableInRange.py
     """
 
     # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-

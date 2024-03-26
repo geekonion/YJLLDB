@@ -15,6 +15,7 @@ def __lldb_init_module(debugger, internal_dict):
 def find_app_delegate(debugger, command, result, internal_dict):
     """
     find AppDelegate class
+    implemented in YJLLDB/src/AppDelegate.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')

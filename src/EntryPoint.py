@@ -20,6 +20,7 @@ def __lldb_init_module(debugger, internal_dict):
 def get_main(debugger, command, result, internal_dict):
     """
     print the address of main function
+    implemented in YJLLDB/src/EntryPoint.py
     """
     handle_command(debugger, command, result, 'print')
 
@@ -27,6 +28,7 @@ def get_main(debugger, command, result, internal_dict):
 def break_main(debugger, command, result, internal_dict):
     """
     break the main function
+    implemented in YJLLDB/src/EntryPoint.py
     """
     handle_command(debugger, command, result, 'break')
 

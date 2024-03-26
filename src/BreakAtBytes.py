@@ -15,6 +15,7 @@ def __lldb_init_module(debugger, internal_dict):
 def break_at_bytes(debugger, command, result, internal_dict):
     """
     set breakpoints at the specified bytes in user modules
+    implemented in YJLLDB/src/BreakAtBytes.py
     """
     # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-
     command_args = shlex.split(command, posix=False)

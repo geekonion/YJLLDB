@@ -32,6 +32,7 @@ def __lldb_init_module(debugger, internal_dict):
 def show_entitlements(debugger, command, result, internal_dict):
     """
     print codesign entitlements of the specified module if any.
+    implemented in YJLLDB/src/MachOInfo.py
     """
     result.AppendMessage(parse_entitlements(debugger, command, result, 'entitlements'))
 
@@ -39,6 +40,7 @@ def show_entitlements(debugger, command, result, internal_dict):
 def show_group_id(debugger, command, result, internal_dict):
     """
     print group id in codesign entitlements of the specified module if any.
+    implemented in YJLLDB/src/MachOInfo.py
     """
     result.AppendMessage(parse_entitlements(debugger, command, result, 'group_id'))
 
@@ -46,6 +48,7 @@ def show_group_id(debugger, command, result, internal_dict):
 def show_bundle_id(debugger, command, result, internal_dict):
     """
     print bundle id in codesign entitlements of the specified module if any.
+    implemented in YJLLDB/src/MachOInfo.py
     """
     result.AppendMessage(parse_entitlements(debugger, command, result, 'bundle_id'))
 
@@ -53,6 +56,7 @@ def show_bundle_id(debugger, command, result, internal_dict):
 def show_team_id(debugger, command, result, internal_dict):
     """
     print team id in codesign entitlements of the specified module if any.
+    implemented in YJLLDB/src/MachOInfo.py
     """
     result.AppendMessage(parse_entitlements(debugger, command, result, 'team_id'))
 
@@ -107,6 +111,7 @@ def parse_entitlements(debugger, command, result, field):
 def show_executable_name(debugger, command, result, internal_dict):
     """
     print executable name
+    implemented in YJLLDB/src/MachOInfo.py
     """
     target = debugger.GetSelectedTarget()
     result.AppendMessage(target.GetExecutable().GetFilename())
@@ -115,6 +120,7 @@ def show_executable_name(debugger, command, result, internal_dict):
 def parse_macho(debugger, command, result, internal_dict):
     """
     parse mach-o of user modules.
+    implemented in YJLLDB/src/MachOInfo.py
     """
 
     # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-

@@ -17,6 +17,7 @@ def __lldb_init_module(debugger, internal_dict):
 def dump_segments(debugger, command, result, internal_dict):
     """
     dump segments of the specified module
+    implemented in YJLLDB/src/DumpSegments.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')

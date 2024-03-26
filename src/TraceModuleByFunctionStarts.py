@@ -25,6 +25,7 @@ def __lldb_init_module(debugger, internal_dict):
 def trace_all_functions_in_module(debugger, command, result, internal_dict):
     """
     trace all functions in the specified module, see also mtrace
+    implemented in YJLLDB/src/TraceModuleByFunctionStarts.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')

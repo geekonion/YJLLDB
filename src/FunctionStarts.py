@@ -15,6 +15,7 @@ def __lldb_init_module(debugger, internal_dict):
 def dump_function_starts(debugger, command, result, internal_dict):
     """
     dump function starts of the specified module
+    implemented in YJLLDB/src/FunctionStarts.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')

@@ -13,6 +13,11 @@ def __lldb_init_module(debugger, internal_dict):
 
 
 def show_info_plist(debugger, command, result, field):
+    """
+    print contents of Info.plist.
+    implemented in YJLLDB/src/InfoPlist.py
+    """
+
     # 去掉转义符
     command = command.replace('\\', '\\\\')
     # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-

@@ -18,6 +18,7 @@ def __lldb_init_module(debugger, internal_dict):
 def dump_module(debugger, command, result, internal_dict):
     """
     dump the specified module, see also dmodule_before_load
+    implemented in YJLLDB/src/DumpModule.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')

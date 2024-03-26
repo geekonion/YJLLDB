@@ -14,6 +14,7 @@ def __lldb_init_module(debugger, internal_dict):
 def get_thread_extended_backtrace(debugger, command, result, internal_dict):
     """
     get extended backtrace of thread
+    implemented in YJLLDB/src/ThreadExtendedBacktrace.py
     """
 
     target = debugger.GetSelectedTarget()

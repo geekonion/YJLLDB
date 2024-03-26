@@ -17,8 +17,9 @@ def __lldb_init_module(debugger, internal_dict):
 
 def find_func(debugger, command, result, internal_dict):
     """
-        dump segments of the specified module
-        """
+    dump segments of the specified module
+    implemented in YJLLDB/src/FindFunc.py
+    """
     # 去掉转义符
     command = command.replace('\\', '\\\\')
     # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-
@@ -162,7 +163,7 @@ def find_func_by_callee_func_addr_or_name(target, module, address, name, min_siz
                     if symbol.GetName() == name:
                         adrp_addr_obj = b_ins.GetAddress()
                         # 动态链接的符号
-                        if stubs_addr < jump_addr < stubs_end:
+                        if stubs_addr <= jump_addr < stubs_end:
                             message += '\tfunction call found at: 0x{:x}, where = {}\n'. \
                                 format(adrp_addr_obj.GetLoadAddress(target), adrp_addr_obj)
                         # 本MachO文件中的符号

@@ -27,7 +27,8 @@ def __lldb_init_module(debugger, internal_dict):
 
 def execute_ls(debugger, command, result, internal_dict):
     """
-    list directory contents, just like ls -lh on mac.
+    list directory contents, just like ls -lh on Mac.
+    implemented in YJLLDB/src/FileSystem.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')
@@ -175,6 +176,11 @@ def show_caches_directory(debugger, command, result, internal_dict):
 
 
 def show_group_path(debugger, command, result, internal_dict):
+    """
+    print App group path if any.
+    implemented in YJLLDB/src/FileSystem.py
+    """
+
     ret_str = util.get_group_path()
     result.AppendMessage(ret_str)
 

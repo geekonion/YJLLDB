@@ -20,6 +20,7 @@ def __lldb_init_module(debugger, internal_dict):
 def dump_got(debugger, command, result, internal_dict):
     """
     dump NON_LAZY_SYMBOL_POINTERS of the specified module
+    implemented in YJLLDB/src/SymbolPointers.py
     """
     handle_command(debugger, command, result, 'got')
 
@@ -27,6 +28,7 @@ def dump_got(debugger, command, result, internal_dict):
 def dump_lazy_symbol_ptr(debugger, command, result, internal_dict):
     """
     dump LAZY_SYMBOL_POINTERS of the specified module
+    implemented in YJLLDB/src/SymbolPointers.py
     """
     handle_command(debugger, command, result, 'lazy_sym')
 

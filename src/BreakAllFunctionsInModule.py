@@ -16,6 +16,7 @@ def break_all_functions_in_module(debugger, command, result, internal_dict):
     """
     set breakpoints to break all functions in the specified module
     functions in system sdks, objc_msgSend stubs and c++ destructors are ignored
+    implemented in YJLLDB/src/BreakAllFunctionsInModule.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')

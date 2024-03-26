@@ -13,6 +13,7 @@ def __lldb_init_module(debugger, internal_dict):
 def disable_current_breakpoint(debugger, command, result, internal_dict):
     """
     disable the breakpoint(s) that is(are) currently hit
+    implemented in YJLLDB/src/BreakDisableCurrent.py
     """
     target = debugger.GetSelectedTarget()
     process = target.GetProcess()

@@ -16,6 +16,7 @@ def __lldb_init_module(debugger, internal_dict):
 def dump_classes_in_module(debugger, command, result, internal_dict):
     """
     dump all class names in the specified module
+    implemented in YJLLDB/src/DumpClassNamesInModule.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')

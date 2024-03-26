@@ -32,6 +32,8 @@
 
 ​     \* [executable - print main executable name](#executable---print-main-executable-name)
 
+​     \* [bundle_id](#bundle_id)
+
 ​     \* [appdelegate](#appdelegate)
 
 ​     \* [classes - print class names](#classes---print-class-names)
@@ -408,6 +410,17 @@ LLDBCode
 
 
 
+#### bundle_id
+
+Print bundle identifer
+
+```stylus
+(lldb) bundle_id
+xxx.com.test.xxx
+```
+
+
+
 #### appdelegate
 
 Find the class that conforms to the UIApplicationDelegate protocol.
@@ -612,6 +625,14 @@ Download file from home, bundle or group path.
 
 ```stylus
 (lldb) dfile /var/containers/Bundle/Application/7099B2B8-39BE-4204-9BEB-5DF6A75BAA29/JITDemo.app/Info.plist
+dumping Info.plist, this may take a while
+1464 bytes written to '/Users/xxx/Info.plist'
+```
+
+or
+
+```stylus
+(lldb) dfile bundle/Info.plist
 dumping Info.plist, this may take a while
 1464 bytes written to '/Users/xxx/Info.plist'
 ```

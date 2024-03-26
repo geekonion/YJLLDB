@@ -26,6 +26,7 @@ def __lldb_init_module(debugger, internal_dict):
 def find_all_blocks(debugger, command, result, internal_dict):
     """
     find blocks in user modules and save block symbols to block_symbol.json
+    implemented in YJLLDB/src/Block.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')
@@ -191,7 +192,8 @@ def find_all_blocks(debugger, command, result, internal_dict):
             # str    w9, [sp, #0x50]
             # str    wzr, [sp, #0x54]
             # adrp   x9, 0
-            # add    x9, x9, #0xf48            ; __41-[ViewController touchesBegan:withEvent:]_block_invoke_4 at ViewController.m:75
+            # add    x9, x9, #0xf48            ; __41-[ViewController touchesBegan:withEvent:]_block_invoke_4
+            #                                   at ViewController.m:75
             # str    x9, [sp, #0x58]    ; store block func to stack
 
             # release StackBlock
@@ -326,7 +328,8 @@ def find_all_blocks(debugger, command, result, internal_dict):
                             # print('target_addr: 0x{:x} {}'.format(target_addr, next_ins_addr))
                             if target_addr == stack_block_isa:
                                 print('find a stack block @0x{:x} in {}'.
-                                      format(next_ins_addr.GetLoadAddress(target), util.get_desc_for_address(next_ins_addr, sym_name)))
+                                      format(next_ins_addr.GetLoadAddress(target),
+                                             util.get_desc_for_address(next_ins_addr, sym_name)))
                                 hits_count += 1
                                 total_count += 1
                                 stack_block_found = True
@@ -349,7 +352,8 @@ def find_all_blocks(debugger, command, result, internal_dict):
                     else:
                         # ldr x0,#0x5330
                         ret = re.match('^x\\d{1,2},#0x\\d+', ldr_ins_ops)
-                        # print('0x{:x}: ldr {} {}'.format(next_ins.GetAddress().GetLoadAddress(target), ldr_ins_ops, ret))
+                        # print('0x{:x}: ldr {} {}'.
+                        #       format(next_ins.GetAddress().GetLoadAddress(target), ldr_ins_ops, ret))
                         if ret:
                             ldr_op_list = ldr_ins_ops.split(',')
                             ldr_offset = int(ldr_op_list[1].replace('#', ''), 16)
@@ -461,6 +465,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
 def find_blocks(debugger, command, result, internal_dict):
     """
     find the specified block(s) in user modules
+    implemented in YJLLDB/src/Block.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')
@@ -586,6 +591,8 @@ def find_blocks(debugger, command, result, internal_dict):
 
             insts = symbol.GetInstructions(target)
 
+            adrp_addr = 0
+            adrp_op_list = None
             adrp_ins = None
             stack_block_found = False
             stack_block_des = ''
@@ -711,7 +718,8 @@ def find_blocks(debugger, command, result, internal_dict):
                             # print('target_addr: 0x{:x} {}'.format(target_addr, next_ins_addr))
                             if target_addr == stack_block_isa:
                                 stack_block_des = 'find a stack block @0x{:x} in {}'.\
-                                    format(next_ins_addr.GetLoadAddress(target), util.get_desc_for_address(next_ins_addr))
+                                    format(next_ins_addr.GetLoadAddress(target),
+                                           util.get_desc_for_address(next_ins_addr))
                                 # print(stack_block_des)
                                 stack_block_found = True
                             else:
@@ -731,7 +739,8 @@ def find_blocks(debugger, command, result, internal_dict):
                     else:
                         # ldr x0,#0x5330
                         ret = re.match('^x\\d{1,2},#0x\\d+', ldr_ins_ops)
-                        # print('0x{:x}: ldr {} {}'.format(next_ins.GetAddress().GetLoadAddress(target), ldr_ins_ops, ret))
+                        # print('0x{:x}: ldr {} {}'.
+                        #       format(next_ins.GetAddress().GetLoadAddress(target), ldr_ins_ops, ret))
                         if ret:
                             ldr_op_list = ldr_ins_ops.split(',')
                             ldr_offset = int(ldr_op_list[1].replace('#', ''), 16)
@@ -740,7 +749,8 @@ def find_blocks(debugger, command, result, internal_dict):
                             addr = next_ins_loadaddr + ldr_offset
                             if addr == stack_block_addr:
                                 stack_block_des = 'find a stack block @0x{:x} in {}'. \
-                                    format(next_ins_addr.GetLoadAddress(target), util.get_desc_for_address(next_ins_addr))
+                                    format(next_ins_addr.GetLoadAddress(target),
+                                           util.get_desc_for_address(next_ins_addr))
                                 # print(stack_block_des)
                                 stack_block_found = True
                             else:
@@ -786,6 +796,7 @@ def find_blocks(debugger, command, result, internal_dict):
 def break_blocks(debugger, command, result, internal_dict):
     """
     break blocks in user modules
+    implemented in YJLLDB/src/Block.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')
@@ -901,6 +912,8 @@ def break_blocks(debugger, command, result, internal_dict):
 
             insts = symbol.GetInstructions(target)
 
+            adrp_addr = 0
+            adrp_op_list = None
             adrp_ins = None
             stack_block_found = False
             for next_ins in insts:
@@ -1016,14 +1029,16 @@ def break_blocks(debugger, command, result, internal_dict):
                             # print('target_addr: 0x{:x} {}'.format(target_addr, next_ins_addr))
                             if target_addr == stack_block_isa:
                                 print('find a stack block @0x{:x} in {}'.
-                                      format(next_ins_addr.GetLoadAddress(target), util.get_desc_for_address(next_ins_addr)))
+                                      format(next_ins_addr.GetLoadAddress(target),
+                                             util.get_desc_for_address(next_ins_addr)))
                                 stack_block_found = True
 
                         adrp_ins = None
                     else:
                         # ldr x0,#0x5330
                         ret = re.match('^x\\d{1,2},#0x\\d+', ldr_ins_ops)
-                        # print('0x{:x}: ldr {} {}'.format(next_ins.GetAddress().GetLoadAddress(target), ldr_ins_ops, ret))
+                        # print('0x{:x}: ldr {} {}'.
+                        #       format(next_ins.GetAddress().GetLoadAddress(target), ldr_ins_ops, ret))
                         if ret:
                             ldr_op_list = ldr_ins_ops.split(',')
                             ldr_offset = int(ldr_op_list[1].replace('#', ''), 16)

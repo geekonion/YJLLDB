@@ -15,6 +15,7 @@ def __lldb_init_module(debugger, internal_dict):
 def symbolic_uncaught_exception(debugger, command, result, internal_dict):
     """
     symbolic uncaught exception addresses list
+    implemented in YJLLDB/src/Symbolic.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')

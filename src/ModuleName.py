@@ -16,6 +16,7 @@ def __lldb_init_module(debugger, internal_dict):
 def get_module_name_with_header_addr(debugger, command, result, internal_dict):
     """
     get module name with header addr
+    implemented in YJLLDB/src/ModuleName.py
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')
