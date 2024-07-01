@@ -1,0 +1,14 @@
+command alias stack memory read --force -f A $sp $fp
+
+command regex -h "read memory region as address" -s "read_mem_as_addr start_addr end_addr" -- read_mem_as_addr 's/(.*)[[:space:]]*(.*)/memory read --force -f A %1 %2/'
+
+command regex divars -h "Dumps all ivars for an instance of a particular class which inherits from NSObject (iOS, NSObject subclass only)" -s "ivars [UIView new]" -- 's/(.+)/expression -lobjc -O -- [objc_getClass("%1") _ivarDescription]/'
+
+command regex dmethods -h "Dumps all methods implemented by the NSObject subclass (iOS, NSObject subclass only)" -s "methods UIView" -- 's/(.+)/expression -lobjc -O -- [objc_getClass("%1") _shortMethodDescription]/'
+
+command alias bundle_dir po [(NSBundle *)[NSBundle mainBundle] bundlePath]
+command alias home_dir po NSHomeDirectory()
+command alias doc_dir po [NSHomeDirectory() stringByAppendingPathComponent:@"Documents"]
+command alias lib_dir po [NSHomeDirectory() stringByAppendingPathComponent:@"Library"]
+command alias tmp_dir po [NSHomeDirectory() stringByAppendingPathComponent:@"tmp"]
+command alias caches_dir po [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Caches"]
