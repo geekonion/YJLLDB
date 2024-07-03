@@ -5,6 +5,7 @@ import lldb
 import optparse
 import shlex
 import MachO
+import util
 
 
 def __lldb_init_module(debugger, internal_dict):
@@ -35,12 +36,18 @@ def get_module_name_with_header_addr(debugger, command, result, internal_dict):
 
     target = debugger.GetSelectedTarget()
     if len(args) == 1:
-        addr_str = args[0]
+        arg_str = args[0]
     else:
         result.AppendMessage(parser.get_usage())
         return
 
+    is_addr, addr_str = util.parse_arg(arg_str)
+    if not is_addr:
+        result.SetError("\n" + parser.get_usage())
+        return
+
     header_addr = int(addr_str, 16)
+
     header_size = 0x4000
 
     name = None

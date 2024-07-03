@@ -97,7 +97,13 @@ def parse_lcs(base, offset, n_cmds, macho):
             elif seg_name == '__TEXT':
                 macho['text_vmaddr'] = segment['vmaddr']
         elif cmd == 0xd:  # LC_ID_DYLIB
-            macho['lcs'].append(parse_load_dylib(base, offset, cmd, cmd_size))
+            lc_info = parse_load_dylib(base, offset, cmd, cmd_size)
+            macho['lcs'].append(lc_info)
+            name = lc_info.get('name')
+            if name:
+                macho['name'] = name
+            else:
+                print('module name not found')
         elif cmd in (0x21, 0x2C):  # ('ENCRYPTION_INFO', 'ENCRYPTION_INFO_64')
             macho['lcs'].append(parse_encryption_info(base, offset, cmd, cmd_size))
         elif cmd == 0x28 | 0x80000000:  # LC_MAIN (0x28|LC_REQ_DYLD)

@@ -2,15 +2,18 @@
 
 import lldb
 import MachO
+import util
+# import json
 from common import get_cs_super_blob, get_cs_blob_index, get_cs_blob, get_string
 
 
 def get_function_starts(lookup_module_name_or_addr):
-    funcs = None
     target = lldb.debugger.GetSelectedTarget()
-    module_file_spec, header_addr, slide, segment_info = get_segment_info(target, lookup_module_name_or_addr, '__LINKEDIT')
+    module_file_spec, header_addr, slide, segment_info, module_name = \
+        get_segment_info(target, lookup_module_name_or_addr, '__LINKEDIT')
     if not module_file_spec:
-        return funcs, module_file_spec
+        print('module {} not found in image list'.format(module_name))
+        # return None, module_file_spec
 
     funcs = []
     func_starts = []
@@ -84,10 +87,11 @@ def get_function_starts(lookup_module_name_or_addr):
 def get_entitlements(lookup_module_name):
     entitlements = None
     target = lldb.debugger.GetSelectedTarget()
-    module_file_spec, header_addr, slide, segment_info = get_segment_info(target, lookup_module_name, '__LINKEDIT')
+    module_file_spec, header_addr, slide, segment_info, module_name = \
+        get_segment_info(target, lookup_module_name, '__LINKEDIT')
     if not module_file_spec:
-        print('module {} not found'.format(lookup_module_name))
-        return entitlements
+        print('module {} not found in image list'.format(module_name))
+        # return entitlements
 
     if not segment_info:
         print('segment __LINKEDIT not found')
@@ -135,23 +139,30 @@ def get_entitlements(lookup_module_name):
 
                     break
 
+    if module_file_spec:
+        module_name = module_file_spec.GetFilename()
+    else:
+        module_name = module_name
+
     if code_signature_not_found:
-        entitlements = '{} apparently does not contain code signature'.format(module_file_spec.GetFilename())
+        entitlements = '{} apparently does not contain code signature'.format(module_name)
     elif ent_not_found:
-        entitlements = '{} apparently does not contain any entitlements'.format(module_file_spec.GetFilename())
+        entitlements = '{} apparently does not contain any entitlements'.format(module_name)
 
     return entitlements
 
 
-def get_segment_info(target, lookup_module_name_or_addr, target_seg_name):
+def get_segment_info(target, module_name_or_addr, target_seg_name):
     module_file_spec = None
     header_addr = 0
     slide = 0
     segment_info = None
     module_found = False
 
-    is_addr = lookup_module_name_or_addr.startswith("0x")
+    is_addr, lookup_module_name_or_addr = util.parse_arg(module_name_or_addr)
+
     module_addr = 0
+    header_size = 0
     if is_addr:
         module_addr = int(lookup_module_name_or_addr, 16)
 
@@ -188,32 +199,45 @@ def get_segment_info(target, lookup_module_name_or_addr, target_seg_name):
         first_sec = seg.GetSubSectionAtIndex(0)
         sec_addr = first_sec.GetLoadAddress(target)
 
-        error = lldb.SBError()
         header_size = sec_addr - header_addr
-        header_data = target.ReadMemory(lldb.SBAddress(header_addr, target), header_size, error)
-        if not error.Success():
-            print('read header failed! {}'.format(error.GetCString()))
-            break
 
-        info = MachO.parse_header(header_data)
-
-        lcs = info['lcs']
-        for lc in lcs:
-            cmd = lc['cmd']
-            if cmd != '19':  # LC_SEGMENT_64
-                continue
-
-            seg_name = lc['name']
-            if seg_name != target_seg_name:
-                continue
-
-            segment_info = lc
-            # lcs
-            break
         # modules
+        break
+
+    if not module_found and is_addr:
+        header_addr = module_addr
+        header_size = 0x4000
+
+    error = lldb.SBError()
+    header_data = target.ReadMemory(lldb.SBAddress(header_addr, target), header_size, error)
+    if not error.Success():
+        print('read header failed! {}'.format(error.GetCString()))
+        return module_file_spec, header_addr, slide, segment_info
+
+    info = MachO.parse_header(header_data)
+    # print(json.dumps(info, indent=2))
+
+    lcs = info['lcs']
+    for lc in lcs:
+        cmd = lc['cmd']
+        if cmd != '19':  # LC_SEGMENT_64
+            continue
+
+        seg_name = lc['name']
+        if seg_name != target_seg_name:
+            continue
+
+        segment_info = lc
+        # lcs
         break
 
     if not module_found:
         module_file_spec = None
 
-    return module_file_spec, header_addr, slide, segment_info
+    if slide == 0:
+        slide = header_addr - int(info['text_vmaddr'], 16)
+        module_name = info.get('name')
+    else:
+        module_name = lookup_module_name_or_addr
+
+    return module_file_spec, header_addr, slide, segment_info, module_name

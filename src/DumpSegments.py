@@ -39,12 +39,11 @@ def dump_segments(debugger, command, result, internal_dict):
     addr_str = None
     lookup_module_name = None
     if len(args) == 1:
-        input_arg = args[0]
-        is_address = input_arg.startswith('0x')
+        is_address, name_or_addr = util.parse_arg(args[0])
         if is_address:
-            addr_str = input_arg
+            addr_str = name_or_addr
         else:
-            lookup_module_name = input_arg
+            lookup_module_name = name_or_addr
     else:
         file_spec = target.GetExecutable()
         lookup_module_name = file_spec.GetFilename()
@@ -129,7 +128,7 @@ def parse_macho(target, header_addr, header_size, slide):
 
 
 def generate_option_parser():
-    usage = "usage: %prog ModuleName\n"
+    usage = "usage: %prog [ModuleName]\n"
 
     parser = optparse.OptionParser(usage=usage, prog='segments')
 

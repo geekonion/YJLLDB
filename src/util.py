@@ -93,13 +93,14 @@ def exe_script(command_script):
     return exe_command('exp -l objc -O -- ' + command_script)
 
 
-def exe_command(command):
+def exe_command(command, log=True):
     res = lldb.SBCommandReturnObject()
     interpreter = lldb.debugger.GetCommandInterpreter()
     interpreter.HandleCommand(command, res)
 
     if not res.HasResult():
-        print('execute JIT code failed: \n{}'.format(res.GetError()))
+        if log:
+            print('execute JIT code failed: \n{}'.format(res.GetError()))
         return ''
 
     response = res.GetOutput()
@@ -403,3 +404,22 @@ def exe_shell_command(cmd, cwd=None):
     code = obj.wait()
 
     return code, out, err
+
+
+def parse_arg(name_or_var_or_addr):
+    cmd_ret = exe_command('p/x {}'.format(name_or_var_or_addr), False)
+    is_addr_or_var = len(cmd_ret) > 0
+
+    # 16进制地址
+    is_addr = name_or_var_or_addr.startswith("0x")
+    # 变量名
+    if is_addr_or_var and not is_addr:
+        pos = cmd_ret.find('0x')
+        if pos >= 0:
+            addr_str = cmd_ret[pos:]
+        else:
+            addr_str = cmd_ret
+        name_or_var_or_addr = addr_str
+        is_addr = name_or_var_or_addr.startswith("0x")
+
+    return is_addr, name_or_var_or_addr

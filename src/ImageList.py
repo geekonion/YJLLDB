@@ -3,6 +3,7 @@
 import lldb
 import optparse
 import shlex
+import util
 
 
 class Module:
@@ -44,6 +45,11 @@ def image_list(debugger, command, result, internal_dict):
     else:
         input_count = 0
 
+    for idx, arg in enumerate(args):
+        is_addr, name_or_addr = util.parse_arg(arg)
+        if is_addr:
+            args[idx] = int(name_or_addr, 16)
+
     n_modules = len(args)
     target = debugger.GetSelectedTarget()
     modules = []
@@ -54,7 +60,9 @@ def image_list(debugger, command, result, internal_dict):
         if n_modules > 0:
             mod_spec = module.GetFileSpec()
             module_name = mod_spec.GetFilename()
-            if module_name not in args:
+            module_header = module.GetObjectFileHeaderAddress()
+            header_addr = module_header.GetLoadAddress(target)
+            if (module_name not in args) and (header_addr not in args):
                 continue
 
         slide = 0
