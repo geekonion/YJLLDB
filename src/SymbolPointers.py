@@ -5,6 +5,7 @@ import optparse
 import shlex
 import util
 import MachO
+import common
 
 
 def __lldb_init_module(debugger, internal_dict):
@@ -227,20 +228,20 @@ def get_lazy_sym_name(target, slide, target_sym_sec, linkedit_seg):
     ptr_size = target.GetAddressByteSize()
     count = int(size / ptr_size)
     for i in range(0, count):
-        addr = MachO.get_long(sec_data, i * ptr_size, byte_order)
+        addr = common.get_long(sec_data, i * ptr_size, byte_order)
         addr_obj = target.ResolveLoadAddress(addr)
         desc = '{}'.format(addr_obj)
         if not desc:
             desc = util.try_macho_address(addr_obj, target, False, True)
 
-        symtab_index = MachO.get_int(indirect_symbol_indices_data, i * 4)
+        symtab_index = common.get_int(indirect_symbol_indices_data, i * 4)
 
         # INDIRECT_SYMBOL_ABS	0x40000000
         # INDIRECT_SYMBOL_LOCAL	0x80000000
         if symtab_index & 0x40000000 == 0 and symtab_index & 0x80000000 == 0:
             # 16 sizeof(struct nlist_64)
-            strtab_offset = MachO.get_int(symtab_data, symtab_index * 16)
-            symbol_name = MachO.get_string(strtab_data, strtab_offset)
+            strtab_offset = common.get_int(symtab_data, symtab_index * 16)
+            symbol_name = common.get_string(strtab_data, strtab_offset)
             # print(symtab_index, strtab_offset, symbol_name)
             pos = 0
             if symbol_name.startswith('_'):

@@ -60,7 +60,7 @@ def dump_segments(debugger, command, result, internal_dict):
         module_name = module_file_spec.GetFilename()
 
         dylib_name = lookup_module_name + '.dylib'
-        if lookup_module_name == module_name or dylib_name == module_name :
+        if lookup_module_name == module_name or dylib_name == module_name:
             seg = module.FindSection('__TEXT')
             if not seg:
                 result.AppendMessage('seg __TEXT not found in {}'.format(module_name))

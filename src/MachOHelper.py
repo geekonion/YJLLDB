@@ -51,12 +51,12 @@ def get_function_starts(lookup_module_name_or_addr):
                     idx += 1
                     continue
 
-                slice = byte_value & 0x7f
+                tmp_slice = byte_value & 0x7f
 
-                if bit >= 64 or slice << bit >> bit != slice:
+                if bit >= 64 or tmp_slice << bit >> bit != tmp_slice:
                     pass
                 else:
-                    offset |= (slice << bit)
+                    offset |= (tmp_slice << bit)
                     bit += 7
 
                 idx += 1

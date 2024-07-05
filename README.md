@@ -552,7 +552,7 @@ dump success, ipa path: /Users/xxx/lldb_dump_macho/JITDemo/JITDemo.ipa
 
 #### addcmd
 
-Add a lldb command for mac command line tool
+Add a lldb command for mac command line tool.
 
 ```stylus
 (lldb) addcmd which
@@ -565,7 +565,7 @@ usage: which [-as] program ...
 
 #### delcmd
 
-Delete lldb command added by addcmd
+Delete lldb command added by addcmd.
 
 ```stylus
 (lldb) delcmd which
@@ -578,7 +578,7 @@ error: 'which' is not a valid command.
 
 #### ls
 
-List directory contents on Mac
+List directory contents on Mac.
 
 ```stylus
 (lldb) ls -l
@@ -708,7 +708,7 @@ upload success
 (lldb) ufile /Users/xxx/uploadfile /var/mobile/Containers/Data/Application/1171F451-C2DC-47E6-B6E3-74A0FE5A6572/Documents/test
 uploading uploadfile, this may take a while
 upload success
-(lldb) ls doc
+(lldb) ils doc
 /var/mobile/Containers/Data/Application/1171F451-C2DC-47E6-B6E3-74A0FE5A6572/Documents
 -rw-r--r--       12.1K 2023-08-10 07:11:29 +0000 test
 -rw-r--r--       12.1K 2023-08-10 07:11:22 +0000 uploadfile
