@@ -18,7 +18,7 @@ Breakpoint:
 
 ​     \* [bdr - breakpoint disable in range](#bdr---breakpoint-disable-in-range)
 
-​     \* [bblocks - break blocks (arm64 only)](#bblocks---break-blocks-(arm64-only))
+​     \* [bblocks - break blocks (arm64 only)](#bblocks---break-blocks-arm64-only)
 
 ​     \* [binitfunc - break mod init func](#binitfunc---break-mod-init-func)
 
@@ -32,9 +32,9 @@ Search:
 
 ​     \* [blookup - lookup bytes](#blookup---lookup-bytes)
 
-​     \* [fblock - find block (arm64 only)](#fblock---find-block-(arm64-only))
+​     \* [fblock - find block (arm64 only)](#fblock---find-block-arm64-only)
 
-​     \* [blocks - find blocks (arm64 only)](#blocks---find-blocks-(arm64-only))
+​     \* [blocks - find blocks (arm64 only)](#blocks---find-blocks-arm64-only)
 
 ​     \* [ffunc - find function](#ffunc---find-function)
 
@@ -52,9 +52,9 @@ Patch:
 
 Dump:
 
-​     \* [dmodule - dump module (private)](#dmodule---dump-module-(private))
+​     \* [dmodule - dump module (private)](#dmodule---dump-module-private)
 
-​     \* [dapp - dump App (private)](#dapp---dump-app-(private))
+​     \* [dapp - dump App (private)](#dapp---dump-app-private)
 
 Shell command
 
