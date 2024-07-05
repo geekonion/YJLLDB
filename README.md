@@ -48,13 +48,19 @@ Trace:
 
 Patch:
 
-​     \* [patch (private)](#patch)
+​     \* [patch (private)](#patch-(private))
 
 Dump:
 
-​     \* [dmodule - dump module (private)](#dmodule---dump-module)
+​     \* [dmodule - dump module (private)](#dmodule---dump-module-(private))
 
-​     \* [dapp - dump App (private)](#dapp---dump-app)
+​     \* [dapp - dump App (private)](#dapp---dump-app-(private))
+
+Shell command
+
+​     \* [addcmd](#addcmd)
+
+​     \* [delcmd](#delcmd)
 
 File:
 
@@ -170,8 +176,6 @@ will set breakpoint for 13880 names
 Breakpoint 4: 13961 locations
 ```
 
-[back to commands list](#Commands-list)
-
 
 
 #### bdc - breakpoint disable current
@@ -204,8 +208,6 @@ disable breakpoint 1.27: where = LLDBCode`__41-[ViewController touchesBegan:with
 (lldb) bda -i ViewController(extension)
 disable breakpoint 1.23: where = LLDBCode`-[ViewController(extension) test] at ViewController.m:20, address = 0x0000000102ec2e7c, unresolved, hit count = 0  Options: disabled 
 ```
-
-[back to commands list](#Commands-list)
 
 
 
@@ -270,8 +272,6 @@ Break module init function(s) in user modules.
 Breakpoint 6: JITDemo`entry1 at main.m:708:0, address = 0x100e08cb0
 Breakpoint 7: JITDemo`entry2 at main.m:740:0, address = 0x100e0960c
 ```
-
-[back to commands list](#Commands-list)
 
 
 
@@ -474,8 +474,6 @@ begin trace with Breakpoint 8: where = MediaRemote`MRMediaRemoteGetDeviceInfo, a
 begin trace with 5 breakpoint(s)
 ```
 
-[back to commands list](#Commands-list)
-
 
 
 #### notifier
@@ -544,6 +542,32 @@ copy file JITDemo.app/embedded.mobileprovision
 no file need patch
 Generating "JITDemo.ipa"
 dump success, ipa path: /Users/xxx/lldb_dump_macho/JITDemo/JITDemo.ipa
+```
+
+[back to commands list](#Commands-list)
+
+
+
+### Shell command
+
+#### addcmd
+
+```stylus
+(lldb) addcmd which
+Add command script successfully, try using it
+(lldb) which
+usage: which [-as] program ...
+(lldb) which ls
+/bin/ls
+```
+
+#### delcmd
+
+```stylus
+(lldb) delcmd which
+command "which" has been deleted
+(lldb) which
+error: 'which' is not a valid command.
 ```
 
 [back to commands list](#Commands-list)
@@ -740,8 +764,6 @@ Print main executable name.
 LLDBCode
 ```
 
-[back to commands list](#Commands-list)
-
 
 
 #### bundle_id
@@ -766,8 +788,6 @@ Print group id
 group id not found
 ```
 
-[back to commands list](#Commands-list)
-
 
 
 #### team_id
@@ -791,8 +811,6 @@ Find the class that conforms to the UIApplicationDelegate protocol.
 (lldb) appdelegate
 AppDelegate
 ```
-
-[back to commands list](#Commands-list)
 
 
 
@@ -871,8 +889,6 @@ Print the address of main function.
 function main at 0x102911b70, fileoff: 0x5b70
 ```
 
-[back to commands list](#Commands-list)
-
 
 
 #### initfunc - print mod init func
@@ -904,8 +920,6 @@ address = 0x1021bdae0 where = JITDemo`-[SceneDelegate .cxx_destruct] at SceneDel
 (lldb) 
 ```
 
-[back to commands list](#Commands-list)
-
 
 
 #### got - print `__got` section
@@ -934,8 +948,6 @@ address = 0x104c7fe14 where = JITDemo`my_NSHomeDirectory at ViewController.m:63 
 address = 0x1815fb950 where = libsystem_kernel.dylib`open -> open
 36 location(s) found
 ```
-
-[back to commands list](#Commands-list)
 
 
 
@@ -999,8 +1011,6 @@ disassembly:
        4: aa0003e8     	mov	x8, x0
 machine code: e9030091e80300aa
 ```
-
-[back to commands list](#Commands-list)
 
 
 

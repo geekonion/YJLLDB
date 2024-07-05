@@ -55,9 +55,9 @@ def show_info_plist(debugger, command, result, field):
 
             code, out, err = util.exe_shell_command('/usr/local/bin/plistutil -i ' + info_plist_path)
             if code == 0:
-                print(out.decode())
+                print(out)
             else:
-                print(err.decode())
+                print(err)
 
 
 def generate_option_parser():

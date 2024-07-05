@@ -65,12 +65,11 @@ def instructions_to_bytes(debugger, command, result, internal_dict):
 
     code, out, err = util.exe_shell_command('clang -c {} -arch {} -o {} && objdump -d {}'.
                                             format(tmp_input_file, arch, tmp_output_file, tmp_output_file))
-    out_str = out.decode()
     keyword = '0000000000000000 <ltmp0>:\n'
-    pos = out_str.find(keyword)
+    pos = out.find(keyword)
     bytes_str = ''
     if pos > 0:
-        insts_str = out_str[pos + len(keyword):]
+        insts_str = out[pos + len(keyword):]
         print('disassembly: \n')
         insts = insts_str.split('\n')
         for inst in insts:

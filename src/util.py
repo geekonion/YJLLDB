@@ -98,7 +98,7 @@ def exe_command(command, log=True):
     interpreter = lldb.debugger.GetCommandInterpreter()
     interpreter.HandleCommand(command, res)
 
-    if not res.HasResult():
+    if not res.Succeeded():
         if log:
             print('execute JIT code failed: \n{}'.format(res.GetError()))
         return ''
@@ -114,6 +114,37 @@ def exe_command(command, log=True):
         response = response[:-1]
 
     return response
+
+
+def exe_shell_command(cmd, cwd=None):
+    """
+    执行命令，截获控制台输出
+    """
+    if "/usr/local/bin" not in os.environ["PATH"]:
+        os.environ["PATH"] += os.pathsep + "/usr/local/bin/"
+
+    comps = cmd.split(' ')
+    prog = comps[0]
+    if subprocess.call(["/usr/bin/which", prog], shell=False) != 0:
+        print("Can't find {prog} in PATH or {prog} isn't installed\n"
+              "you can determine this in LLDB via \""
+              "(lldb) script import os; os.environ['PATH']\"\n"
+              "You can persist this via "
+              "(lldb) script os.environ['PATH'] += os.pathsep + /path/to/{prog}/folder".
+              format(prog=prog))
+        return -1, '', '{} not found'.format(prog)
+
+    prog_path = subprocess.Popen(['/usr/bin/which', prog],
+                                 shell=False,
+                                 stdout=subprocess.PIPE).communicate()[0].rstrip(b'\n\r').decode()
+    prog_path = prog_path.replace('//', '/')
+    new_cmd = cmd.replace(prog, prog_path, 1)
+
+    obj = subprocess.Popen(new_cmd, shell=True, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = obj.communicate()
+    code = obj.wait()
+
+    return code, out.decode(), err.decode()
 
 
 def try_mkdir(dir_path):
@@ -393,17 +424,6 @@ def xml_to_obj(element):
         print("other need parse tag {}, text {}, attr {}".format(element.tag, element.text, element.attrib))
 
     return obj
-
-
-def exe_shell_command(cmd, cwd=None):
-    """
-    执行命令，截获控制台输出
-    """
-    obj = subprocess.Popen(cmd, shell=True, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = obj.communicate()
-    code = obj.wait()
-
-    return code, out, err
 
 
 def parse_arg(name_or_var_or_addr):
