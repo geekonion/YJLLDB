@@ -8,7 +8,7 @@ import util
 
 def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand('command script add -h "list directory contents, just like ls -lh on mac."'
-                           ' -f FileSystem.execute_ls ls')
+                           ' -f FileSystem.execute_ls ils')
     # debugger.HandleCommand('command script add -h "print Home directory path."'
     #                        ' -f FileSystem.show_home_directory home_dir')
     # debugger.HandleCommand('command script add -h "print bundle path."'

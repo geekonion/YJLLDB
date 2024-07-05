@@ -66,7 +66,7 @@ File:
 
 ​     \* [commads to get common directory](#commads-to-get-common-directory)
 
-​     \* [ls](#ls)
+​     \* [ils](#ils)
 
 ​     \* [dfile - download file](#dfile---download-file)
 
@@ -74,7 +74,7 @@ File:
 
 ​     \* [ufile - upload local file to device](#ufile---upload-local-file-to-device)
 
-​     \* [rm - remove file](#rm---remove-file)
+​     \* [irm - remove file](#irm---remove-file)
 
 Module:
 
@@ -552,6 +552,8 @@ dump success, ipa path: /Users/xxx/lldb_dump_macho/JITDemo/JITDemo.ipa
 
 #### addcmd
 
+Add a lldb command for mac command line tool
+
 ```stylus
 (lldb) addcmd which
 Add command script successfully, try using it
@@ -563,6 +565,8 @@ usage: which [-as] program ...
 
 #### delcmd
 
+Delete lldb command added by addcmd
+
 ```stylus
 (lldb) delcmd which
 command "which" has been deleted
@@ -571,6 +575,31 @@ error: 'which' is not a valid command.
 ```
 
 [back to commands list](#Commands-list)
+
+#### ls
+
+List directory contents on Mac
+
+```stylus
+(lldb) ls -l
+total 10
+drwxrwxr-x  61 root  admin  1952 Jul  4 12:28 Applications
+drwxr-xr-x  71 root  wheel  2272 May 21 09:49 Library
+drwxr-xr-x@ 10 root  wheel   320 May  7 15:01 System
+drwxr-xr-x   5 root  admin   160 May 21 09:48 Users
+drwxr-xr-x   4 root  wheel   128 Jul  4 12:29 Volumes
+drwxr-xr-x@ 39 root  wheel  1248 May  7 15:01 bin
+drwxr-xr-x   2 root  wheel    64 Jul 14  2022 cores
+dr-xr-xr-x   3 root  wheel  4982 Jul  2 16:28 dev
+lrwxr-xr-x@  1 root  wheel    11 May  7 15:01 etc -> private/etc
+lrwxr-xr-x   1 root  wheel    25 Jul  2 16:29 home -> /System/Volumes/Data/home
+drwxr-xr-x   4 root  wheel   128 May 16 14:10 opt
+drwxr-xr-x   6 root  wheel   192 Jul  2 16:29 private
+drwxr-xr-x@ 64 root  wheel  2048 May  7 15:01 sbin
+lrwxr-xr-x@  1 root  wheel    11 May  7 15:01 tmp -> private/tmp
+drwxr-xr-x@ 11 root  wheel   352 May  7 15:01 usr
+lrwxr-xr-x@  1 root  wheel    11 May  7 15:01 var -> private/var
+```
 
 
 
@@ -599,12 +628,12 @@ error: 'which' is not a valid command.
 
 
 
-#### ls
+#### ils
 
-List directory contents, just like `ls -lh` on Mac.
+List directory contents on remote device, just like `ls -lh` on Mac.
 
 ```stylus
-(lldb) ls bu
+(lldb) ils bu
 /var/containers/Bundle/Application/D0419A6E-053C-4E35-B422-7C0FD6CAB060/Interlock.app
 drwxr-xr-x        128B 1970-01-01 00:00:00 +0000 Base.lproj
 drwxr-xr-x         96B 1970-01-01 00:00:00 +0000 _CodeSignature
@@ -613,13 +642,13 @@ drwxr-xr-x         64B 1970-01-01 00:00:00 +0000 META-INF
 -rwxr-xr-x      103.0K 2023-05-19 11:07:02 +0000 Interlock
 -rw-r--r--          8B 2023-05-16 03:17:32 +0000 PkgInfo
 -rw-r--r--      194.7K 2023-05-16 03:17:31 +0000 embedded.mobileprovision
-(lldb) ls home
+(lldb) ils home
 /var/mobile/Containers/Data/Application/09E63130-623F-4124-BCBB-59E20BD28964
 drwxr-xr-x         96B 2023-05-19 07:28:01 +0000 Documents
 drwxr-xr-x        128B 2023-05-16 04:51:14 +0000 Library
 drwxr-xr-x         64B 1970-01-01 00:00:00 +0000 SystemData
 drwxr-xr-x         64B 2023-05-16 04:51:14 +0000 tmp
-(lldb) ls /var/mobile/Containers/Data/Application/09E63130-623F-4124-BCBB-59E20BD28964/Documents
+(lldb) ils /var/mobile/Containers/Data/Application/09E63130-623F-4124-BCBB-59E20BD28964/Documents
 -rw-r--r--         18B 2023-05-16 05:36:05 +0000 report.txt
 ```
 
@@ -689,18 +718,18 @@ upload success
 
 
 
-#### rm - remove file
+#### irm - remove file
 
 Remove file or directory on remote device.
 
 ```stylus
-(lldb) ls doc
+(lldb) ils doc
 /var/mobile/Containers/Data/Application/B142040E-B1A0-4E97-8E76-03357585BFF8/Documents
 -rw-r--r--       12.1K 2023-08-10 07:32:05 +0000 test
 -rw-r--r--       12.1K 2023-08-10 08:22:40 +0000 uploadfile
-(lldb) rm /var/mobile/Containers/Data/Application/B142040E-B1A0-4E97-8E76-03357585BFF8/Documents/uploadfile
+(lldb) irm /var/mobile/Containers/Data/Application/B142040E-B1A0-4E97-8E76-03357585BFF8/Documents/uploadfile
 remove success
-(lldb) ls doc
+(lldb) ils doc
 /var/mobile/Containers/Data/Application/B142040E-B1A0-4E97-8E76-03357585BFF8/Documents
 -rw-r--r--       12.1K 2023-08-10 07:32:05 +0000 test
 ```
