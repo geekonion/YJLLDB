@@ -87,7 +87,7 @@ def handle_command(debugger, command, result, name):
             module_file_spec = module.GetFileSpec()
             module_name = module_file_spec.GetFilename()
 
-            if lookup_module_name not in module_name:
+            if lookup_module_name != module_name and lookup_module_name + '.dylib' != module_name:
                 continue
             seg = module.FindSection('__TEXT')
             if not seg:
