@@ -62,6 +62,12 @@ Shell command
 
 ​     \* [delcmd](#delcmd)
 
+​     \* [pwd](#pwd)
+
+​     \* [cd](#cd)
+
+​     \* [ls](#ls)
+
 File:
 
 ​     \* [commads to get common directory](#commads-to-get-common-directory)
@@ -575,6 +581,27 @@ error: 'which' is not a valid command.
 ```
 
 [back to commands list](#Commands-list)
+
+
+
+#### pwd
+
+```stylus
+(lldb) pwd
+/Users/xxx
+```
+
+#### cd
+
+```stylus
+(lldb) cd /
+(lldb) pwd
+/
+```
+
+[back to commands list](#Commands-list)
+
+
 
 #### ls
 

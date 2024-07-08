@@ -29,6 +29,10 @@ def __lldb_init_module(debugger, internal_dict):
     dir_name = os.path.dirname(file_path)
     load_python_scripts_dir(dir_name)
 
+    # set cwd to home dir
+    home_path = os.path.expanduser('~')
+    os.chdir(home_path)
+
 
 def load_python_scripts_dir(dir_name):
     this_file_name = os.path.basename(__file__)
