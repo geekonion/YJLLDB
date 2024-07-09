@@ -243,10 +243,35 @@ def get_lazy_sym_name(target, slide, target_sym_sec, linkedit_seg):
             strtab_offset = common.get_int(symtab_data, symtab_index * 16)
             symbol_name = common.get_string(strtab_data, strtab_offset)
             # print(symtab_index, strtab_offset, symbol_name)
-            pos = 0
             if symbol_name.startswith('_'):
-                pos = 1
-            desc += ' -> ' + symbol_name[pos:]
+                name = symbol_name[1:]
+            else:
+                name = symbol_name
+
+            symbol_list = target.FindFunctions(name, lldb.eFunctionNameTypeFull)
+            nsymbol = symbol_list.GetSize()
+
+            if nsymbol == 0:
+                desc += ' -> {} (not a function)'.format(name)
+            elif nsymbol == 1:
+                symbol = symbol_list.GetContextAtIndex(0).GetSymbol()
+                start_addr_obj = symbol.GetStartAddress()
+                if addr_obj == start_addr_obj:
+                    desc += ' (matched)'
+                else:
+                    desc += ' -> {}'.format(start_addr_obj)
+            else:
+                target_addr_obj = None
+                for idx in range(nsymbol):
+                    symbol = symbol_list.GetContextAtIndex(idx).GetSymbol()
+                    start_addr_obj = symbol.GetStartAddress()
+                    if addr_obj == start_addr_obj:
+                        target_addr_obj = start_addr_obj
+                        break
+                if target_addr_obj:
+                    desc += ' (matched)'
+                else:
+                    desc += ' -> ' + name
 
         message += 'address = 0x{:x} where = {}\n'.format(addr, desc)
         total_count += 1
