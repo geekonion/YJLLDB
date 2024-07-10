@@ -45,7 +45,7 @@ def show_info_plist(debugger, command, result, field):
         module_file_spec = module.GetFileSpec()
         module_name = module_file_spec.GetFilename()
 
-        if lookup_module_name in module_name:
+        if lookup_module_name == module_name or lookup_module_name + '.dylib' == module_name:
             print("-----parsing module %s-----" % module_name)
             bundle_path = module_file_spec.GetDirectory()
             info_plist_path = bundle_path + os.path.sep + "Info.plist"
