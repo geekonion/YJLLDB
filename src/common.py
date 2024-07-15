@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+import hashlib
 g_byteorder = 'little'
 
 
@@ -50,3 +51,15 @@ def get_cs_blob(base: bytes, offset, byteorder=None):
     length = swap32(get_int(base, offset + 4, byteorder))
 
     return magic, length
+
+
+def file_md5(file_path):
+    md5_hash = hashlib.md5()
+    with open(file_path, 'rb') as file:
+        while True:
+            data = file.read(4096)
+            if not data:
+                break
+            md5_hash.update(data)
+
+    return md5_hash.hexdigest()
