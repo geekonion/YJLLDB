@@ -20,7 +20,7 @@ def __lldb_init_module(debugger, internal_dict):
         'FileOperations.upload_file ufile')
     debugger.HandleCommand(
         'command script add -h "remove file or directory on remote device" -f '
-        'FileOperations.remove_file rm')
+        'FileOperations.remove_file irm')
 
 
 def download_file(debugger, command, result, internal_dict):
@@ -115,7 +115,10 @@ def upload_file(debugger, command, result, internal_dict):
 
     src = args[0]
     dst, _ = util.absolute_path(args[1])
+    do_upload_file(src, dst)
 
+
+def do_upload_file(src, dst):
     stats = os.stat(src)
     data_size = stats.st_size
     mem_info_str = allocate_memory(data_size)
