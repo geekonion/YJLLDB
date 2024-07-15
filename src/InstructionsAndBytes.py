@@ -65,19 +65,23 @@ def instructions_to_bytes(debugger, command, result, internal_dict):
 
     code, out, err = util.exe_shell_command('clang -c {} -arch {} -o {} && objdump -d {}'.
                                             format(tmp_input_file, arch, tmp_output_file, tmp_output_file))
+    if err:
+        result.SetError(err)
+        return
+
     keyword = '0000000000000000 <ltmp0>:\n'
     pos = out.find(keyword)
     bytes_str = ''
     if pos > 0:
         insts_str = out[pos + len(keyword):]
-        print('disassembly: \n')
+        result.AppendMessage('disassembly: \n')
         insts = insts_str.split('\n')
         for inst in insts:
             open_angle_pos = inst.find('<')
             if open_angle_pos > 0:
                 inst = inst[:open_angle_pos]
 
-            print(inst)
+            result.AppendMessage(inst)
 
             inst = inst.lstrip(' ')
             pos1 = inst.find(':')
@@ -87,10 +91,11 @@ def instructions_to_bytes(debugger, command, result, internal_dict):
             reversed_bytes = bytes_data[::-1]
             bytes_str += reversed_bytes.hex()
 
-    print('machine code: {}'.format(bytes_str))
+    result.AppendMessage('machine code: {}'.format(bytes_str))
 
     os.remove(tmp_input_file)
-    os.remove(tmp_output_file)
+    if os.path.exists(tmp_output_file):
+        os.remove(tmp_output_file)
 
 
 def bytes_to_instructions(debugger, command, result, internal_dict):
