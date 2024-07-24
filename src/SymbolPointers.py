@@ -53,9 +53,9 @@ def handle_command(debugger, command, result, name):
     target = debugger.GetSelectedTarget()
 
     if name == 'got':
-        mask = 0x6  # S_NON_LAZY_SYMBOL_POINTERS 0x6
+        flag = 0x6  # S_NON_LAZY_SYMBOL_POINTERS 0x6
     elif name == 'lazy_sym':
-        mask = 0x7  # S_LAZY_SYMBOL_POINTERS 0x7
+        flag = 0x7  # S_LAZY_SYMBOL_POINTERS 0x7
     else:
         result.SetError("\n" + parser.get_usage())
         return
@@ -78,7 +78,7 @@ def handle_command(debugger, command, result, name):
     if is_address:
         header_addr = int(addr_str, 16)
         header_size = 0x4000
-        message, count = parse_macho(target, header_addr, header_size, 0, mask)
+        message, count = parse_macho(target, header_addr, header_size, 0, flag)
         total_count += count
 
         result.AppendMessage(message)
@@ -101,7 +101,7 @@ def handle_command(debugger, command, result, name):
             first_sec = seg.GetSubSectionAtIndex(0)
             sec_addr = first_sec.GetLoadAddress(target)
             header_size = sec_addr - header_addr
-            message, count = parse_macho(target, header_addr, header_size, slide, mask)
+            message, count = parse_macho(target, header_addr, header_size, slide, flag)
             total_count += count
 
             result.AppendMessage(message)
@@ -109,7 +109,7 @@ def handle_command(debugger, command, result, name):
     result.AppendMessage('{} location(s) found'.format(total_count))
 
 
-def parse_macho(target, header_addr, header_size, slide, mask):
+def parse_macho(target, header_addr, header_size, slide, flag):
     message = ''
     total_count = 0
     error = lldb.SBError()
@@ -122,7 +122,7 @@ def parse_macho(target, header_addr, header_size, slide, mask):
     if slide == 0:
         slide = header_addr - int(info['text_vmaddr'], 16)
 
-    target_sym_sec = None
+    target_sym_secs = []
     linkedit_seg = None
     lcs = info['lcs']
     for lc in lcs:
@@ -142,30 +142,32 @@ def parse_macho(target, header_addr, header_size, slide, mask):
                 continue
 
             # SECTION_TYPE 0x000000ff
-            is_lazy_sym = int(flags_str, 16) & 0x000000ff == mask
+            is_lazy_sym = int(flags_str, 16) & 0x000000ff == flag
             if not is_lazy_sym:
                 continue
 
-            target_sym_sec = sect
+            target_sym_secs.append(sect)
 
-    if target_sym_sec:
-        message, count = get_lazy_sym_name(target, slide, target_sym_sec, linkedit_seg)
-        total_count += count
+    if len(target_sym_secs):
+        for sym_sec in target_sym_secs:
+            msg, count = get_sym_name(target, slide, sym_sec, linkedit_seg)
+            message += 'symbols in ' + sym_sec['name'] + ':\n' + msg
+            total_count += count
     else:
         message = 'section not found'
 
     return message, total_count
 
 
-def get_lazy_sym_name(target, slide, target_sym_sec, linkedit_seg):
+def get_sym_name(target, slide, sym_sec, linkedit_seg):
     message = ''
     total_count = 0
 
     byte_order = 'little' if target.GetByteOrder() == lldb.eByteOrderLittle else 'big'
 
-    addr = int(target_sym_sec['addr'], 16)
-    size = int(target_sym_sec['size'], 16)
-    reserved1 = int(target_sym_sec['reserved1'], 16)
+    addr = int(sym_sec['addr'], 16)
+    size = int(sym_sec['size'], 16)
+    reserved1 = int(sym_sec['reserved1'], 16)
     sec_start = addr + slide
 
     error1 = lldb.SBError()
