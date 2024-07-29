@@ -15,6 +15,21 @@ def get_function_starts(lookup_module_name_or_addr):
         print('module {} not found in image list'.format(module_name))
         # return None, module_file_spec
 
+    return get_function_starts_with_args(target, module_file_spec, header_addr, slide, segment_info)
+
+
+def get_function_starts_with_module(module):
+    target = lldb.debugger.GetSelectedTarget()
+    module_file_spec, header_addr, slide, segment_info, module_name = \
+        get_segment_info_in_module(target, module, '__LINKEDIT')
+    if not module_file_spec:
+        print('module {} not found in image list'.format(module_name))
+        # return None, module_file_spec
+
+    return get_function_starts_with_args(target, module_file_spec, header_addr, slide, segment_info)
+
+
+def get_function_starts_with_args(target, module_file_spec, header_addr, slide, segment_info):
     funcs = []
     func_starts = []
     func_size_list = []
@@ -153,16 +168,11 @@ def get_entitlements(lookup_module_name):
 
 
 def get_segment_info(target, module_name_or_addr, target_seg_name):
-    module_file_spec = None
-    header_addr = 0
-    slide = 0
-    segment_info = None
-    module_found = False
+    target_module = None
 
     is_addr, lookup_module_name_or_addr = util.parse_arg(module_name_or_addr)
 
     module_addr = 0
-    header_size = 0
     if is_addr:
         module_addr = int(lookup_module_name_or_addr, 16)
 
@@ -187,24 +197,34 @@ def get_segment_info(target, module_name_or_addr, target_seg_name):
             if lookup_module_name_or_addr != module_name and lib_name != module_name:
                 continue
 
-        module_found = True
-        seg = module.FindSection('__TEXT')
-        if not seg:
-            print('seg __TEXT not found in {}'.format(module_name))
-            continue
-
-        header_addr = seg.GetLoadAddress(target)
-        slide = header_addr - seg.GetFileAddress()
-
-        first_sec = seg.GetSubSectionAtIndex(0)
-        sec_addr = first_sec.GetLoadAddress(target)
-
-        header_size = sec_addr - header_addr
-
+        target_module = module
         # modules
         break
 
-    if not module_found and is_addr:
+    return get_segment_info_in_module(target, target_module, target_seg_name)
+
+
+def get_segment_info_in_module(target, module, target_seg_name):
+    header_addr = 0
+    slide = 0
+    segment_info = None
+    module_file_spec = module.GetFileSpec()
+
+    seg = module.FindSection('__TEXT')
+    module_name = module_file_spec.GetFilename()
+    if not seg:
+        print('seg __TEXT not found in {}'.format(module_name))
+        return module_file_spec, header_addr, slide, segment_info, module_name
+
+    header_addr = seg.GetLoadAddress(target)
+    slide = header_addr - seg.GetFileAddress()
+
+    first_sec = seg.GetSubSectionAtIndex(0)
+    sec_addr = first_sec.GetLoadAddress(target)
+
+    header_size = sec_addr - header_addr
+
+    if not module and is_addr:
         header_addr = module_addr
         header_size = 0x4000
 
@@ -231,13 +251,11 @@ def get_segment_info(target, module_name_or_addr, target_seg_name):
         # lcs
         break
 
-    if not module_found:
+    if not module:
         module_file_spec = None
 
     if slide == 0:
         slide = header_addr - int(info['text_vmaddr'], 16)
         module_name = info.get('name')
-    else:
-        module_name = lookup_module_name_or_addr
 
     return module_file_spec, header_addr, slide, segment_info, module_name
