@@ -750,13 +750,15 @@ def symbolize_addr(addr):
 
 def find_addresses_in_module(addr_list, module_path):
     command_script = '@import ObjectiveC;\n@import Foundation;\n'
-    command_script += 'NSArray *addr_list = @[\n'
+    command_script += 'NSArray *methods_list = @[\n'
     for addr in addr_list:
         command_script += '\t@(' + str(addr) + '),\n'
     command_script += '];\n'
     command_script += 'NSString *module_path = @"' + str(module_path) + '";'
 
     command_script += r'''
+    
+    NSMutableArray *addr_list = [NSMutableArray arrayWithArray:methods_list];
     
     unsigned int n_classes = 0;
     const char **allClasses = (const char **)objc_copyClassNamesForImage((const char *)[module_path UTF8String], &n_classes);
@@ -777,13 +779,19 @@ def find_addresses_in_module(addr_list, module_path):
         for (int j = 0; j < n_imethods; j++) {
             Method method = methods[j];
             uint64_t method_imp = (uint64_t)method_getImplementation(method);
-            if ([addr_list containsObject:@(method_imp)]) {
+            NSNumber *addr = @(method_imp);
+            if ([addr_list containsObject:addr]) {
                 const char *sel_name = sel_getName((SEL)method_getName(method));
                 NSString *key = [NSString stringWithFormat:@"%lld", method_imp];
                 methods_info[key] = [NSString stringWithFormat:@"-[%s %s]", cls_name, sel_name];
+                [addr_list removeObject:addr];
             }
         }
         free(methods);
+        
+        if ([addr_list count] == 0) {
+            break;
+        }
         
         // class methods
         unsigned int n_cmethods = 0;
@@ -791,13 +799,18 @@ def find_addresses_in_module(addr_list, module_path):
         for (int k = 0; k < n_cmethods; k++) {
             Method method = classMethods[k];
             uint64_t method_imp = (uint64_t)method_getImplementation(method);
-            if ([addr_list containsObject:@(method_imp)]) {
+            NSNumber *addr = @(method_imp);
+            if ([addr_list containsObject:addr]) {
                 const char *sel_name = sel_getName((SEL)method_getName(method));
                 NSString *key = [NSString stringWithFormat:@"%lld", method_imp];
-                methods_info[key] = [NSString stringWithFormat:@"-[%s %s]", cls_name, sel_name];
+                methods_info[key] = [NSString stringWithFormat:@"+[%s %s]", cls_name, sel_name];
+                [addr_list removeObject:addr];
             }
         }
         free(classMethods);
+        if ([addr_list count] == 0) {
+            break;
+        }
     }
     free(allClasses);
     
