@@ -29,6 +29,7 @@ def get_desc_for_address(addr, default_name=None, need_line=True):
         module_file_spec = module.GetFileSpec()
         module_name = module_file_spec.GetFilename()
 
+    # 行号
     if need_line:
         line_entry = addr.GetLineEntry()
         if line_entry:
