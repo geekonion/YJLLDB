@@ -92,7 +92,12 @@ def get_function_starts_with_args(target, module_file_spec, header_addr, slide, 
             if index < max_idx:
                 funcs.append((func_start, func_size_list[index]))
             else:
-                funcs.append((func_start, 0))
+                func_addr_obj = target.ResolveLoadAddress(func_start)
+                symbol = func_addr_obj.GetSymbol()
+                end_addr = symbol.GetEndAddress().GetLoadAddress(target)
+                func_size = end_addr - func_start
+
+                funcs.append((func_start, func_size))
         # sects
         break
 
