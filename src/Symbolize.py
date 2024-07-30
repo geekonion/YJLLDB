@@ -656,6 +656,10 @@ def symbolize_thread_list(last_exception_obj, thread_list):
     for thread in thread_list:
         target_frames.extend(thread.frames)
 
+    file_spec = target.GetExecutable()
+    module = target.FindModule(file_spec)
+    main_addr = module.GetObjectFileEntryPointAddress().GetLoadAddress(target)
+
     for frame in target_frames:
         if frame.symbol_name:
             continue
@@ -670,11 +674,14 @@ def symbolize_thread_list(last_exception_obj, thread_list):
                 func_map[image_name] = addr_list
 
             load_addr = header_addr + frame.file_offset
+
             addr_obj = lldb.SBAddress(load_addr, target)
             symbol = addr_obj.GetSymbol()
             symbol_start = symbol.GetStartAddress().GetLoadAddress(target)
             symbol_name = symbol.name
-            if symbol_name.find('unnamed_symbol') == -1:
+            if symbol_start == main_addr:
+                frame.symbol_name = 'main'
+            elif symbol_name.find('unnamed_symbol') == -1:
                 frame.symbol_name = symbol_name
             else:
                 addr_list.append(symbol_start)
