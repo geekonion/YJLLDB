@@ -875,7 +875,13 @@ AppDelegate
 Get module name with header address.
 
 ```stylus
+(lldb) p/x header
+(const mach_header *) 0x1043e8000
+
 (lldb) mname 0x1043e8000
+LLDBCode
+
+(lldb) mname header
 LLDBCode
 ```
 
@@ -969,10 +975,10 @@ Print function starts
 ```stylus
 (lldb) func_starts
 -----parsing module JITDemo-----
-address = 0x1021bc5c8 where = JITDemo`globalBlock_block_invoke at ViewController.m:17
-address = 0x1021bc608 where = JITDemo`+[ViewController load] at ViewController.m:27
+address = 0x1021bc5c8 size = 64 where = JITDemo`globalBlock_block_invoke at ViewController.m:17
+address = 0x1021bc608 size = 20 where = JITDemo`+[ViewController load] at ViewController.m:27
 ...
-address = 0x1021bdae0 where = JITDemo`-[SceneDelegate .cxx_destruct] at SceneDelegate.m:14
+address = 0x1021bdae0 size = 56 where = JITDemo`-[SceneDelegate .cxx_destruct] at SceneDelegate.m:14
 (lldb) 
 ```
 
@@ -983,10 +989,10 @@ address = 0x1021bdae0 where = JITDemo`-[SceneDelegate .cxx_destruct] at SceneDel
 ```stylus
 (lldb) got
 -----parsing module JITDemo-----
-address = 0x1ac734ce0 where = Foundation`NSFileModificationDate
+address = 0x1ac734ce0 where = where = Foundation`NSFileModificationDate -> NSFileModificationDate (not a function)
 ...
-address = 0x180d44900 where = libobjc.A.dylib`objc_msgSend
-address = 0x1814ce1c0 where = libdyld.dylib`dyld_stub_binder
+address = 0x180d44900 where = libobjc.A.dylib`objc_msgSend (matched)
+address = 0x1814ce1c0 where = libdyld.dylib`dyld_stub_binder (matched)
 13 location(s) found
 ```
 
@@ -999,9 +1005,9 @@ address = 0x1814ce1c0 where = libdyld.dylib`dyld_stub_binder
 ```stylus
 (lldb) lazy_sym
 -----parsing module JITDemo-----
-address = 0x104c7fe14 where = JITDemo`my_NSHomeDirectory at ViewController.m:63 -> NSHomeDirectory
+address = 0x104c7fe14 where = JITDemo`my_NSHomeDirectory at ViewController.m:63 -> Foundation`NSHomeDirectory
 ...
-address = 0x1815fb950 where = libsystem_kernel.dylib`open -> open
+address = 0x1815fb950 where = libsystem_kernel.dylib`open (matched)
 36 location(s) found
 ```
 
