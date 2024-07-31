@@ -3,7 +3,6 @@
 import lldb
 import optparse
 import shlex
-import MachO
 import util
 
 
