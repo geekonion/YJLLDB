@@ -7,6 +7,7 @@ import os
 import json
 import util
 import re
+import LoadDSYM
 
 g_last_exception_place_holder = '$Last Exception$'
 g_thread_list_place_holder = '$thread list$'
@@ -27,6 +28,8 @@ g_registers = {
 g_uuid_loadAddr_map = {}
 # modules in crash report
 g_module_name_uuid_map = {}
+g_crash_uuid_map = {}
+g_dsym_dir = None
 
 
 def __lldb_init_module(debugger, internal_dict):
@@ -75,6 +78,9 @@ def do_symbolize(debugger, command, result, internal_dict):
             else:
                 result.AppendMessage('symbol not found')
         elif arg.endswith('.ips') or arg.endswith('.crash'):
+            if options.dsym:
+                global g_dsym_dir
+                g_dsym_dir = options.dsym
             symbolize_crash_report(debugger, result, arg)
         else:
             result.AppendMessage('unknown argument')
@@ -120,7 +126,7 @@ def symbolize_crash_report(debugger, result, file_path):
     target = debugger.GetSelectedTarget()
     global g_uuid_loadAddr_map
     for module in target.module_iter():
-        uuid = module.GetUUIDString().replace('-', '')
+        uuid = module.GetUUIDString().upper().replace('-', '')
         header_addr = module.GetObjectFileHeaderAddress().GetLoadAddress(target)
         g_uuid_loadAddr_map[uuid] = header_addr
 
@@ -174,6 +180,14 @@ def symbolize_ips_file(file_path):
             last_exception_obj = build_last_exception(last_exception, used_images, max_width)
 
         thread_list = build_threads(data_dict, used_images, max_width)
+
+        # 尝试加载符号文件
+        if g_dsym_dir:
+            dsym_dir = g_dsym_dir
+        else:
+            dsym_dir = os.path.dirname(file_path)
+        LoadDSYM.try_load_dsym_file_in_dir(dsym_dir, g_crash_uuid_map)
+
         symbolize_thread_list(last_exception_obj, thread_list)
 
         if last_exception:
@@ -440,7 +454,7 @@ def build_images(data_dict):
     image_list = ' \n'
     image_list += 'Binary Images:\n'
 
-    global g_module_name_uuid_map
+    global g_crash_uuid_map, g_module_name_uuid_map
     for image in images:
         base = image.get('base')
         size = image.get('size')
@@ -449,11 +463,13 @@ def build_images(data_dict):
         else:
             end = base + size
         arch = image.get('arch')
-        uuid = image.get('uuid')
+        uuid = image.get('uuid').upper()
         path = image.get('path')
         name = image.get('name')
         image_list += '\t{:#x} - {:#x} {} {} <{}> {}\n'.format(base, end, name, arch, uuid, path)
 
+        global g_crash_uuid_map, g_module_name_uuid_map
+        g_crash_uuid_map[uuid] = True
         g_module_name_uuid_map[name] = uuid.replace('-', '')
 
     image_list += ' \n'
@@ -466,7 +482,7 @@ def build_images(data_dict):
         end = base + size - 1
     else:
         end = base + size
-    uuid = sharedCache.get('uuid')
+    uuid = sharedCache.get('uuid').upper()
     image_list += '{:#x} - {:#x} <{}>\n'.format(base, end, uuid)
 
     return image_list
@@ -575,6 +591,14 @@ def symbolize_crash_file(file_path):
             final_lines.append(line)
 
     final_report = '\n'.join(final_lines)
+
+    # 尝试加载符号文件
+    if g_dsym_dir:
+        dsym_dir = g_dsym_dir
+    else:
+        dsym_dir = os.path.dirname(file_path)
+    LoadDSYM.try_load_dsym_file_in_dir(dsym_dir, g_crash_uuid_map)
+
     symbolize_thread_list(last_exception, thread_list)
 
     if last_exception:
@@ -635,9 +659,11 @@ def parse_image_line(image_line):
     image_name = image_line[pos2 + 1: pos3]
     pos4 = image_line.find('<', pos3)
     pos5 = image_line.find('>', pos4)
-    uuid = image_line[pos4 + 1: pos5].replace('-', '')
+    uuid = image_line[pos4 + 1: pos5].upper()
 
-    g_module_name_uuid_map[image_name] = uuid
+    global g_crash_uuid_map, g_module_name_uuid_map
+    g_crash_uuid_map[uuid] = True
+    g_module_name_uuid_map[image_name] = uuid.replace('-', '')
 
 
 def symbolize_thread_list(last_exception_obj, thread_list):
@@ -665,7 +691,7 @@ def symbolize_thread_list(last_exception_obj, thread_list):
             continue
 
         image_name = frame.image_name
-        uuid = g_module_name_uuid_map[image_name].upper()
+        uuid = g_module_name_uuid_map[image_name]
         header_addr = g_uuid_loadAddr_map.get(uuid)
         if header_addr and header_addr > 0:
             addr_list = func_map.get(image_name)
@@ -871,5 +897,8 @@ def generate_option_parser():
             "%prog /path/to/crash report file"
 
     parser = optparse.OptionParser(usage=usage, prog='symbolize')
+    parser.add_option("-s", "--dsym",
+                      dest="dsym",
+                      help="path to dir of dSYM")
 
     return parser
