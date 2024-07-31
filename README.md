@@ -1058,6 +1058,22 @@ ViewController <0x10468e260>
 
 [back to commands list](#Commands-list)
 
+#### load_dSYM
+
+Add debug symbol file(s) to corresponding module(s)
+
+```stylus
+(lldb) load_dSYM /path/to/dSYMs/Alamofire.framework.dSYM
+1 dSYM file(s) loaded
+```
+
+or
+
+```stylus
+(lldb) load_dSYM /path/to/dSYMs
+16 dSYM file(s) loaded
+```
+
 
 
 ### Assembly
