@@ -692,6 +692,8 @@ def symbolize_thread_list(last_exception_obj, thread_list):
 
     for image_name in func_map:
         addr_list = func_map[image_name]
+        if len(addr_list) == 0:
+            continue
 
         command_script = find_addresses_in_module(addr_list, module_map[image_name])
         method_json_str = util.exe_script(command_script)
