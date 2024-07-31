@@ -1178,7 +1178,7 @@ Convert machine code to assembly instructions.
 
 #### symbolize
 
-Symbolize address, uncaught exception addresses list or crash report file.
+Symbolize address, uncaught exception address list or crash report file.
 
 Symbolize address
 
@@ -1192,7 +1192,7 @@ JITDemo`___lldb_unnamed_symbol302:
 
 
 
-Symbolize uncaught exception addresses list
+Symbolize uncaught exception address list
 
 ```stylus
 (lldb) symbolic (0x1845aed8c 0x1837685ec 0x18450a448 0x104360f78 0x18e4fd83c 0x18e3a3760 0x18e39d7c8 0x18e392890 0x18e3911d0 0x18eb72d1c 0x18eb752c8 0x18eb6e368 0x184557404 0x184556c2c 0x18455479c 0x184474da8 0x186459020 0x18e491758 0x104361da0 0x183f05fc0)

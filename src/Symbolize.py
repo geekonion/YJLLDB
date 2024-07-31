@@ -20,8 +20,7 @@ g_registers = {
           'x16', 'x17', 'x18', 'x19',
           'x20', 'x21', 'x22', 'x23',
           'x24', 'x25', 'x26', 'x27',
-          'x28'],
-    'r': ['r0', 'r1']
+          'x28']
 }
 
 # runtime modules
@@ -34,13 +33,13 @@ g_dsym_dir = None
 
 def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand(
-        'command script add -h "symbolize address, uncaught exception addresses list or crash report file" -f '
+        'command script add -h "symbolize address, uncaught exception address list or crash report file" -f '
         'Symbolize.do_symbolize symbolize')
 
 
 def do_symbolize(debugger, command, result, internal_dict):
     """
-    symbolize uncaught exception addresses list
+    symbolize address, uncaught exception address list or crash report file
     implemented in YJLLDB/src/Symbolize.py
     """
     # 去掉转义符
