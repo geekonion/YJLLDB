@@ -92,7 +92,7 @@ def try_load_dsym_file_in_dir(dir_path, uuid_map, log=False):
 
 
 def try_load_dsym_file(uuid_map, path):
-    code, output, error = util.exe_shell_command('dwarfdump --uuid {}'.format(path))
+    code, output, error = util.exe_shell_command("dwarfdump --uuid '{}'".format(path))
     if code != 0:
         return False, 'dwarfdump failed: {}'.format(error)
 
