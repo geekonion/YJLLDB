@@ -554,6 +554,36 @@ dump success, ipa path: /Users/xxx/lldb_dump_macho/JITDemo/JITDemo.ipa
 
 
 
+##### dmethods
+
+Dumps all methods implemented by the NSObject subclass, supporting both iOS and MacOS.
+
+```stylus
+(lldb) dmethods ViewController
+<ViewController: 0x1021c9b48>:
+in ViewController:
+	Properties:
+		@property unsigned long test;  (@synthesize test = _test;)
+	Instance Methods:
+		- (void) setRepresentedObject:(id)arg1; (0x1021c7020)
+		- (void) setTest:(unsigned long)arg1; (0x1021c7190)
+		- (unsigned long) test; (0x1021c7170)
+		- (void) viewDidLoad; (0x1021c6e90)
+(NSViewController ...)
+```
+
+##### divars
+
+Dumps all ivars for an instance of a particular class which inherits from NSObject, supporting both iOS and MacOS.
+
+```stylus
+(lldb) divars ViewController
+in ViewController:
+	_test (unsigned long): {length = 8, bytes = 0x5a00ab0000000000}
+```
+
+
+
 ### Shell command
 
 #### addcmd

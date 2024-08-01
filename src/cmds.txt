@@ -2,9 +2,9 @@ command alias stack memory read --force -f A $sp $fp
 
 command regex -h "read memory region as address" -s "read_mem_as_addr start_addr end_addr" -- read_mem_as_addr 's/(.*)[[:space:]]*(.*)/memory read --force -f A %1 %2/'
 
-command regex divars -h "Dumps all ivars for an instance of a particular class which inherits from NSObject (iOS, NSObject subclass only)" -s "ivars [UIView new]" -- 's/(.+)/expression -lobjc -O -- [objc_getClass("%1") _ivarDescription]/'
+command regex divars -h "Dumps all ivars for an instance of a particular class which inherits from NSObject, supporting both iOS and MacOS." -s "ivars [UIView new]" -- 's/(.+)/expression -lobjc -O -- NSString *x_iva_des = nil; if ((BOOL)[%1 respondsToSelector:@selector(_ivarDescription)]) { x_iva_des = (id)[%1 _ivarDescription]; } else if ((BOOL)[NSObject respondsToSelector:@selector(fp__ivarDescriptionForClass:)]) { x_iva_des = (id)[NSObject fp__ivarDescriptionForClass:(Class)[%1 class]]; } else { x_iva_des = @"not supported"; } x_iva_des;/'
 
-command regex dmethods -h "Dumps all methods implemented by the NSObject subclass (iOS, NSObject subclass only)" -s "methods UIView" -- 's/(.+)/expression -lobjc -O -- [objc_getClass("%1") _shortMethodDescription]/'
+command regex dmethods -h "Dumps all methods implemented by the NSObject subclass, supporting both iOS and MacOS." -s "methods UIView" -- 's/(.+)/expression -lobjc -O -- NSString *x_method_des = nil; if ((BOOL)[%1 respondsToSelector:@selector(_shortMethodDescription)]) { x_method_des = (id)[%1 _shortMethodDescription]; } else if ((BOOL)[%1 respondsToSelector:@selector(fp_shortMethodDescription)]) { x_method_des = (id)[%1 fp_shortMethodDescription]; } else { x_method_des = @"not supported"; } x_method_des;/'
 
 command alias bundle_dir po [(NSBundle *)[NSBundle mainBundle] bundlePath]
 command alias home_dir po NSHomeDirectory()
