@@ -6,7 +6,6 @@ import shlex
 import util
 import tempfile
 import os
-import MachO
 
 
 def __lldb_init_module(debugger, internal_dict):

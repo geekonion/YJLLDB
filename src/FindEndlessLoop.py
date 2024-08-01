@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 
 import lldb
-import os
 import time
 
 start_time = 0

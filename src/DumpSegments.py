@@ -1,11 +1,11 @@
 # -*- coding: UTF-8 -*-
-import json
 
 import lldb
 import optparse
 import shlex
 import util
 import MachO
+# import json
 
 
 def __lldb_init_module(debugger, internal_dict):

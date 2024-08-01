@@ -1,10 +1,10 @@
 # -*- coding: UTF-8 -*-
-import os.path
 
 import lldb
 import optparse
 import shlex
 import util
+import os.path
 
 
 def __lldb_init_module(debugger, internal_dict):
