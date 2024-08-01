@@ -43,27 +43,33 @@ def find_app_delegate(debugger, command, result, internal_dict):
 def get_app_delegate_class():
     command_script = '@import Foundation;'
     command_script += r'''
-    NSString *module_path = [[NSBundle mainBundle] executablePath];
+    NSString *dlg_module_path = [[NSBundle mainBundle] executablePath];
+    NSString *dlg_dylib = [dlg_module_path stringByAppendingString:@".debug.dylib"];
+    if ((BOOL)[[NSFileManager defaultManager] fileExistsAtPath:dlg_dylib]) {
+        dlg_module_path = dlg_dylib;
+    }
     
-    NSMutableString *result = [NSMutableString string];
-    if (module_path) {
-        unsigned int nclass = 0;
-        const char **names = (const char **)objc_copyClassNamesForImage((const char *)[module_path UTF8String], &nclass);
-        if (names) {
-            Protocol *AppDelegate = NSProtocolFromString(@"UIApplicationDelegate");
-            for (unsigned int i = 0; i < nclass; i++) {
-                NSString *className = [NSString stringWithUTF8String:names[i]];
-                Class cls = NSClassFromString(className);
-                if (cls && (BOOL)[cls conformsToProtocol:AppDelegate]) {
-                    [result appendFormat:@"%@\n", className];
+    NSMutableString *dlg_result = [NSMutableString string];
+    unsigned int nclass = 0;
+    const char **dlg_cls_names = (const char **)objc_copyClassNamesForImage((const char *)[dlg_module_path UTF8String], &nclass);
+    if (dlg_cls_names) {
+        Protocol *AppDelegate = NSProtocolFromString(@"UIApplicationDelegate");
+        Protocol *NSAppDelegate = NSProtocolFromString(@"NSApplicationDelegate");
+        for (unsigned int i = 0; i < nclass; i++) {
+            NSString *className = [NSString stringWithUTF8String:dlg_cls_names[i]];
+            Class cls = NSClassFromString(className);
+            if (cls) {
+                if ((BOOL)[cls conformsToProtocol:AppDelegate]
+                    || (BOOL)[cls conformsToProtocol:NSAppDelegate]) {
+                    [dlg_result appendFormat:@"%@\n", className];
                     break;
                 }
             }
-            free(names);
         }
+        free(dlg_cls_names);
     }
     
-    result;
+    dlg_result;
     '''
 
     ret_str = util.exe_script(command_script)
