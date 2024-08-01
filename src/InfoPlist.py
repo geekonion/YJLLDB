@@ -48,12 +48,16 @@ def show_info_plist(debugger, command, result, field):
         if lookup_module_name == module_name or lookup_module_name + '.dylib' == module_name:
             print("-----parsing module %s-----" % module_name)
             bundle_path = module_file_spec.GetDirectory()
+            if bundle_path.endswith('/MacOS'):
+                bundle_path = bundle_path[:-6]
+
             info_plist_path = bundle_path + os.path.sep + "Info.plist"
             if not os.path.exists(info_plist_path):
                 print("Info.plist not found")
                 continue
 
-            code, out, err = util.exe_shell_command('/usr/local/bin/plistutil -i ' + info_plist_path)
+            cmd_str = "/usr/local/bin/plistutil -i '{}' -f xml".format(info_plist_path)
+            code, out, err = util.exe_shell_command(cmd_str)
             if code == 0:
                 print(out)
             else:
