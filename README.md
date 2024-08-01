@@ -20,7 +20,7 @@ Breakpoint:
 
 ​     \* [bblocks - break blocks (arm64 only)](#bblocks---break-blocks-arm64-only)
 
-​     \* [binitfunc - break mod init func](#binitfunc---break-mod-init-func)
+​     \* [binitfunc - break init func](#binitfunc---break-init-func)
 
 ​     \* [bmethod - break method](#bmethod---break-method)
 
@@ -104,7 +104,7 @@ Module:
 
 ​     \* [main](#main)
 
-​     \* [initfunc - print mod init func](#initfunc---print-mod-init-func)
+​     \* [initfunc - print init func](#initfunc---print-init-func)
 
 ​     \* [func_starts - function starts](#func_starts---function-starts)
 
@@ -114,7 +114,13 @@ Module:
 
 ​     \* [entitlements - dump entitlements](#entitlements---dump-entitlements)
 
+Objc
+
 ​     \* [classes - print class names](#classes---print-class-names)
+
+​     \* [dmethods](#dmethods)
+
+​     \* [divars](#divars)
 
 Assembly:
 
@@ -128,13 +134,19 @@ Memory:
 
 ​     \* [read_cstring - read memory as c style string](#read_cstring---read-memory-as-c-style-string)
 
-Others:
+Symbolize
+
+​     \* [load_dSYM](#load_dSYM)
 
 ​     \* [symbolize](#symbolize)
+
+Others:
 
 ​     \* [find_el - find endless loop](#find_el---find-endless-loop)
 
 ​     \* [thread_eb - extended backtrace of thread](#thread_eb---extended-backtrace-of-thread)
+
+
 
 ## Installation
 
@@ -268,13 +280,14 @@ set 7 breakpoints
 
 
 
-#### binitfunc - break mod init func
+#### binitfunc - break init func
 
 Break module init function(s) in user modules.
 
 ```stylus
 (lldb) binitfunc
 -----try to lookup init function in JITDemo-----
+mod init func pointers found: __DATA,__mod_init_func
 Breakpoint 6: JITDemo`entry1 at main.m:708:0, address = 0x100e08cb0
 Breakpoint 7: JITDemo`entry2 at main.m:740:0, address = 0x100e0960c
 ```
@@ -551,36 +564,6 @@ dump success, ipa path: /Users/xxx/lldb_dump_macho/JITDemo/JITDemo.ipa
 ```
 
 [back to commands list](#Commands-list)
-
-
-
-##### dmethods
-
-Dumps all methods implemented by the NSObject subclass, supporting both iOS and MacOS.
-
-```stylus
-(lldb) dmethods ViewController
-<ViewController: 0x1021c9b48>:
-in ViewController:
-	Properties:
-		@property unsigned long test;  (@synthesize test = _test;)
-	Instance Methods:
-		- (void) setRepresentedObject:(id)arg1; (0x1021c7020)
-		- (void) setTest:(unsigned long)arg1; (0x1021c7190)
-		- (unsigned long) test; (0x1021c7170)
-		- (void) viewDidLoad; (0x1021c6e90)
-(NSViewController ...)
-```
-
-##### divars
-
-Dumps all ivars for an instance of a particular class which inherits from NSObject, supporting both iOS and MacOS.
-
-```stylus
-(lldb) divars ViewController
-in ViewController:
-	_test (unsigned long): {length = 8, bytes = 0x5a00ab0000000000}
-```
 
 
 
@@ -983,13 +966,14 @@ function main at 0x102911b70, fileoff: 0x5b70
 
 
 
-#### initfunc - print mod init func
+#### initfunc - print init func
 
 Dump module init function(s) in user modules.
 
 ```stylus
 (lldb) initfunc
 -----try to lookup init function in JITDemo-----
+mod init func pointers found: __DATA,__mod_init_func
 address = 0x100e08cb0 JITDemo`entry1 at main.m:708:0
 address = 0x100e0960c JITDemo`entry2 at main.m:740:0
 ```
@@ -1075,6 +1059,8 @@ UIKit apparently does not contain code signature
 
 
 
+### Objc
+
 #### classes - print class names
 
 Print class names in the specified module.
@@ -1088,20 +1074,36 @@ ViewController <0x10468e260>
 
 [back to commands list](#Commands-list)
 
-#### load_dSYM
 
-Add debug symbol file(s) to corresponding module(s)
+
+##### dmethods
+
+Dumps all methods implemented by the NSObject subclass, supporting both iOS and MacOS.
 
 ```stylus
-(lldb) load_dSYM /path/to/dSYMs/Alamofire.framework.dSYM
-1 dSYM file(s) loaded
+(lldb) dmethods ViewController
+<ViewController: 0x1021c9b48>:
+in ViewController:
+	Properties:
+		@property unsigned long test;  (@synthesize test = _test;)
+	Instance Methods:
+		- (void) setRepresentedObject:(id)arg1; (0x1021c7020)
+		- (void) setTest:(unsigned long)arg1; (0x1021c7190)
+		- (unsigned long) test; (0x1021c7170)
+		- (void) viewDidLoad; (0x1021c6e90)
+(NSViewController ...)
 ```
 
-or
+
+
+##### divars
+
+Dumps all ivars for an instance of a particular class which inherits from NSObject, supporting both iOS and MacOS.
 
 ```stylus
-(lldb) load_dSYM /path/to/dSYMs
-16 dSYM file(s) loaded
+(lldb) divars ViewController
+in ViewController:
+	_test (unsigned long): {length = 8, bytes = 0x5a00ab0000000000}
 ```
 
 
@@ -1204,7 +1206,25 @@ Convert machine code to assembly instructions.
 
 
 
-### Others:
+### symbolize:
+
+#### load_dSYM
+
+Add debug symbol file(s) to corresponding module(s)
+
+```stylus
+(lldb) load_dSYM /path/to/dSYMs/Alamofire.framework.dSYM
+1 dSYM file(s) loaded
+```
+
+or
+
+```stylus
+(lldb) load_dSYM /path/to/dSYMs
+16 dSYM file(s) loaded
+```
+
+
 
 #### symbolize
 
@@ -1219,6 +1239,8 @@ JITDemo`___lldb_unnamed_symbol302:
 (lldb) symbolize 0x1045843d4
 0x1045843d4: JITDemo`-[ViewController ls_dir:] + 0
 ```
+
+[back to commands list](#Commands-list)
 
 
 
@@ -1263,6 +1285,8 @@ or
 [back to commands list](#Commands-list)
 
 
+
+### Others:
 
 #### find_el - find endless loop
 
