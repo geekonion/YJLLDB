@@ -78,6 +78,10 @@ def parse_entitlements(debugger, command, result, field):
         return
 
     target = debugger.GetSelectedTarget()
+    if field != 'entitlements' and target.GetTriple().find('apple-macosx') > 0:
+        print('MacOSX not supported')
+        return
+
     if args:
         module_name = ''.join(args)
     else:
