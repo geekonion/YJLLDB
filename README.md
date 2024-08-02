@@ -786,7 +786,7 @@ List current executable and dependent shared library images, sorted by load addr
 
 ```stylus
 (lldb) image_list
-index     load addr(slide)     vmsize path
+index     load_addr(slide)     vmsize path
 ------------------------------------------------------------
 [  0] 0x1048dc000(0x0048dc000) 655.4K /private/var/containers/Bundle/Application/D5752641-F291-4170-9576-67D8011C88D3/JITDemo.app
 [  1] 0x10497c000(0x10497c000) 131.1K /Users/xxx/Library/Developer/Xcode/DerivedData/LLDBJIT-xxx/Build/Products/Debug-iphoneos/JITDemo.app/Frameworks/LLDBJIT.framework/LLDBJIT
@@ -795,11 +795,20 @@ index     load addr(slide)     vmsize path
 
 ```stylus
 (lldb) image_list -v
-index    load addr - end addr(slide)         vmsize arch  uuid   path
+index    load_addr - end_addr(slide)         vmsize arch  uuid   path
 ------------------------------------------------------------
 [  0] 0x1048dc000 - 0x10497c000(0x0048dc000) 655.4K arm64 5B4BAB05-B614-339D-909E-1877AA53AD11 /private/var/containers/Bundle/Application/D5752641-F291-4170-9576-67D8011C88D3/JITDemo.app
 [  1] 0x10497c000 - 0x10499c000(0x10497c000) 131.1K arm64 E8938575-D438-3175-B846-B60CF9DE0304 /Users/xxx/Library/Developer/Xcode/DerivedData/LLDBJIT-xxx/Build/Products/Debug-iphoneos/JITDemo.app/Frameworks/LLDBJIT.framework/LLDBJIT
 ...
+```
+
+```stylus
+(lldb) image_list -u
+index     load_addr(slide)     vmsize path
+------------------------------------------------------------
+[  0] 0x1022f8000(0x0022f8000)  98.3K /private/var/containers/Bundle/Application/5DD99AF7-20FE-4369-AD0B-6A898DB12171/JITDemo.app
+[  1] 0x1024cc000(0x1024cc000) 147.5K /Users/xxx/Library/Developer/Xcode/DerivedData/LLDBJIT-bwkzhcqdptajftbnezhkwkpwqlqb/Build/Products/Debug-iphoneos/JITDemo.app/Frameworks/LLDBJIT.framework/LLDBJIT
+[  2] 0x1027a0000(0x1027a0000) 655.4K /Users/xxx/Library/Developer/Xcode/DerivedData/LLDBJIT-bwkzhcqdptajftbnezhkwkpwqlqb/Build/Products/Debug-iphoneos/JITDemo.app/JITDemo.debug.dylib
 ```
 
 [back to commands list](#Commands-list)

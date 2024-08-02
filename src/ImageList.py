@@ -4,6 +4,7 @@ import lldb
 import optparse
 import shlex
 import util
+import os
 
 
 class Module:
@@ -56,13 +57,24 @@ def image_list(debugger, command, result, internal_dict):
     symbol_comp = ')/Symbols/'
     symbol_comp_len = len(symbol_comp)
 
+    app_name = None
+    app_path = target.GetExecutable().GetDirectory()
+    last_slash_pos = app_path.rfind('/')
+    if last_slash_pos > 0:
+        app_name = app_path[last_slash_pos:] + os.path.sep
+
     for module in target.module_iter():
+        mod_spec = module.GetFileSpec()
         if n_modules > 0:
-            mod_spec = module.GetFileSpec()
             module_name = mod_spec.GetFilename()
             module_header = module.GetObjectFileHeaderAddress()
             header_addr = module_header.GetLoadAddress(target)
             if (module_name not in args) and (header_addr not in args):
+                continue
+        elif options.user:
+            mod_path = str(mod_spec)
+            pos = mod_path.rfind(app_name)
+            if pos == -1:
                 continue
 
         slide = 0
@@ -99,9 +111,9 @@ def image_list(debugger, command, result, internal_dict):
     sorted_modules = sorted(modules, key=lambda tmp_module: tmp_module.load_address)
 
     if options.verbose:
-        print("index    load addr - end addr(slide)         vmsize arch  uuid   path")
+        print("index    load_addr - end_addr(slide)         vmsize arch  uuid   path")
     else:
-        print("index     load addr(slide)     vmsize path")
+        print("index     load_addr(slide)     vmsize path")
 
     print('-' * 60)
     for idx, module in enumerate(sorted_modules):
@@ -138,6 +150,13 @@ def generate_option_parser():
     parser.add_option("-c", "--count",
                       dest="count",
                       help="image count")
+
+    parser.add_option("-u", "--user",
+                      action="store_true",
+                      default=False,
+                      dest="user",
+                      help="parse user modules")
+
     parser.add_option("-v", "--verbose",
                       action='store_true',
                       default=False,
