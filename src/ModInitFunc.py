@@ -9,17 +9,17 @@ import MachO
 
 def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand(
-        'command script add -h "dump module init function(s) in user modules" -f '
+        'command script add -h "dump module init function(s) of specified module" -f '
         'ModInitFunc.dump_mod_init_func initfunc')
 
     debugger.HandleCommand(
-        'command script add -h "break module init function(s) in user modules" -f '
+        'command script add -h "break module init function(s) of specified module" -f '
         'ModInitFunc.break_mod_init_func binitfunc')
 
 
 def dump_mod_init_func(debugger, command, result, internal_dict):
     """
-    dump module init function(s) in user modules
+    dump module init function(s) of specified module
     implemented in YJLLDB/src/ModInitFunc.py
     """
     parse_mod_init_func(debugger, command, result, 'initfunc')
@@ -27,7 +27,7 @@ def dump_mod_init_func(debugger, command, result, internal_dict):
 
 def break_mod_init_func(debugger, command, result, internal_dict):
     """
-    break module init function(s) in user modules
+    break module init function(s) of specified module
     implemented in YJLLDB/src/ModInitFunc.py
     """
     parse_mod_init_func(debugger, command, result, 'binitfunc')
@@ -54,127 +54,133 @@ def parse_mod_init_func(debugger, command, result, name):
         lookup_module_name = ''.join(args)
         lookup_module_name = lookup_module_name.replace("'", "")
     else:
+        # 缺省时，解析所有用户镜像
         lookup_module_name = None
 
     process = target.GetProcess()
-    total_count = 0
-    module_name = None
     bundle_path = target.GetExecutable().GetDirectory()
-    target_module = None
+    module_not_found = True
     for module in target.module_iter():
         module_file_spec = module.GetFileSpec()
         module_name = module_file_spec.GetFilename()
         module_dir = module_file_spec.GetDirectory()
-        if bundle_path not in module_dir:
-            continue
 
-        if module_name.startswith('libswift'):
-            continue
-
-        if lookup_module_name and lookup_module_name not in module_name:
-            continue
-
-        target_module = module
-        # modules
-        break
-
-    if target_module:
-        print("-----try to lookup init function in %s-----" % module_name)
-
-        header_addr = target_module.GetObjectFileHeaderAddress().GetLoadAddress(target)
-        seg = target_module.FindSection('__TEXT')
-        if seg:
-            slide = header_addr - seg.GetFileAddress()
-            first_sec = seg.GetSubSectionAtIndex(0)
-            sec_addr = first_sec.GetLoadAddress(target)
-            header_size = sec_addr - header_addr
+        if lookup_module_name:
+            dylib_name = lookup_module_name + '.dylib'
+            if lookup_module_name == module_name or dylib_name == module_name:
+                module_not_found = False
+                parse_module(target, process, result, module, module_name, name)
         else:
-            slide = 0
-            header_size = 0x4000
-
-        error = lldb.SBError()
-        header_data = target.ReadMemory(lldb.SBAddress(header_addr, target), header_size, error)
-        if not error.Success():
-            result.AppendMessage('read header failed! {}\n'.format(error.GetCString()))
-            return
-
-        init_func_not_found = True
-        info = MachO.parse_header(header_data)
-        if slide == 0:
-            slide = header_addr - int(info['text_vmaddr'], 16)
-
-        lcs = info['lcs']
-        for lc in lcs:
-            cmd = lc['cmd']
-            if cmd != '19':  # LC_SEGMENT_64
+            if bundle_path not in module_dir:
                 continue
 
-            sects = lc['sects']
-            for sect in sects:
-                set_flags_str = sect.get('flags')
-                if not set_flags_str:
-                    continue
+            if module_name.startswith('libswift'):
+                continue
 
-                sec_flags = int(set_flags_str, 16)
+            parse_module(target, process, result, module, module_name, name)
 
-                # define SECTION_TYPE		 0x000000ff
-                # #define S_MOD_INIT_FUNC_POINTERS 0x9
-                is_mod_init = sec_flags & 0x000000ff == 0x9
+    if lookup_module_name and module_not_found:
+        result.AppendMessage('module {} not found'.format(lookup_module_name))
+        return
 
-                # #define S_INIT_FUNC_OFFSETS 0x16  /* 32-bit offsets to initializers
-                is_init_offsets = sec_flags & 0x000000ff == 0x16
-                if not is_mod_init and not is_init_offsets:
-                    continue
 
-                sec_addr = slide + int(sect['addr'], 16)
-                sec_size = int(sect['size'], 16)
-                if is_mod_init:
-                    unit_size = process.GetAddressByteSize()
-                    unit_count = int(sec_size / unit_size)
-                    print('mod init func pointers found: {},{}'.format(lc['name'], sect['name']))
-                elif is_init_offsets:
-                    unit_size = 4  # offset is 32-bit
-                    unit_count = int(sec_size / unit_size)
-                    print('init func offsets found: {},{}'.format(lc['name'], sect['name']))
-                else:
-                    unit_size = 8
-                    unit_count = 0
-
-                init_func_not_found = False
-                for idx in range(unit_count):
-                    error = lldb.SBError()
-                    if is_mod_init:
-                        func_ptr = process.ReadPointerFromMemory(sec_addr + idx * unit_size, error)
-                    elif is_init_offsets:
-                        offset = process.ReadUnsignedFromMemory(sec_addr + idx * unit_size, unit_size, error)
-                        func_ptr = header_addr + offset
-                    else:
-                        continue
-
-                    if error.Success():
-                        func_addr = target.ResolveLoadAddress(func_ptr)
-                        if name == 'initfunc':
-                            print('address = 0x{:x} {}'.
-                                  format(func_ptr, util.get_desc_for_address(func_addr)))
-                        elif name == 'binitfunc':
-                            brkpoint = target.BreakpointCreateBySBAddress(func_addr)
-                            # 判断下断点是否成功
-                            if not brkpoint.IsValid() or brkpoint.num_locations == 0:
-                                print("Breakpoint isn't valid or hasn't found any hits")
-                            else:
-                                total_count += 1
-                                print("Breakpoint {}: {}, address = 0x{:x}"
-                                      .format(brkpoint.GetID(), util.get_desc_for_address(func_addr), func_ptr)
-                                      )
-
-                # for sects
-                break
-
-        if init_func_not_found:
-            result.AppendMessage('{} apparently does not contain init_func'.format(module_name))
-            return
+def parse_module(target, process, result, module, module_name, name):
+    result.AppendMessage("-----try to lookup init function in %s-----" % module_name)
+    total_count = 0
+    header_addr = module.GetObjectFileHeaderAddress().GetLoadAddress(target)
+    seg = module.FindSection('__TEXT')
+    if seg:
+        slide = header_addr - seg.GetFileAddress()
+        first_sec = seg.GetSubSectionAtIndex(0)
+        sec_addr = first_sec.GetLoadAddress(target)
+        header_size = sec_addr - header_addr
     else:
-        result.AppendMessage('module {} not found'.format(module_name))
+        slide = 0
+        header_size = 0x4000
+
+    error = lldb.SBError()
+    header_data = target.ReadMemory(lldb.SBAddress(header_addr, target), header_size, error)
+    if not error.Success():
+        result.AppendMessage('read header failed! {}\n'.format(error.GetCString()))
+        return
+
+    init_func_not_found = True
+    info = MachO.parse_header(header_data)
+    if slide == 0:
+        slide = header_addr - int(info['text_vmaddr'], 16)
+
+    lcs = info['lcs']
+    for lc in lcs:
+        cmd = lc['cmd']
+        if cmd != '19':  # LC_SEGMENT_64
+            continue
+
+        sects = lc['sects']
+        for sect in sects:
+            set_flags_str = sect.get('flags')
+            if not set_flags_str:
+                continue
+
+            sec_flags = int(set_flags_str, 16)
+
+            # define SECTION_TYPE		 0x000000ff
+            # #define S_MOD_INIT_FUNC_POINTERS 0x9
+            is_mod_init = sec_flags & 0x000000ff == 0x9
+
+            # #define S_INIT_FUNC_OFFSETS 0x16  /* 32-bit offsets to initializers
+            is_init_offsets = sec_flags & 0x000000ff == 0x16
+            if not is_mod_init and not is_init_offsets:
+                continue
+
+            sec_addr = slide + int(sect['addr'], 16)
+            sec_size = int(sect['size'], 16)
+            if is_mod_init:
+                unit_size = process.GetAddressByteSize()
+                unit_count = int(sec_size / unit_size)
+                result.AppendMessage('mod init func pointers found: {},{}'.format(lc['name'], sect['name']))
+            elif is_init_offsets:
+                unit_size = 4  # offset is 32-bit
+                unit_count = int(sec_size / unit_size)
+                result.AppendMessage('init func offsets found: {},{}'.format(lc['name'], sect['name']))
+            else:
+                unit_size = 8
+                unit_count = 0
+
+            init_func_not_found = False
+            for idx in range(unit_count):
+                error = lldb.SBError()
+                if is_mod_init:
+                    func_ptr = process.ReadPointerFromMemory(sec_addr + idx * unit_size, error)
+                elif is_init_offsets:
+                    offset = process.ReadUnsignedFromMemory(sec_addr + idx * unit_size, unit_size, error)
+                    func_ptr = header_addr + offset
+                else:
+                    continue
+
+                if error.Fail():
+                    result.AppendMessage('read memory failed {}'.format(error.GetCString()))
+                    continue
+
+                func_addr = target.ResolveLoadAddress(func_ptr)
+                if name == 'initfunc':
+                    result.AppendMessage('address = 0x{:x} {}'.
+                                         format(func_ptr, util.get_desc_for_address(func_addr)))
+                elif name == 'binitfunc':
+                    brkpoint = target.BreakpointCreateBySBAddress(func_addr)
+                    # 判断下断点是否成功
+                    if not brkpoint.IsValid() or brkpoint.num_locations == 0:
+                        result.AppendMessage("Breakpoint isn't valid or hasn't found any hits")
+                    else:
+                        total_count += 1
+                        result.AppendMessage("Breakpoint {}: {}, address = 0x{:x}"
+                                             .format(brkpoint.GetID(), util.get_desc_for_address(func_addr), func_ptr)
+                                             )
+
+            # for sects
+            break
+
+    if init_func_not_found:
+        result.AppendMessage('{} apparently does not contain init_func'.format(module_name))
         return
 
     if name == 'binitfunc':
@@ -182,7 +188,7 @@ def parse_mod_init_func(debugger, command, result, name):
 
 
 def generate_option_parser(prog):
-    usage = "usage: %prog"
+    usage = "usage: %prog [module name]"
 
     parser = optparse.OptionParser(usage=usage, prog=prog)
 

@@ -282,7 +282,7 @@ set 7 breakpoints
 
 #### binitfunc - break init func
 
-Break module init function(s) in user modules.
+Break module init function(s) of specified module.
 
 ```stylus
 (lldb) binitfunc
@@ -977,7 +977,7 @@ function main at 0x102911b70, fileoff: 0x5b70
 
 #### initfunc - print init func
 
-Dump module init function(s) in user modules.
+Dump module init function(s) of specified module.
 
 ```stylus
 (lldb) initfunc
