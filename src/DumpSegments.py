@@ -5,6 +5,7 @@ import optparse
 import shlex
 import util
 import MachO
+import os
 # import json
 
 
@@ -47,6 +48,10 @@ def dump_segments(debugger, command, result, internal_dict):
     else:
         file_spec = target.GetExecutable()
         lookup_module_name = file_spec.GetFilename()
+        full_path = str(file_spec)
+        debug_dylib = full_path + '.debug.dylib'
+        if os.path.exists(debug_dylib):
+            lookup_module_name += '.debug.dylib'
 
     if is_address:
         header_addr = int(addr_str, 16)

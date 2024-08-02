@@ -4,6 +4,7 @@ import lldb
 import optparse
 import shlex
 import util
+import os
 
 
 def __lldb_init_module(debugger, internal_dict):
@@ -53,6 +54,10 @@ def handle_command(debugger, command, result, prog):
         target = debugger.GetSelectedTarget()
         file_spec = target.GetExecutable()
         name_or_addr = file_spec.GetFilename()
+        full_path = str(file_spec)
+        debug_dylib = full_path + '.debug.dylib'
+        if os.path.exists(debug_dylib):
+            name_or_addr += '.debug.dylib'
     elif n_args == 1:
         name_or_addr = args[0]
     else:

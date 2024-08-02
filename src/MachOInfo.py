@@ -7,6 +7,7 @@ import util
 import MachO
 import json
 import MachOHelper
+import os
 
 
 def __lldb_init_module(debugger, internal_dict):
@@ -85,7 +86,8 @@ def parse_entitlements(debugger, command, result, field):
     if args:
         module_name = ''.join(args)
     else:
-        module_name = target.GetExecutable().GetFilename()
+        file_spec = target.GetExecutable()
+        module_name = file_spec.GetFilename()
 
     module_name = module_name.replace("'", "")
     entitlements = MachOHelper.get_entitlements(module_name)
@@ -154,6 +156,10 @@ def parse_macho(debugger, command, result, internal_dict):
     else:
         file_spec = target.GetExecutable()
         lookup_module_name = file_spec.GetFilename()
+        full_path = str(file_spec)
+        debug_dylib = full_path + '.debug.dylib'
+        if os.path.exists(debug_dylib):
+            lookup_module_name += '.debug.dylib'
 
     header_data = None
     if is_address:

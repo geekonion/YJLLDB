@@ -4,6 +4,7 @@ import lldb
 import optparse
 import shlex
 import MachOHelper
+import os
 
 
 def __lldb_init_module(debugger, internal_dict):
@@ -38,6 +39,10 @@ def dump_function_starts(debugger, command, result, internal_dict):
     else:
         file_spec = target.GetExecutable()
         lookup_module_name = file_spec.GetFilename()
+        full_path = str(file_spec)
+        debug_dylib = full_path + '.debug.dylib'
+        if os.path.exists(debug_dylib):
+            lookup_module_name += '.debug.dylib'
 
     funcs, module_file_spec = MachOHelper.get_function_starts(lookup_module_name)
     if not funcs:

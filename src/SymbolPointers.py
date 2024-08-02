@@ -6,6 +6,7 @@ import shlex
 import util
 import MachO
 import common
+import os
 
 
 def __lldb_init_module(debugger, internal_dict):
@@ -73,6 +74,10 @@ def handle_command(debugger, command, result, name):
     else:
         file_spec = target.GetExecutable()
         lookup_module_name = file_spec.GetFilename()
+        full_path = str(file_spec)
+        debug_dylib = full_path + '.debug.dylib'
+        if os.path.exists(debug_dylib):
+            lookup_module_name += '.debug.dylib'
 
     total_count = 0
     if is_address:
