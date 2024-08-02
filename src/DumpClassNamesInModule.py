@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-import json
 
 import lldb
 import optparse
@@ -52,7 +51,13 @@ def get_module_regions(module):
     command_script += 'NSString *x_module_name = @"' + module + '";'
     command_script += r'''
     if (![x_module_name length]) {
-        x_module_name = [[[NSBundle mainBundle] executablePath] lastPathComponent];
+        NSString *cls_module_path = [[NSBundle mainBundle] executablePath];
+        NSString *dlg_dylib = [cls_module_path stringByAppendingString:@".debug.dylib"];
+        if ((BOOL)[[NSFileManager defaultManager] fileExistsAtPath:dlg_dylib]) {
+            x_module_name = [dlg_dylib lastPathComponent];
+        } else {
+            x_module_name = [cls_module_path lastPathComponent];
+        }
     }
     
     const char *module_path = NULL;
