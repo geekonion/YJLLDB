@@ -4,12 +4,17 @@ import lldb
 import optparse
 import shlex
 import util
+import json
 
 
 def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand(
-        'command script add -h "dump all class names in the specified module" -f '
+        'command script add -h "dump all classes in the specified module" -f '
         'Objc.dump_classes_in_module classes')
+
+    debugger.HandleCommand(
+        'command script add -h "find duplicate class(es)" -f '
+        'Objc.find_duplicate_classes duplicate_class')
 
     debugger.HandleCommand(
         'command script add '
@@ -25,7 +30,7 @@ def __lldb_init_module(debugger, internal_dict):
 
 def dump_classes_in_module(debugger, command, result, internal_dict):
     """
-    dump all class names in the specified module
+    dump all classes in the specified module
     implemented in YJLLDB/src/Objc.py
     """
     handle_command(command, result, 'classes')
@@ -88,6 +93,22 @@ def handle_command(command, result, name):
         result.AppendMessage(get_methods(input_arg))
     elif name == 'ivars':
         result.AppendMessage(get_ivars(input_arg))
+
+
+def find_duplicate_classes(debugger, command, result, internal_dict):
+    """
+    find duplicate class(es)
+    implemented in YJLLDB/src/Objc.py
+    """
+    json_str = dump_duplicate_oc_classes()
+    class_dict = json.loads(json_str)
+    for cls_name in class_dict:
+        print('class {} is implemented in:'.format(cls_name))
+        paths = class_dict[cls_name]
+        for image_path in paths:
+            print('\t{}'.format(image_path))
+
+    print('{} duplicate classes were found'.format(len(class_dict)))
 
 
 def get_module_regions(module):
@@ -244,6 +265,82 @@ def get_ivars(input_arg):
     }
     
     x_ivar_des;
+    '''
+
+    ret_str = util.exe_script(command_script)
+
+    return ret_str
+
+
+def dump_duplicate_oc_classes():
+    command_script = '@import Foundation;\n@import ObjectiveC;\n'
+    command_script += r'''
+    NSMutableArray *path_array = [NSMutableArray array];
+    NSMutableArray *cls_array = [NSMutableArray array];
+    
+    uint32_t img_count = (uint32_t)_dyld_image_count();
+    for (uint32_t idx = 0; idx < img_count; idx++) {
+        @autoreleasepool {
+            const char *image_path = (const char *)_dyld_get_image_name(idx);
+            unsigned n_classes = 0;
+            const char **classes = objc_copyClassNamesForImage(image_path, &n_classes);
+            if (n_classes != 0) {
+                NSString *path = [NSString stringWithUTF8String:image_path];
+                NSMutableArray *classNames = [NSMutableArray array];
+                for (int i = 0; i < n_classes; i++) {
+                    const char *name = classes[i];
+                    [classNames addObject:[NSString stringWithUTF8String:name]];
+                }
+                
+                [path_array addObject:path];
+                [cls_array addObject:classNames];
+            }
+            if (classes) {
+                free(classes);
+                classes = NULL;
+            }
+        }
+    }
+    
+    NSString *bundle_path = [NSBundle mainBundle].bundlePath;
+    NSString *bundle_parent = [bundle_path stringByDeletingLastPathComponent];
+    NSMutableDictionary *class_dict = [NSMutableDictionary dictionary];
+    NSInteger count = [cls_array count];
+    for (NSInteger i = 0; i < count; i++) {
+        NSString *path = path_array[i];
+        if (![path containsString:bundle_path]) {
+            continue;
+        }
+        @autoreleasepool {
+            NSArray *cls_arr1 = cls_array[i];
+            for (NSInteger j = i + 1; j < count; j++) {
+                @autoreleasepool {
+                    NSMutableSet *cls_set1 = [NSMutableSet setWithArray:cls_arr1];
+                    NSArray *cls_arr2 = cls_array[j];
+                    NSMutableSet *cls_set2 = [NSMutableSet setWithArray:cls_arr2];
+                    [cls_set1 intersectSet:cls_set2];
+                    for (id<NSCopying> cls_name in cls_set1) {
+                        NSMutableArray *paths = class_dict[cls_name];
+                        if (!paths) {
+                            paths = [NSMutableArray array];
+                            class_dict[cls_name] = paths;
+                            NSString *rel_path = [path stringByReplacingOccurrencesOfString:bundle_parent withString:@""];
+                            [paths addObject:rel_path];
+                        }
+                        
+                        NSString *rel_path = [path_array[j] stringByReplacingOccurrencesOfString:bundle_parent withString:@""];
+                        [paths addObject:rel_path];
+                    }
+                }
+            }
+        }
+    }
+    
+    NSData *data = [NSJSONSerialization dataWithJSONObject:class_dict options:kNilOptions error:nil];
+    // 4 NSUTF8StringEncoding
+    NSString *cls_json_str = [[NSString alloc] initWithData:data encoding:4];
+    
+    cls_json_str;
     '''
 
     ret_str = util.exe_script(command_script)

@@ -122,6 +122,8 @@ Objc
 
 ​     \* [divars](#divars)
 
+​     \* [duplicate_class](#duplicate_class)
+
 Assembly:
 
 ​     \* [inst2bytes](#inst2bytes)
@@ -1113,6 +1115,20 @@ Dumps all ivars for an instance of a particular class which inherits from NSObje
 (lldb) divars ViewController
 in ViewController:
 	_test (unsigned long): {length = 8, bytes = 0x5a00ab0000000000}
+```
+
+##### duplicate_class
+
+```stylus
+(lldb) duplicate_class
+class DDContextAllowlistFilterLogFormatter is implemented in:
+	/JITDemo.app/Frameworks/JITMiddleWareSDK.framework/JITMiddleWareSDK
+	/JITDemo.app/Frameworks/LLDBLog.framework/LLDBLog
+...
+class DDLoggingContextSet is implemented in:
+	/JITDemo.app/Frameworks/LLDBJIT.framework/JITMiddleWareSDK
+	/JITDemo.app/Frameworks/LLDBLog.framework/LLDBLog
+24 duplicate classes were found
 ```
 
 
