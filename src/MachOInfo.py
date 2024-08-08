@@ -14,14 +14,14 @@ def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand('command script add -h "print codesign entitlements of the specified module if any."'
                            ' -f MachOInfo.show_entitlements entitlements')
 
-    debugger.HandleCommand('command script add -h "print group id in codesign entitlements of the specified '
-                           'module if any." -f MachOInfo.show_group_id group_id')
-
-    debugger.HandleCommand('command script add -h "print bundle id in codesign entitlements of the specified '
-                           'module if any." -f MachOInfo.show_bundle_id bundle_id')
-
-    debugger.HandleCommand('command script add -h "print team id in codesign entitlements of the specified '
-                           'module if any." -f MachOInfo.show_team_id team_id')
+    # debugger.HandleCommand('command script add -h "print group id in codesign entitlements of the specified '
+    #                        'module if any." -f MachOInfo.show_group_id group_id')
+    #
+    # debugger.HandleCommand('command script add -h "print bundle id in codesign entitlements of the specified '
+    #                        'module if any." -f MachOInfo.show_bundle_id bundle_id')
+    #
+    # debugger.HandleCommand('command script add -h "print team id in codesign entitlements of the specified '
+    #                        'module if any." -f MachOInfo.show_team_id team_id')
 
     debugger.HandleCommand(
         'command script add -h "print executable name."'
@@ -97,21 +97,21 @@ def parse_entitlements(debugger, command, result, field):
     elif 'does not contain' in entitlements:
         return entitlements
 
-    if field == 'entitlements':
-        return entitlements
-    elif field == 'group_id':
+    if options.group_id or field == 'group_id':
         ent_dict = util.parse_info_plist(entitlements)
         group_ids = ent_dict.get('com.apple.security.application-groups')
         if group_ids:
             return '{}'.format(group_ids)
         else:
             return 'group id not found'
-    elif field == 'bundle_id':
+    elif options.bundle_id or field == 'bundle_id':
         ent_dict = util.parse_info_plist(entitlements)
         return '{}'.format(ent_dict.get('application-identifier'))
-    elif field == 'team_id':
+    elif options.team_id or field == 'team_id':
         ent_dict = util.parse_info_plist(entitlements)
         return '{}'.format(ent_dict.get('com.apple.developer.team-identifier'))
+    elif field == 'entitlements':
+        return entitlements
 
 
 def show_executable_name(debugger, command, result, internal_dict):
@@ -211,5 +211,23 @@ def generate_option_parser():
     usage = "usage: %prog [module name]\n"
 
     parser = optparse.OptionParser(usage=usage, prog='entitlements')
+
+    parser.add_option("-b", "--bundle_id",
+                      action='store_true',
+                      default=False,
+                      dest="bundle_id",
+                      help="Extract and show only the bundle ID within the entitlements.")
+
+    parser.add_option("-t", "--team_id",
+                      action='store_true',
+                      default=False,
+                      dest="team_id",
+                      help="Extract and show only the team ID within the entitlements.")
+
+    parser.add_option("-g", "--group_id",
+                      action='store_true',
+                      default=False,
+                      dest="group_id",
+                      help="Extract and show only the group ID(s) within the entitlements.")
 
     return parser

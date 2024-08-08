@@ -90,12 +90,6 @@ Module:
 
 ​     \* [executable - print main executable name](#executable---print-main-executable-name)
 
-​     \* [bundle_id](#bundle_id)
-
-​     \* [group_id](#group_id)
-
-​     \* [team_id](#team_id)
-
 ​     \* [appdelegate](#appdelegate)
 
 ​     \* [mname - module name](#mname---module-name)
@@ -856,41 +850,6 @@ Print main executable name.
 LLDBCode
 ```
 
-
-
-#### bundle_id
-
-Print bundle identifer
-
-```stylus
-(lldb) bundle_id
-xxx.com.test.xxx
-```
-
-[back to commands list](#Commands-list)
-
-
-
-#### group_id
-
-Print group id
-
-```stylus
-(lldb) group_id
-group id not found
-```
-
-
-
-#### team_id
-
-Print team identifer
-
-```stylus
-(lldb) team_id
-xxxxxxxxxx
-```
-
 [back to commands list](#Commands-list)
 
 
@@ -1076,6 +1035,27 @@ Interlock:
 ```stylus
 (lldb) ent UIKit
 UIKit apparently does not contain code signature
+```
+
+Dump bundle ID in the codesign entitlements.
+
+```stylus
+(lldb) ent -b
+TeamID.com.xxx.LLDBCode
+```
+
+Dump team ID in the codesign entitlements.
+
+```stylus
+(lldb) ent -t
+TeamID
+```
+
+Dump group ID(s) in the codesign entitlements.
+
+```stylus
+(lldb) ent -g
+['group.com.xxx.JITDemo']
 ```
 
 [back to commands list](#Commands-list)
