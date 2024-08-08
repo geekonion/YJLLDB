@@ -168,14 +168,24 @@ def get_module_regions(module):
 
 def get_methods(input_arg):
     command_script = '@import Foundation;\n@import ObjectiveC;\n'
-    command_script += 'Class mthd_cls = [' + input_arg + ' class];'
+    if input_arg.startswith('0x'):
+        command_script += 'Class mthd_cls = (Class)[(id)' + input_arg + ' class];'
+    else:
+        command_script += 'Class mthd_cls = (Class)[' + input_arg + ' class];'
     command_script += r'''
     NSString *x_method_des = nil;
+    NSString *x_mthd_source = nil;
     if ((BOOL)[mthd_cls respondsToSelector:@selector(_shortMethodDescription)]) {
         x_method_des = (id)[mthd_cls _shortMethodDescription];
+        x_mthd_source = @" (UI)\n";
     } else if ((BOOL)[mthd_cls respondsToSelector:@selector(fp_shortMethodDescription)]) {
         x_method_des = (id)[mthd_cls fp_shortMethodDescription];
+        x_mthd_source = @" (FP)\n";
+    } else if ((BOOL)[mthd_cls respondsToSelector:@selector(_fd_shortMethodDescription)]) {
+        x_method_des = (id)[mthd_cls _fd_shortMethodDescription];
+        x_mthd_source = @" (DK)\n";
     } else {
+        x_mthd_source = @" (JIT)\n";
         NSMutableString *method_list = [NSMutableString string];
         [method_list appendFormat:@"in %s:\n", class_getName(mthd_cls)];
     
@@ -189,7 +199,7 @@ def get_methods(input_arg):
             Method method = c_methods[i];
             const char *ret_type = method_copyReturnType(method);
             const char *sel_name = sel_getName(method_getName(method));
-            void *imp = (void *)method_getImplementation(method);
+            void * imp = (void *)method_getImplementation(method);
             [method_list appendFormat:@"\t\t+ (%s) %s; (%p)\n", ret_type, sel_name, imp];
             
             free((void *)ret_type);
@@ -205,7 +215,7 @@ def get_methods(input_arg):
             Method method = i_methods[i];
             const char *ret_type = method_copyReturnType(method);
             const char *sel_name = sel_getName(method_getName(method));
-            void *imp = (void *)method_getImplementation(method);
+            void * imp = (void *)method_getImplementation(method);
             [method_list appendFormat:@"\t\t- (%s) %s; (%p)\n", ret_type, sel_name, imp];
             
             free((void *)ret_type);
@@ -217,7 +227,13 @@ def get_methods(input_arg):
         x_method_des = method_list;
     }
     
-    x_method_des;
+    NSMutableString *x_method_des_ret = [NSMutableString stringWithString:x_method_des];
+    NSRange range = [x_method_des_ret rangeOfString:@"\n"];
+    if (range.location != NSNotFound) {
+        [x_method_des_ret replaceCharactersInRange:range withString:x_mthd_source];
+    }
+    
+    x_method_des_ret;
     '''
 
     ret_str = util.exe_script(command_script)
@@ -227,14 +243,30 @@ def get_methods(input_arg):
 
 def get_ivars(input_arg):
     command_script = '@import Foundation;\n@import ObjectiveC;\n'
-    command_script += 'id ivar_obj = ' + input_arg + ';'
+    if input_arg.startswith('0x'):
+        command_script += 'id ivar_obj = (id)' + input_arg + ';'
+    else:
+        command_script += 'id ivar_obj = ' + input_arg + ';'
     command_script += r'''
     NSString *x_ivar_des = nil;
+    NSString *x_ivar_source = nil;
     if ((BOOL)[ivar_obj respondsToSelector:@selector(_ivarDescription)]) {
         x_ivar_des = (id)[ivar_obj _ivarDescription];
+        x_ivar_source = @" (UI)\n";
     } else if ((BOOL)[NSObject respondsToSelector:@selector(fp__ivarDescriptionForClass:)]) {
-        x_ivar_des = (id)[NSObject fp__ivarDescriptionForClass:ivar_obj];
+        Class ivar_cls = nil;
+        if (object_isClass(ivar_obj)) {
+            ivar_cls = ivar_obj;
+        } else {
+            ivar_cls = (Class)[ivar_obj class];
+        }
+        x_ivar_des = (id)[NSObject fp__ivarDescriptionForClass:ivar_cls];
+        x_ivar_source = @" (FP)\n";
+    } else if ((BOOL)[ivar_obj respondsToSelector:@selector(_fd_ivarDescription)]) {
+        x_ivar_des = (id)[ivar_obj _fd_ivarDescription];
+        x_ivar_source = @" (DK)\n";
     } else {
+        x_ivar_source = @" (JIT)\n";
         void (^parse_ivars)(Class, NSMutableString *) = ^(Class cls, NSMutableString *ivar_list){
             [ivar_list appendFormat:@"in %s:\n", class_getName(cls)];
             unsigned v_count = 0;
@@ -264,7 +296,13 @@ def get_ivars(input_arg):
         x_ivar_des = ivar_list;
     }
     
-    x_ivar_des;
+    NSMutableString *x_ivar_des_ret = [NSMutableString stringWithString:x_ivar_des];
+    NSRange range = [x_ivar_des_ret rangeOfString:@"\n"];
+    if (range.location != NSNotFound) {
+        [x_ivar_des_ret replaceCharactersInRange:range withString:x_ivar_source];
+    }
+    
+    x_ivar_des_ret;
     '''
 
     ret_str = util.exe_script(command_script)

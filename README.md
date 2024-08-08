@@ -142,6 +142,18 @@ Symbolize
 
 ​     \* [symbolize](#symbolize)
 
+DebugKit
+
+​     \* [UIControl extension](#UIControl-extension)
+
+​     \* [NSObject extension](#NSObject-extension)
+
+​     \* [NSBlock extension](#NSBlock-extension)
+
+​     \* [iOS Sandbox Explorer](#iOS-Sandbox-Explorer)
+
+​     \* [vmmap](#vmmap)
+
 Others:
 
 ​     \* [find_el - find endless loop](#find_el---find-endless-loop)
@@ -1311,6 +1323,187 @@ or
 
 
 
+### DebugKit
+
+Debugkit is a framework for debugging, it is not loaded by default. 
+
+You can load it using the `debugkit` command.
+
+```stylus
+(lldb) debugkit
+loading DebugKit, this may take a while
+[INFO] GCDWebUploader started on port 80 and reachable at http://xxx.xxx.xxx.xxx/
+DebugKit loaded
+```
+
+
+
+#### UIControl extension
+
+```stylus
+(lldb) po btn
+<UIButton: 0x107d2eaf0; frame = (100 100; 200 30); opaque = NO; layer = <CALayer: 0x282f4ee20>>
+	control events list:
+		target: <ViewController: 0x107e2ac90>, action: -[ViewController clicked:], event: UIControlEventTouchUpInside
+```
+
+
+
+#### NSObject extension
+
+UIKit provides debugging methods in `NSObject(IvarDescription)`，It works on iOS but not on macOS.Debugkit provides several alternative solutions for this.
+
+Here's one solution in DebugKit:
+
+```stylus
+(lldb) divars self
+(FP)
+in ViewController:
+	_test (unsigned long): {length = 8, bytes = 0x5a00ab0000000000}
+```
+
+```stylus
+(lldb) dmethods self
+<ViewController: 0x1063c7c10>: (FP)
+in ViewController:
+	Class Methods:
+		+ (void) ivar_description:(id)arg1; (0x1063c4d10)
+		+ (void) method_description:(id)arg1; (0x1063c4870)
+	Properties:
+		@property unsigned long test;  (@synthesize test = _test;)
+	Instance Methods:
+		- (void) setRepresentedObject:(id)arg1; (0x1063c4800)
+		- (void) setTest:(unsigned long)arg1; (0x1063c5120)
+		- (unsigned long) test; (0x1063c5100)
+		- (void) viewDidLoad; (0x1063c4790)
+(NSViewController ...)
+```
+
+Here's another solution in DebugKit (Powered by [pookjw/IvarDescription](https://github.com/pookjw/IvarDescription)):
+
+```stylus
+(lldb) divars ofile
+<CDMachOFile: 0x600002580000>: (DK)
+in CDMachOFile:
+	<+ 32> _byteOrder (unsigned long): 0
+...
+	<+ 24> _searchPathState (CDSearchPathState*): nil
+in NSObject:
+	<+  0> isa (Class): CDMachOFile(isa, 0x23d8001000711c5)
+```
+
+```stylus
+(lldb) dmethods ofile
+<CDMachOFile: 0x1000711c0>: (DK)
+in CDMachOFile:
+	Properties:
+		@property (readonly) unsigned long byteOrder;
+...
+		@property (readonly, nonatomic) Class processorClass;
+	Instance Methods:
+		- (int) cputype; (0x10002b310)
+...
+		- (id) segmentWithName:(id)arg1; (0x100028f00)
+(CDFile ...)
+```
+
+[back to commands list](#Commands-list)
+
+
+
+#### NSBlock extension
+
+block code sample
+
+```stylus
+^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+    NSLog(@"%@ %d", self, fd);
+}
+```
+
+Here is the official block description.
+
+```stylus
+(lldb) po $x0
+<__NSMallocBlock__: 0x282090ab0>
+ signature: "v24@?0@"NSURLSessionDataTask"8@"NSError"16"
+ invoke   : 0x102fe4a4c (/private/var/containers/Bundle/Application/3AF6DA13-4E66-4E8F-89D0-BDD268A430A7/JITDemo.app/JITDemo.debug.dylib`__41-[ViewController touchesBegan:withEvent:]_block_invoke_2)
+ copy     : 0x102fe4bc8 (/private/var/containers/Bundle/Application/3AF6DA13-4E66-4E8F-89D0-BDD268A430A7/JITDemo.app/JITDemo.debug.dylib`__copy_helper_block_e8_32s)
+ dispose  : 0x102fe4c00 (/private/var/containers/Bundle/Application/3AF6DA13-4E66-4E8F-89D0-BDD268A430A7/JITDemo.app/JITDemo.debug.dylib`__destroy_helper_block_e8_32s)
+```
+
+Here is DebugKit's block description, it's clearer and more straightforward.
+
+```stylus
+(lldb) po [$x0 description]
+<__NSMallocBlock__: 0x282090ab0>
+	- size: 44
+	- func_addr: <0x102fe4a4c>
+	- func_prototype: void (*)(id(block) , NSURLSessionDataTask * , NSError * )
+	- variable or captured variable:
+		- <ViewController: 0x107e2ac90>
+		- int 20
+```
+
+[back to commands list](#Commands-list)
+
+
+
+#### iOS Sandbox Explorer
+
+Powered by [GCDWebServer](https://github.com/swisspol/GCDWebServer).The server starts along with DebugKit, and once it's running, you can access sandbox files via a web browser.
+
+```stylus
+[INFO] GCDWebUploader started on port 80 and reachable at http://xxx.xxx.xxx.xxx/
+(lldb) c
+Process 4569 resuming
+[INFO] GCDWebUploader now locally reachable at http://iPhone-8.local/
+```
+
+
+
+#### vmmap
+
+show vm map info of address
+
+```stylus
+(lldb) po self
+<ViewController: 0x105329a40>
+
+(lldb) vmmap self
+pid: 4713
+path: /private/var/containers/Bundle/Application/08326E5F-4DEB-41CC-8320-4417B1649E7F/JITDemo.app/JITDemo
+ 
+0000000105300000-0000000105400000 [   1.0M] rw-/rwx SM=PRIVATE <MALLOC_TINY>
+    (offset 0) /usr/share/icu/icudt70l.dat
+```
+
+show vm map info of current process
+
+```stylus
+(lldb) vmmap
+pid: 4713
+path: /private/var/containers/Bundle/Application/08326E5F-4DEB-41CC-8320-4417B1649E7F/JITDemo.app/JITDemo
+ 
+DYLD all image info: 0000000104cd0000 + 170 format = 1
+0000000104c00000-0000000104c04000 [    16K] r-x/r-x SM=COW
+    104c00000-104c0c000: __TEXT r-x (/private/var/containers/Bundle/Application/08326E5F-4DEB-41CC-8320-4417B1649E7F/JITDemo.app/JITDemo) slide=4c00000
+    (offset 0) /private/var/containers/Bundle/Application/08326E5F-4DEB-41CC-8320-4417B1649E7F/JITDemo.app/JITDemo
+0000000104c04000-0000000104c08000 [    16K] r-x/rwx SM=PRIVATE
+    104c00000-104c0c000: __TEXT r-x (/private/var/containers/Bundle/Application/08326E5F-4DEB-41CC-8320-4417B1649E7F/JITDemo.app/JITDemo) slide=4c00000
+    (offset 0) /private/var/containers/Bundle/Application/08326E5F-4DEB-41CC-8320-4417B1649E7F/JITDemo.app/JITDemo
+...
+    221e4c000-235b08000: __LINKEDIT r-- (/System/Library/PrivateFrameworks/AppSSOCore.framework/AppSSOCore) slide=c204000
+    221e4c000-235b08000: __LINKEDIT r-- (/System/Library/Frameworks/Accelerate.framework/Frameworks/vImage.framework/Libraries/libCGInterfaces.dylib) slide=c204000
+0000000280000000-00000002a0000000 [ 512.0M] rw-/rwx SM=PRIVATE <MALLOC_NANO>
+0000000fc0000000-0000001000000000 [   1.0G] ---/--- SM=EMPTY
+0000001000000000-0000007000000000 [ 384.0G] ---/--- SM=EMPTY
+```
+
+[back to commands list](#Commands-list)
+
+
+
 ### Others:
 
 #### find_el - find endless loop
@@ -1379,6 +1572,14 @@ https://github.com/DerekSelander/LLDB
 https://github.com/facebook/chisel
 
 https://github.com/aaronst/macholibre
+
+https://github.com/swisspol/GCDWebServer
+
+https://github.com/pookjw/IvarDescription
+
+https://github.com/yulingtianxia/BlockHook (block with private data)
+
+https://github.com/comex/myvmmap
 
 ## License
 

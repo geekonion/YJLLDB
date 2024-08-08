@@ -1,0 +1,6 @@
+framework module DebugKit {
+  umbrella header "DebugKit.h"
+  export *
+
+  module * { export * }
+}
