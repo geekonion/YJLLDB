@@ -118,18 +118,20 @@ def upload_file(debugger, command, result, internal_dict):
     do_upload_file(src, dst)
 
 
-def do_upload_file(src, dst):
+def do_upload_file(src, dst, log=False):
     stats = os.stat(src)
     data_size = stats.st_size
     mem_info_str = allocate_memory(data_size)
     if mem_info_str:
         mem_info = json.loads(mem_info_str)
         file_name = os.path.basename(src)
-        print('uploading {}, this may take a while'.format(file_name))
+        if log:
+            print('uploading {}, this may take a while'.format(file_name))
         success, data_addr = write_mem_with_info(mem_info, src)
         if success:
             message = write_data_to_file(data_addr, data_size, dst, file_name)
-            print(message)
+            if log or message != 'upload success':
+                print(message)
 
 
 def remove_file(debugger, command, result, internal_dict):
@@ -287,8 +289,8 @@ def load_dir(filepath):
     command_script += 'NSString *filepath = @"' + filepath + '";'
     command_script += r'''
     BOOL isDirectory = NO;
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    BOOL exists = [fileManager fileExistsAtPath:filepath isDirectory:&isDirectory];
+    NSFileManager *x_load_fileManager = [NSFileManager defaultManager];
+    BOOL exists = [x_load_fileManager fileExistsAtPath:filepath isDirectory:&isDirectory];
     
     NSDictionary *file_dict = nil;
     if (!isDirectory) {
@@ -297,7 +299,7 @@ def load_dir(filepath):
             @"dir_name": filepath.lastPathComponent
         };
     } else if (exists) {
-        NSArray *subpaths = [fileManager subpathsAtPath:filepath];
+        NSArray *subpaths = [x_load_fileManager subpathsAtPath:filepath];
         NSMutableArray *files = [NSMutableArray array];
         for (NSString *subpath in subpaths) {
             NSString *fullpath = [filepath stringByAppendingPathComponent:subpath];
@@ -307,7 +309,7 @@ def load_dir(filepath):
             NSString *data_info = [NSString stringWithFormat:@"%lu-%lu", (NSUInteger)bytes, len];
             
             BOOL isDirectory = NO;
-            [fileManager fileExistsAtPath:fullpath isDirectory:&isDirectory];
+            [x_load_fileManager fileExistsAtPath:fullpath isDirectory:&isDirectory];
             if (isDirectory) {
                 continue;
             }
@@ -377,8 +379,8 @@ def write_data_to_file(data_addr, data_size, dst, file_name):
     command_script += 'size_t data_size = {};\n'.format(data_size)
     command_script += r'''
     BOOL isDirectory = NO;
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    BOOL exists = [fileManager fileExistsAtPath:pathOrDir isDirectory:&isDirectory];
+    NSFileManager *x_write_fileManager = [NSFileManager defaultManager];
+    BOOL exists = [x_write_fileManager fileExistsAtPath:pathOrDir isDirectory:&isDirectory];
     NSString *filepath = nil;
     if (isDirectory) {
         filepath = [pathOrDir stringByAppendingPathComponent:filename];
@@ -386,7 +388,7 @@ def write_data_to_file(data_addr, data_size, dst, file_name):
         filepath = pathOrDir;
         if (!exists) {
             NSString *dir = [filepath stringByDeletingLastPathComponent];
-            [fileManager createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
+            [x_write_fileManager createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
         }
     }
     
@@ -408,13 +410,13 @@ def remove_file_on_device(filepath):
     command_script += 'NSString *filepath = @"' + filepath + '";\n'
     command_script += r'''
     BOOL isDirectory = NO;
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    BOOL exists = [fileManager fileExistsAtPath:filepath isDirectory:&isDirectory];
+    NSFileManager *x_rm_fileManager = [NSFileManager defaultManager];
+    BOOL exists = [x_rm_fileManager fileExistsAtPath:filepath isDirectory:&isDirectory];
     
     void (^removeFile)(NSString *path, NSMutableString *message, BOOL needPath);
     removeFile = ^(NSString *path, NSMutableString *message, BOOL needPath) {
         NSError *error = nil;
-        [fileManager removeItemAtPath:path error:&error];
+        [x_rm_fileManager removeItemAtPath:path error:&error];
         if (error) {
             [message appendFormat:@"%@\n", error.localizedDescription];
         } else {
@@ -427,7 +429,7 @@ def remove_file_on_device(filepath):
     };
     NSMutableString *message = [NSMutableString string];
     if (isDirectory) {
-        NSArray *array = [fileManager subpathsAtPath:filepath];
+        NSArray *array = [x_rm_fileManager subpathsAtPath:filepath];
         NSMutableArray *subpaths = [NSMutableArray arrayWithArray:array];
         // 排序
         NSInteger count = [subpaths count];
