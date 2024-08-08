@@ -42,6 +42,7 @@ def get_module_name_with_header_addr(debugger, command, result, internal_dict):
 
     is_addr, addr_str = util.parse_arg(arg_str)
     if not is_addr:
+        print('input argument is neither an address nor a variable that refers to an address.')
         result.SetError("\n" + parser.get_usage())
         return
 
