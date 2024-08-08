@@ -123,6 +123,11 @@ def vmmap(debugger, command, result, field):
         return
 
     target = debugger.GetSelectedTarget()
+    is_Mac = target.GetTriple().find('apple-macosx') > 0
+    if is_Mac:
+        print('unsupported')
+        return
+
     module = target.module['DebugKit']
     if not module:
         print('DebugKit not loaded, Please run the "debugkit" command to load it.')
