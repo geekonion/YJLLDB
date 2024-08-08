@@ -1343,8 +1343,8 @@ DebugKit loaded
 ```stylus
 (lldb) po btn
 <UIButton: 0x107d2eaf0; frame = (100 100; 200 30); opaque = NO; layer = <CALayer: 0x282f4ee20>>
-	control events list:
-		target: <ViewController: 0x107e2ac90>, action: -[ViewController clicked:], event: UIControlEventTouchUpInside
+    control events list:
+        target: <ViewController: 0x107e2ac90>, action: -[ViewController clicked:], event: UIControlEventTouchUpInside
 ```
 
 
@@ -1359,23 +1359,23 @@ Here's one solution in DebugKit:
 (lldb) divars self
 (FP)
 in ViewController:
-	_test (unsigned long): {length = 8, bytes = 0x5a00ab0000000000}
+    _test (unsigned long): {length = 8, bytes = 0x5a00ab0000000000}
 ```
 
 ```stylus
 (lldb) dmethods self
 <ViewController: 0x1063c7c10>: (FP)
 in ViewController:
-	Class Methods:
-		+ (void) ivar_description:(id)arg1; (0x1063c4d10)
-		+ (void) method_description:(id)arg1; (0x1063c4870)
-	Properties:
-		@property unsigned long test;  (@synthesize test = _test;)
-	Instance Methods:
-		- (void) setRepresentedObject:(id)arg1; (0x1063c4800)
-		- (void) setTest:(unsigned long)arg1; (0x1063c5120)
-		- (unsigned long) test; (0x1063c5100)
-		- (void) viewDidLoad; (0x1063c4790)
+    Class Methods:
+        + (void) ivar_description:(id)arg1; (0x1063c4d10)
+        + (void) method_description:(id)arg1; (0x1063c4870)
+    Properties:
+        @property unsigned long test;  (@synthesize test = _test;)
+    Instance Methods:
+        - (void) setRepresentedObject:(id)arg1; (0x1063c4800)
+        - (void) setTest:(unsigned long)arg1; (0x1063c5120)
+        - (unsigned long) test; (0x1063c5100)
+        - (void) viewDidLoad; (0x1063c4790)
 (NSViewController ...)
 ```
 
@@ -1385,25 +1385,25 @@ Here's another solution in DebugKit (Powered by [pookjw/IvarDescription](https:/
 (lldb) divars ofile
 <CDMachOFile: 0x600002580000>: (DK)
 in CDMachOFile:
-	<+ 32> _byteOrder (unsigned long): 0
+    <+ 32> _byteOrder (unsigned long): 0
 ...
-	<+ 24> _searchPathState (CDSearchPathState*): nil
+    <+ 24> _searchPathState (CDSearchPathState*): nil
 in NSObject:
-	<+  0> isa (Class): CDMachOFile(isa, 0x23d8001000711c5)
+    <+  0> isa (Class): CDMachOFile(isa, 0x23d8001000711c5)
 ```
 
 ```stylus
 (lldb) dmethods ofile
 <CDMachOFile: 0x1000711c0>: (DK)
 in CDMachOFile:
-	Properties:
-		@property (readonly) unsigned long byteOrder;
+    Properties:
+        @property (readonly) unsigned long byteOrder;
 ...
-		@property (readonly, nonatomic) Class processorClass;
-	Instance Methods:
-		- (int) cputype; (0x10002b310)
+        @property (readonly, nonatomic) Class processorClass;
+    Instance Methods:
+        - (int) cputype; (0x10002b310)
 ...
-		- (id) segmentWithName:(id)arg1; (0x100028f00)
+        - (id) segmentWithName:(id)arg1; (0x100028f00)
 (CDFile ...)
 ```
 
@@ -1437,12 +1437,12 @@ Here is DebugKit's block description, it's clearer and more straightforward.
 ```stylus
 (lldb) po [$x0 description]
 <__NSMallocBlock__: 0x282090ab0>
-	- size: 44
-	- func_addr: <0x102fe4a4c>
-	- func_prototype: void (*)(id(block) , NSURLSessionDataTask * , NSError * )
-	- variable or captured variable:
-		- <ViewController: 0x107e2ac90>
-		- int 20
+    - size: 44
+    - func_addr: <0x102fe4a4c>
+    - func_prototype: void (*)(id(block) , NSURLSessionDataTask * , NSError * )
+    - variable or captured variable:
+        - <ViewController: 0x107e2ac90>
+        - int 20
 ```
 
 [back to commands list](#Commands-list)
