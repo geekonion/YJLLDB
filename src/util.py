@@ -444,3 +444,50 @@ def parse_arg(name_or_var_or_addr):
         is_addr = name_or_var_or_addr.startswith("0x")
 
     return is_addr, name_or_var_or_addr
+
+
+def get_wifi_ip_address():
+    command_script = '@import Foundation;'
+    command_script += 'BOOL useIPv6 = NO;'
+
+    command_script += r'''
+    NSString *address = @"";
+    const char *primaryInterface = "en0";  // WiFi interface on iOS
+    
+    struct ifaddrs *list;
+    if ((int)getifaddrs(&list) >= 0) {
+        for (struct ifaddrs *ifap = list; ifap; ifap = ifap->ifa_next) {
+            if (strcmp(ifap->ifa_name, primaryInterface)) {
+                continue;
+            }
+            // #define IFF_UP          0x1
+            // #define AF_INET         2
+            // #define AF_INET6        30
+            if ((ifap->ifa_flags & 0x1/*IFF_UP*/) && ((!useIPv6 && (ifap->ifa_addr->sa_family == 2/*AF_INET*/)) || (useIPv6 && (ifap->ifa_addr->sa_family == 30/*AF_INET6*/)))) {
+                const struct sockaddr *addr = ifap->ifa_addr;
+                BOOL includeService = NO;
+                // #define    NI_MAXHOST    1025
+                // #define    NI_MAXSERV    32
+                char hostBuffer[1025/*NI_MAXHOST*/] = {};
+                char serviceBuffer[32/*NI_MAXSERV*/] = {};
+                // #define    NI_NUMERICHOST    0x00000002
+                // #define    NI_NUMERICSERV    0x00000008
+                // #define    NI_NOFQDN    0x00000001
+                if ((int)getnameinfo(addr, addr->sa_len, hostBuffer, sizeof(hostBuffer), serviceBuffer, sizeof(serviceBuffer), 0x00000002/*NI_NUMERICHOST*/ | 0x00000008/*NI_NUMERICSERV*/ | 0x00000001/*NI_NOFQDN*/) != 0) {
+                    address = @"";
+                } else {
+                    address = includeService ? [NSString stringWithFormat:@"%s:%s", hostBuffer, serviceBuffer] : (NSString*)[NSString stringWithUTF8String:hostBuffer];
+                }
+                
+                break;
+            }
+        }
+    }
+    
+    freeifaddrs(list);
+    
+    address;
+    '''
+    ret_str = exe_script(command_script)
+
+    return ret_str
