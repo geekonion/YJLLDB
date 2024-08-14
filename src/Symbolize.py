@@ -131,6 +131,8 @@ def symbolize_crash_report(debugger, result, file_path):
 
     if file_path.endswith('.ips'):
         final_report = symbolize_ips_file(file_path)
+        if 'isn\'t json format' in final_report:
+            final_report = symbolize_crash_file(file_path)
         result.AppendMessage(final_report)
     elif file_path.endswith('.crash'):
         final_report = symbolize_crash_file(file_path)
@@ -141,7 +143,7 @@ def symbolize_ips_file(file_path):
     with open(file_path, 'r') as report_file:
         header_line = report_file.readline()
         if not header_line.startswith('{'):
-            final_report = 'not supported yet'
+            final_report = 'unsupported yet'
             report_file.close()
 
             return final_report
@@ -203,7 +205,7 @@ def symbolize_ips_file(file_path):
 
         final_report += ' \nEOF\n'
     else:
-        final_report = 'not supported yet'
+        final_report = 'unsupported yet, isn\'t json format'
 
     return final_report
 
