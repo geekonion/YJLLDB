@@ -491,3 +491,30 @@ def get_wifi_ip_address():
     ret_str = exe_script(command_script)
 
     return ret_str
+
+
+def get_registers(frame, kind):
+    """
+    Returns the registers given the frame and the kind of registers desired.
+    Returns None if there's no such kind.
+    """
+    registerSet = frame.GetRegisters()  # Return type of SBValueList.
+    for value in registerSet:
+        if kind.lower() in value.GetName().lower():
+            return value
+
+    return None
+
+
+def get_GPRs(frame):
+    """
+    Returns the general purpose registers of the frame as an SBValue.
+    The returned SBValue object is iterable.  An example:
+        ...
+        from lldbutil import get_GPRs
+        regs = get_GPRs(frame)
+        for reg in regs:
+            print('%s => %s' % (reg.GetName(), reg.GetValue()))
+        ...
+    """
+    return get_registers(frame, 'general purpose')
