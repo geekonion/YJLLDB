@@ -41,14 +41,15 @@ def load_dsym(debugger, command, result, internal_dict):
     n_totoal = 0
     n_success = 0
     for arg in args:
+        filepath = arg.replace('"', '').replace("'", "")
         # 普通文件
-        if os.path.isfile(arg):
-            print('{} is not a directory'.format(arg))
+        if os.path.isfile(filepath):
+            print('{} is not a directory'.format(filepath))
             continue
 
         # .dSYM文件
-        if arg.endswith('.dSYM'):
-            success, message = try_load_dsym_file(uuid_map, arg)
+        if filepath.endswith('.dSYM'):
+            success, message = try_load_dsym_file(uuid_map, filepath)
             n_totoal += 1
             if success:
                 n_success += 1
@@ -58,7 +59,7 @@ def load_dsym(debugger, command, result, internal_dict):
             continue
 
         # 文件夹
-        for root, dirs, files in os.walk(arg):
+        for root, dirs, files in os.walk(filepath):
             for dir_name in dirs[::-1]:
                 if dir_name.endswith('.dSYM'):
                     # 遍历时排除.dSYM
@@ -88,7 +89,7 @@ def try_load_dsym_file_in_dir(dir_path, uuid_map, log=False):
                 full_path = os.path.join(root, dir_name)
                 success, message = try_load_dsym_file(uuid_map, full_path)
                 if log and not success:
-                    print(message)
+                    print('[try_load_dsym_file_in_dir] {}'.format(message))
 
 
 def try_load_dsym_file(uuid_map, path):
@@ -114,7 +115,7 @@ def try_load_dsym_file(uuid_map, path):
     if not found:
         return False, 'uuid not match: {}'.format(path)
 
-    message = util.exe_command('target symbols add {}'.format(path))
+    message = util.exe_command('target symbols add \'{}\''.format(path))
     success = message.find('has been added to') > 0
 
     return success, message

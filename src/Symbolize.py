@@ -80,7 +80,7 @@ def do_symbolize(debugger, command, result, internal_dict):
             if options.dsym:
                 global g_dsym_dir
                 g_dsym_dir = options.dsym
-            symbolize_crash_report(debugger, result, arg)
+            symbolize_crash_report(debugger, result, arg, options.force)
         else:
             result.AppendMessage('unknown argument')
     else:
@@ -117,7 +117,7 @@ def symbolize_uncaught_exception(debugger, result, args):
     result.AppendMessage("backtrace: \n{}".format(backtrace))
 
 
-def symbolize_crash_report(debugger, result, file_path):
+def symbolize_crash_report(debugger, result, file_path, force):
     if not os.path.exists(file_path):
         print('No such file: {}'.format(file_path))
         return
@@ -130,16 +130,16 @@ def symbolize_crash_report(debugger, result, file_path):
         g_uuid_loadAddr_map[uuid] = header_addr
 
     if file_path.endswith('.ips'):
-        final_report = symbolize_ips_file(file_path)
+        final_report = symbolize_ips_file(file_path, force)
         if 'isn\'t json format' in final_report:
             final_report = symbolize_crash_file(file_path)
         result.AppendMessage(final_report)
     elif file_path.endswith('.crash'):
-        final_report = symbolize_crash_file(file_path)
+        final_report = symbolize_crash_file(file_path, force)
         result.AppendMessage(final_report)
 
 
-def symbolize_ips_file(file_path):
+def symbolize_ips_file(file_path, force):
     with open(file_path, 'r') as report_file:
         header_line = report_file.readline()
         if not header_line.startswith('{'):
@@ -189,7 +189,7 @@ def symbolize_ips_file(file_path):
             dsym_dir = os.path.dirname(file_path)
         LoadDSYM.try_load_dsym_file_in_dir(dsym_dir, g_crash_uuid_map)
 
-        symbolize_thread_list(last_exception_obj, thread_list)
+        symbolize_thread_list(last_exception_obj, thread_list, force)
 
         if last_exception:
             report_header = report_header.replace(g_last_exception_place_holder, last_exception_obj.description())
@@ -470,7 +470,7 @@ def build_images(data_dict):
         image_list += '\t{:#x} - {:#x} {} {} <{}> {}\n'.format(base, end, name, arch, uuid, path)
 
         global g_crash_uuid_map, g_module_name_uuid_map
-        g_crash_uuid_map[uuid] = True
+        g_crash_uuid_map[uuid] = base
         g_module_name_uuid_map[name] = uuid.replace('-', '')
 
     image_list += ' \n'
@@ -512,7 +512,7 @@ def build_report_notes(data_dict):
     return report_notes_str
 
 
-def symbolize_crash_file(file_path):
+def symbolize_crash_file(file_path, force):
     with open(file_path, 'r') as report_file:
         content = report_file.read()
         report_file.close()
@@ -600,7 +600,7 @@ def symbolize_crash_file(file_path):
         dsym_dir = os.path.dirname(file_path)
     LoadDSYM.try_load_dsym_file_in_dir(dsym_dir, g_crash_uuid_map)
 
-    symbolize_thread_list(last_exception, thread_list)
+    symbolize_thread_list(last_exception, thread_list, force)
 
     if last_exception:
         final_report = final_report.replace(g_last_exception_place_holder, last_exception.description())
@@ -629,8 +629,12 @@ def parse_frame_line(frame_line):
     pos3 = frame_line.find(' ', pos2 + 3)
     load_addr = frame_line[pos2 + 1: pos3]
     pos4 = frame_line.find(' + ', pos3 + 1)
-    name_or_addr = frame_line[pos3 + 1: pos4]
-    offset = frame_line[pos4 + 3:]
+    if pos4 > 0:
+        name_or_addr = frame_line[pos3 + 1: pos4]
+        offset = frame_line[pos4 + 3:]
+    else:
+        name_or_addr = frame_line[pos3 + 1:]
+        offset = -1
 
     global g_max_name_width
     n_name = len(image_name)
@@ -647,6 +651,7 @@ def parse_frame_line(frame_line):
     else:
         frame_obj.symbol_name = name_or_addr
         frame_obj.symbol_offset = int(offset)
+        frame_obj.file_offset = 0
 
     return frame_obj
 
@@ -655,6 +660,7 @@ def parse_image_line(image_line):
     # 0x104c9c000 - 0x104d1bfff dyld arm64 <444f50414d494e45444f50414d494e45> /usr/lib/dyld
     image_line = replace_multiple_spaces(image_line)
     pos1 = image_line.find(' - 0x')
+    base = image_line[:pos1]
     pos2 = image_line.find(' ', pos1 + 4)
     pos3 = image_line.find(' ', pos2 + 1)
     image_name = image_line[pos2 + 1: pos3]
@@ -663,11 +669,11 @@ def parse_image_line(image_line):
     uuid = image_line[pos4 + 1: pos5].upper()
 
     global g_crash_uuid_map, g_module_name_uuid_map
-    g_crash_uuid_map[uuid] = True
+    g_crash_uuid_map[uuid] = base
     g_module_name_uuid_map[image_name] = uuid.replace('-', '')
 
 
-def symbolize_thread_list(last_exception_obj, thread_list):
+def symbolize_thread_list(last_exception_obj, thread_list, force):
     func_map = {}
     frame_map = {}
     module_map = {}
@@ -688,34 +694,43 @@ def symbolize_thread_list(last_exception_obj, thread_list):
     main_addr = module.GetObjectFileEntryPointAddress().GetLoadAddress(target)
 
     for frame in target_frames:
-        if frame.symbol_name:
+        if not force and frame.symbol_name:
             continue
 
         image_name = frame.image_name
         uuid = g_module_name_uuid_map[image_name]
         header_addr = g_uuid_loadAddr_map.get(uuid)
-        if header_addr and header_addr > 0:
-            addr_list = func_map.get(image_name)
-            if not addr_list:
-                addr_list = []
-                func_map[image_name] = addr_list
+        if not header_addr:
+            continue
 
-            load_addr = header_addr + frame.file_offset
+        addr_list = func_map.get(image_name)
+        if not addr_list:
+            addr_list = []
+            func_map[image_name] = addr_list
 
-            addr_obj = lldb.SBAddress(load_addr, target)
-            symbol = addr_obj.GetSymbol()
-            symbol_start = symbol.GetStartAddress().GetLoadAddress(target)
-            symbol_name = symbol.name
-            if symbol_start == main_addr:
-                frame.symbol_name = 'main'
-            elif symbol_name.find('unnamed_symbol') == -1:
-                frame.symbol_name = symbol_name
-            else:
-                addr_list.append(symbol_start)
-                frame_map[str(symbol_start)] = frame
-                module_map[image_name] = str(addr_obj.module.file)
+        if frame.file_offset == 0:
+            base_in_crash_report = g_crash_uuid_map.get(uuid)
+            if not base_in_crash_report:
+                continue
 
-            frame.symbol_offset = load_addr - symbol_start
+            frame.file_offset = frame.load_addr - int(base_in_crash_report, 16)
+
+        load_addr = header_addr + frame.file_offset
+
+        addr_obj = lldb.SBAddress(load_addr, target)
+        symbol = addr_obj.GetSymbol()
+        symbol_start = symbol.GetStartAddress().GetLoadAddress(target)
+        symbol_name = symbol.name
+        if symbol_start == main_addr:
+            frame.symbol_name = 'main'
+        elif symbol_name.find('unnamed_symbol') == -1:
+            frame.symbol_name = symbol_name
+        else:
+            addr_list.append(symbol_start)
+            frame_map[str(symbol_start)] = frame
+            module_map[image_name] = str(addr_obj.module.file)
+
+        frame.symbol_offset = load_addr - symbol_start
 
     for image_name in func_map:
         addr_list = func_map[image_name]
@@ -730,10 +745,12 @@ def symbolize_thread_list(last_exception_obj, thread_list):
         if len(method_json_str) > 2:
             methods_info = json.loads(method_json_str)
 
-        if methods_info:
-            for key in methods_info:
-                frame = frame_map[key]
-                frame.symbol_name = methods_info[key]
+        if not methods_info:
+            continue
+
+        for key in methods_info:
+            frame = frame_map[key]
+            frame.symbol_name = methods_info[key]
 
 
 def symbolize_addr(addr):
@@ -901,5 +918,11 @@ def generate_option_parser():
     parser.add_option("-s", "--dsym",
                       dest="dsym",
                       help="path to dir of dSYM")
+
+    parser.add_option("-f", "--force",
+                      action='store_true',
+                      default=False,
+                      dest="force",
+                      help="force resymbolize")
 
     return parser
