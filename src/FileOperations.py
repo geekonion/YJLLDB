@@ -48,12 +48,19 @@ def download_file(debugger, command, result, internal_dict):
         return
 
     for filepath in args:
-        filepath, _ = util.absolute_path(filepath)
-        file_info_str = load_file(filepath)
-        if file_info_str:
-            file_info = json.loads(file_info_str)
-            print('dumping {}, this may take a while'.format(file_info["file_name"]))
-            dump_file_with_info(file_info)
+        download_file_with_path(filepath)
+
+
+def download_file_with_path(filepath):
+    filepath, _ = util.absolute_path(filepath)
+    file_info_str = load_file(filepath)
+    output_path = None
+    if file_info_str:
+        file_info = json.loads(file_info_str)
+        print('dumping {}, this may take a while'.format(file_info["file_name"]))
+        output_path = dump_file_with_info(file_info)
+
+    return output_path
 
 
 def download_dir(debugger, command, result, internal_dict):
@@ -196,6 +203,8 @@ def dump_file_with_info(file_info):
     if os.path.exists(output_filepath):
         output_filepath = os.path.join(home_path, 'dumped_' + file_name)
     dump_data(output_filepath, data_size, data_addr)
+
+    return output_filepath
 
 
 def dump_dir_with_info(dir_info):

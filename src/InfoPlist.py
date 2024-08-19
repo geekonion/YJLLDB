@@ -5,6 +5,7 @@ import optparse
 import shlex
 import util
 import os.path
+import FileOperations
 
 
 def __lldb_init_module(debugger, internal_dict):
@@ -45,13 +46,18 @@ def show_info_plist(debugger, command, result, field):
         module_file_spec = module.GetFileSpec()
         module_name = module_file_spec.GetFilename()
 
-        if lookup_module_name == module_name or lookup_module_name + '.dylib' == module_name:
+        if lookup_module_name == module_name:
             print("-----parsing module %s-----" % module_name)
             bundle_path = module_file_spec.GetDirectory()
             if bundle_path.endswith('/MacOS'):
                 bundle_path = bundle_path[:-6]
 
             info_plist_path = bundle_path + os.path.sep + "Info.plist"
+            need_download = False
+            if '/var/containers/' in info_plist_path:
+                info_plist_path = FileOperations.download_file_with_path(info_plist_path)
+                need_download = True
+
             if not os.path.exists(info_plist_path):
                 print("Info.plist not found")
                 continue
@@ -62,6 +68,9 @@ def show_info_plist(debugger, command, result, field):
                 print(out)
             else:
                 print(err)
+
+            if need_download:
+                os.remove(info_plist_path)
 
 
 def generate_option_parser():
