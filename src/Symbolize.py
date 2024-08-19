@@ -132,7 +132,7 @@ def symbolize_crash_report(debugger, result, file_path, force):
     if file_path.endswith('.ips'):
         final_report = symbolize_ips_file(file_path, force)
         if 'isn\'t json format' in final_report:
-            final_report = symbolize_crash_file(file_path)
+            final_report = symbolize_crash_file(file_path, force)
         result.AppendMessage(final_report)
     elif file_path.endswith('.crash'):
         final_report = symbolize_crash_file(file_path, force)
@@ -628,7 +628,7 @@ def parse_frame_line(frame_line):
     image_name = frame_line[pos1 + 1: pos2]
     pos3 = frame_line.find(' ', pos2 + 3)
     load_addr = frame_line[pos2 + 1: pos3]
-    pos4 = frame_line.find(' + ', pos3 + 1)
+    pos4 = frame_line.rfind(' + ')
     if pos4 > 0:
         name_or_addr = frame_line[pos3 + 1: pos4]
         offset = frame_line[pos4 + 3:]
