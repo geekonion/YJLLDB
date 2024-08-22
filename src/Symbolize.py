@@ -279,6 +279,10 @@ Translated Report (Full Report Below)
             report_header += 'Exception Subtype: {}\n'.format(subtype)
         report_header += 'Exception Codes: {}\n'.format(exception.get('codes'))
 
+    is_corpse = data_dict.get('isCorpse')
+    if is_corpse:
+        report_header += 'Exception Note: EXC_CORPSE_NOTIFY'
+
     vm_region_info = data_dict.get('vmRegionInfo')
     if not vm_region_info:
         vm_region_info = data_dict.get('vmregioninfo')

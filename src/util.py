@@ -126,7 +126,7 @@ def exe_shell_command(cmd, cwd=None):
 
     comps = cmd.split(' ')
     prog = comps[0]
-    if subprocess.call(["/usr/bin/which", prog], shell=False) != 0:
+    if subprocess.call(["/usr/bin/which", prog], shell=False, stdout=subprocess.PIPE) != 0:
         print("Can't find {prog} in PATH or {prog} isn't installed\n"
               "you can determine this in LLDB via \""
               "(lldb) script import os; os.environ['PATH']\"\n"
