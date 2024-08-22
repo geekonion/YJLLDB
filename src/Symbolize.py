@@ -348,12 +348,17 @@ def build_backtrace(frames, used_images, max_width):
         image_dict = used_images[imageIndex]
         image_name = image_dict.get('name')
         image_base = image_dict.get('base')
+        if image_base == 0:
+            print('unexpected image {}'.format(image_dict))
 
         func_addr = image_base + image_offset
 
         frame_obj = Frame()
         frame_obj.idx = idx
-        frame_obj.image_name = image_name
+        if image_name:
+            frame_obj.image_name = image_name
+        else:
+            frame_obj.image_name = '???'
         frame_obj.max_width = max_width
         frame_obj.load_addr = func_addr
         frame_obj.base = image_base
@@ -702,6 +707,9 @@ def symbolize_thread_list(last_exception_obj, thread_list, force):
             continue
 
         image_name = frame.image_name
+        if image_name == '???':
+            continue
+
         uuid = g_module_name_uuid_map[image_name]
         header_addr = g_uuid_loadAddr_map.get(uuid)
         if not header_addr:
@@ -731,7 +739,12 @@ def symbolize_thread_list(last_exception_obj, thread_list, force):
             frame.symbol_name = symbol_name
         else:
             addr_list.append(symbol_start)
-            frame_map[str(symbol_start)] = frame
+            addr_str = str(symbol_start)
+            frame_list = frame_map.get(addr_str)
+            if not frame_list:
+                frame_list = []
+                frame_map[addr_str] = frame_list
+            frame_list.append(frame)
             module_map[image_name] = str(addr_obj.module.file)
 
         frame.symbol_offset = load_addr - symbol_start
@@ -753,8 +766,10 @@ def symbolize_thread_list(last_exception_obj, thread_list, force):
             continue
 
         for key in methods_info:
-            frame = frame_map[key]
-            frame.symbol_name = methods_info[key]
+            sym_name = methods_info[key]
+            frame_list = frame_map[key]
+            for frame in frame_list:
+                frame.symbol_name = sym_name
 
 
 def symbolize_addr(addr):
@@ -896,8 +911,16 @@ class Frame:
         if self.max_width == 0:
             self.max_width = g_max_name_width
 
-        frame_des += '{:<4}{:<{}}  {:#x} {} + {}\n'. \
-            format(self.idx, self.image_name, self.max_width, self.load_addr, name_or_addr, offset)
+        if self.image_name == '???':
+            frame_des += '{:<4}{:<{}}  {:#x} ???\n'. \
+                format(self.idx, self.image_name, self.max_width, self.load_addr)
+        # atos有时不输出offset
+        elif offset == -1:
+            frame_des += '{:<4}{:<{}}  {:#x} {}\n'. \
+                format(self.idx, self.image_name, self.max_width, self.load_addr, name_or_addr)
+        else:
+            frame_des += '{:<4}{:<{}}  {:#x} {} + {}\n'. \
+                format(self.idx, self.image_name, self.max_width, self.load_addr, name_or_addr, offset)
 
         return frame_des
 
