@@ -173,8 +173,8 @@ def symbolize_ips_file(file_path, force):
                 max_width = name_len
 
         final_report = ''
+        report_header, last_exception = build_header(data_dict)
         image_list = build_images(data_dict)
-        report_header, last_exception = build_header(data_dict, used_images, max_width)
 
         last_exception_obj = None
         if last_exception:
@@ -210,7 +210,7 @@ def symbolize_ips_file(file_path, force):
     return final_report
 
 
-def build_header(data_dict, used_images, max_width):
+def build_header(data_dict):
     report_header = """
 -------------------------------------
 Translated Report (Full Report Below)
@@ -541,6 +541,7 @@ def symbolize_crash_file(file_path, force):
 
     final_lines = []
     for line in lines:
+        line = line.strip()
         if line == 'Last Exception Backtrace:':
             in_last_exception = True
             last_exception = Thread()
