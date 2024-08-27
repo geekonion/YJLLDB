@@ -654,7 +654,12 @@ def parse_frame_line(frame_line):
     frame_obj = Frame()
     frame_obj.idx = int(frame_idx)
     frame_obj.image_name = image_name
-    frame_obj.load_addr = int(load_addr, 16)
+
+    if load_addr.startswith('0x'):
+        frame_obj.load_addr = int(load_addr, 16)
+    else:
+        print("frame_line {}".format(frame_line))
+
     if name_or_addr.startswith('0x'):
         frame_obj.base = int(name_or_addr, 16)
         frame_obj.file_offset = int(offset)
