@@ -1244,8 +1244,8 @@ def get_blocks_info(module):
     return ret_str
 
 
-def generate_option_parser(proc, args=''):
-    usage = "usage: %prog{}\n".format(args)
+def generate_option_parser(proc):
+    usage = "usage: %prog [module name] [module name] [...]\n"
 
     parser = optparse.OptionParser(usage=usage, prog=proc)
 
