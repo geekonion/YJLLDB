@@ -79,10 +79,10 @@ def lookup_bytes(debugger, command, result, internal_dict):
                 if seg_name != "__TEXT":
                     continue
 
-            def match_seg(in_seg, in_seg_name, in_sec_name, count):
-                matched_count = 0
+            def match_seg(in_seg, in_seg_name, in_sec_name, max_count):
+                n_matches = 0
                 sec_addr = in_seg.GetLoadAddress(target)
-                error = lldb.SBError()
+                error_obj = lldb.SBError()
                 sec_size = in_seg.GetByteSize()
                 if sec_size == 0:
                     if len(in_sec_name):
@@ -92,11 +92,11 @@ def lookup_bytes(debugger, command, result, internal_dict):
                     return 0
 
                 # 砸壳应用读取不到
-                # sec_data = sec.GetSectionData().ReadRawData(error, 0, sec_size)
-                sec_data = target.ReadMemory(lldb.SBAddress(sec_addr, target), sec_size, error)
-                if not error.Success():
+                # sec_data = sec.GetSectionData().ReadRawData(error_obj, 0, sec_size)
+                sec_data = target.ReadMemory(lldb.SBAddress(sec_addr, target), sec_size, error_obj)
+                if not error_obj.Success():
                     result.AppendMessage(
-                        'read section {}:0x{:x} failed! {}'.format(in_sec_name, sec_addr, error.GetCString()))
+                        'read section {}:0x{:x} failed! {}'.format(in_sec_name, sec_addr, error_obj.GetCString()))
                     return 0
 
                 pos = 0
@@ -105,7 +105,7 @@ def lookup_bytes(debugger, command, result, internal_dict):
                     if pos == -1:
                         break
 
-                    matched_count += 1
+                    n_matches += 1
                     bytes_addr = pos + sec_addr
                     inst_addr = target.ResolveLoadAddress(bytes_addr)
                     addr_info = '{}'.format(inst_addr)
@@ -114,12 +114,12 @@ def lookup_bytes(debugger, command, result, internal_dict):
                     else:
                         result.AppendMessage('address = 0x{:x} where = {}'.format(bytes_addr, seg_name))
 
-                    if 0 < count <= matched_count:
+                    if 0 < max_count <= n_matches:
                         break
 
                     pos += bytes_len
 
-                return matched_count
+                return n_matches
 
             if search_all:
                 matched_count = match_seg(seg, seg_name, '', count)
@@ -176,6 +176,6 @@ def generate_option_parser():
     parser.add_option("-c", "--count",
                       action="store",
                       dest="count",
-                      help="lookup bytes in the specified module")
+                      help="max count")
 
     return parser
