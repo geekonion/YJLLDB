@@ -42,16 +42,17 @@ def lookup_string(debugger, command, result, internal_dict):
     keyword = arg0.encode()
     start_addr = int(args[1], 16)
     end_addr = int(args[2], 16)
-    page_size = 4096
+    page_size = 0x1000000
 
     addr = start_addr
     hits_count = 0
     while True:
-        data = process.ReadMemory(addr, page_size + keyword_len, error)
+        # -1防重复
+        data = process.ReadMemory(addr, page_size + keyword_len - 1, error)
         if not data:
             break
         pos = data.find(keyword)
-        if pos != -1:
+        while pos != -1:
             hits_count += 1
             hit_addr = pos + addr
             addr_obj = target.ResolveLoadAddress(hit_addr)
@@ -63,7 +64,11 @@ def lookup_string(debugger, command, result, internal_dict):
                     print("found at 0x{:x} where = {}".format(hit_addr, addr_obj))
             else:
                 print("found at 0x{:x}".format(hit_addr))
+
+            pos = data.find(keyword, pos + keyword_len)
+
         addr += page_size
+        del data
         if addr > end_addr:
             break
 
