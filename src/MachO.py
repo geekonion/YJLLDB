@@ -77,6 +77,7 @@ def parse_lcs(base, offset, n_cmds, macho):
 
     seg_linkedit = None
     linkedit_secs = []
+    module_size = 0
     for _ in range(n_cmds):
         cmd = get_int(base, offset)  # load command type
         cmd_size = get_int(base, offset + 4)  # size of load command
@@ -96,6 +97,9 @@ def parse_lcs(base, offset, n_cmds, macho):
                 seg_linkedit = segment
             elif seg_name == '__TEXT':
                 macho['text_vmaddr'] = segment['vmaddr']
+
+            if seg_name != '__PAGEZERO':
+                module_size += int(segment['vmsize'], 16)
         elif cmd == 0xd:  # LC_ID_DYLIB
             lc_info = parse_load_dylib(base, offset, cmd, cmd_size)
             macho['lcs'].append(lc_info)
@@ -170,6 +174,8 @@ def parse_lcs(base, offset, n_cmds, macho):
     if seg_linkedit:
         linkedit_secs.sort(key=sort_comparator)
         seg_linkedit['sects'] = linkedit_secs
+
+    macho['module_size'] = module_size
 
 
 def parse_segment(base, m_offset, cmd, cmd_size):
