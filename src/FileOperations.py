@@ -441,9 +441,9 @@ def remove_file_on_device(filepath):
         NSArray *array = [x_rm_fileManager subpathsAtPath:filepath];
         NSMutableArray *subpaths = [NSMutableArray arrayWithArray:array];
         // 排序
-        NSInteger count = [subpaths count];
+        NSInteger n_rm_files = [subpaths count];
         NSInteger j = 0;
-        for (NSInteger idx = 1; idx < count; idx++) {
+        for (NSInteger idx = 1; idx < n_rm_files; idx++) {
             NSString *subpath = subpaths[idx];
             j = idx;
             while (j > 0 && [(NSString *)subpaths[j - 1] compare:subpath] == NSOrderedAscending) {
