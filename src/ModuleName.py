@@ -74,13 +74,11 @@ def parse_macho(target, header_addr, header_size, slide):
         return 'read header failed! {}\n'.format(error.GetCString())
 
     info = MachO.parse_header(header_data)
-    lcs = info['lcs']
-    name = None
-    for lc in lcs:
-        cmd = lc['cmd']
-        if cmd == 'D':  # LC_ID_DYLIB
-            name = lc['name']
-            break
+
+    name = info.get('name')
+    if not name:
+        if info.get('filetype') == '7':  # #define	MH_DYLINKER	0x7
+            name = 'dyld'
 
     return name
 
