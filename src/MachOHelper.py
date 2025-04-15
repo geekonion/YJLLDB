@@ -38,11 +38,13 @@ def get_function_starts_with_args(target, module_file_spec, header_addr, slide, 
     linkedit_vmaddr = int(segment_info['vmaddr'], 16)
 
     sects = segment_info['sects']
+    func_starts_found = False
     for sect in sects:
         sec_name = sect['name']
         if sec_name != 'Function Starts':
             continue
 
+        func_starts_found = True
         dataoff = int(sect['offset'], 16)
         datasize = int(sect['size'], 16)
         data_start = linkedit_vmaddr + slide + dataoff - linkedit_offset
@@ -101,7 +103,7 @@ def get_function_starts_with_args(target, module_file_spec, header_addr, slide, 
         # sects
         break
 
-    return funcs, module_file_spec
+    return funcs, module_file_spec, func_starts_found
 
 
 def get_entitlements(lookup_module_name):

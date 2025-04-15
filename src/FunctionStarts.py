@@ -44,8 +44,10 @@ def dump_function_starts(debugger, command, result, internal_dict):
         if os.path.exists(debug_dylib):
             lookup_module_name += '.debug.dylib'
 
-    funcs, module_file_spec = MachOHelper.get_function_starts(lookup_module_name)
-    if not funcs:
+    funcs, module_file_spec, func_starts_found = MachOHelper.get_function_starts(lookup_module_name)
+    if not func_starts_found:
+        result.AppendMessage('Function Starts not found in {}'.format(lookup_module_name))
+    elif not funcs:
         result.AppendMessage("module {} not found".format(lookup_module_name))
     else:
         total_count = 0

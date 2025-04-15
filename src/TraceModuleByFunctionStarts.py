@@ -57,8 +57,10 @@ def trace_all_functions_in_module(debugger, command, result, internal_dict):
         global oneshot
         oneshot = True
 
-    funcs, module_file_spec = MachOHelper.get_function_starts(lookup_module_name_or_addr)
-    if not module_file_spec:
+    funcs, module_file_spec, func_starts_found = MachOHelper.get_function_starts(lookup_module_name_or_addr)
+    if not func_starts_found:
+        result.AppendMessage('Function Starts not found in {}'.format(lookup_module_name_or_addr))
+    elif not module_file_spec:
         result.AppendMessage("module {} not found".format(lookup_module_name_or_addr))
     else:
         target = debugger.GetSelectedTarget()

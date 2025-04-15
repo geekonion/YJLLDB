@@ -100,6 +100,9 @@ def parse_lcs(base, offset, n_cmds, macho):
 
             if seg_name != '__PAGEZERO':
                 module_size += int(segment['vmsize'], 16)
+        elif cmd == 0xe or cmd == 0xf or cmd == 0x27:  # LC_LOAD_DYLINKER LC_ID_DYLINKER LC_DYLD_ENVIRONMENT
+            lc_info = parse_dylib_linker(base, offset, cmd, cmd_size)
+            macho['lcs'].append(lc_info)
         elif cmd == 0xd:  # LC_ID_DYLIB
             lc_info = parse_load_dylib(base, offset, cmd, cmd_size)
             macho['lcs'].append(lc_info)
@@ -265,6 +268,20 @@ def parse_load_dylib(base, offset, cmd, cmd_size):
             '%Y-%m-%d %H:%M:%S'),
         'current version': make_version(current_version),
         'compatibility version': make_version(compatibility_version)
+    }
+
+    return output
+
+
+def parse_dylib_linker(base, offset, cmd, cmd_size):
+    """Parse dylinker command."""
+    offset += 12  # skip cmd, cmd_size and str offset
+    name = get_string(base, offset)
+
+    output = {
+        'cmd': '{:X}'.format(cmd),
+        'cmd_size': '{:X}'.format(cmd_size),
+        'name': name
     }
 
     return output
