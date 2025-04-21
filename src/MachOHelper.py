@@ -13,7 +13,10 @@ def get_function_starts(lookup_module_name_or_addr):
         get_segment_info(target, lookup_module_name_or_addr, '__LINKEDIT')
     if not module_file_spec:
         print('module {} not found in image list'.format(module_name))
+        # 兼容注入的库，这里不返回
         # return None, module_file_spec
+        if segment_info:
+            print('please wait')
 
     return get_function_starts_with_args(target, module_file_spec, header_addr, slide, segment_info)
 
@@ -208,28 +211,33 @@ def get_segment_info(target, module_name_or_addr, target_seg_name):
         # modules
         break
 
-    return get_segment_info_in_module(target, target_module, target_seg_name)
+    return get_segment_info_in_module(target, target_module, target_seg_name, is_addr, module_addr)
 
 
-def get_segment_info_in_module(target, module, target_seg_name):
+def get_segment_info_in_module(target, module, target_seg_name, is_addr, module_addr):
     header_addr = 0
     slide = 0
     segment_info = None
-    module_file_spec = module.GetFileSpec()
+    header_size = 0
+    module_file_spec = None
+    module_name = None
 
-    seg = module.FindSection('__TEXT')
-    module_name = module_file_spec.GetFilename()
-    if not seg:
-        print('seg __TEXT not found in {}'.format(module_name))
-        return module_file_spec, header_addr, slide, segment_info, module_name
+    if module:
+        module_file_spec = module.GetFileSpec()
 
-    header_addr = seg.GetLoadAddress(target)
-    slide = header_addr - seg.GetFileAddress()
+        seg = module.FindSection('__TEXT')
+        module_name = module_file_spec.GetFilename()
+        if not seg:
+            print('seg __TEXT not found in {}'.format(module_name))
+            return module_file_spec, header_addr, slide, segment_info, module_name
 
-    first_sec = seg.GetSubSectionAtIndex(0)
-    sec_addr = first_sec.GetLoadAddress(target)
+        header_addr = seg.GetLoadAddress(target)
+        slide = header_addr - seg.GetFileAddress()
 
-    header_size = sec_addr - header_addr
+        first_sec = seg.GetSubSectionAtIndex(0)
+        sec_addr = first_sec.GetLoadAddress(target)
+
+        header_size = sec_addr - header_addr
 
     if not module and is_addr:
         header_addr = module_addr
