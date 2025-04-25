@@ -8,13 +8,13 @@ import util
 
 def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand(
-        'command script add -h "read memory region as hex" -f '
-        'ReadMemory.read_memory_as_hex hex_mem')
+        'command script add -h "read memory region with JIT code" -f '
+        'ReadMemory.read_memory_as_hex jit_mem')
 
 
 def read_memory_as_hex(debugger, command, result, internal_dict):
     """
-    read memory region as c style string
+    read memory region with JIT code
     implemented in YJLLDB/src/ReadMemory.py
     """
     # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-
@@ -109,6 +109,6 @@ def jit_read_memory(start_addr, size):
 def generate_option_parser():
     usage = "usage: %prog start_addr size"
 
-    parser = optparse.OptionParser(usage=usage, prog='hex_mem')
+    parser = optparse.OptionParser(usage=usage, prog='jit_mem')
 
     return parser

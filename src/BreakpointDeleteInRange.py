@@ -12,13 +12,13 @@ class BreakPointInfo:
 
 def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand(
-        'command script add -h "disable breakpoint(s) in the specified range" -f '
-        'BreakpointDeleteInRange.disable_breakpoint_in_range bdelr')
+        'command script add -h "delete breakpoint(s) in the specified range" -f '
+        'BreakpointDeleteInRange.delete_breakpoint_in_range bdelr')
 
 
-def disable_breakpoint_in_range(debugger, command, result, internal_dict):
+def delete_breakpoint_in_range(debugger, command, result, internal_dict):
     """
-    disable breakpoint(s) in the specified range
+    delete breakpoint(s) in the specified range
     implemented in YJLLDB/src/BreakpointDeleteInRange.py
     """
 

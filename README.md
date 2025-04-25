@@ -18,6 +18,8 @@ Breakpoint:
 
 ​     \* [bdr - breakpoint disable in range](#bdr---breakpoint-disable-in-range)
 
+​     \* [bdelr - breakpoint delete in range](#bdelr---breakpoint-delete-in-range)
+
 ​     \* [bblocks - break blocks (arm64 only)](#bblocks---break-blocks-arm64-only)
 
 ​     \* [binitfunc - break init func](#binitfunc---break-init-func)
@@ -55,6 +57,8 @@ Dump:
 ​     \* [dmodule - dump module (private)](#dmodule---dump-module-private)
 
 ​     \* [dapp - dump App (private)](#dapp---dump-app-private)
+
+​     \* [denv - dump env](#denv---dump-env)
 
 Shell command
 
@@ -129,6 +133,8 @@ Memory:
 ​     \* [read_mem_as_addr](#read_mem_as_addr)
 
 ​     \* [read_cstring - read memory as c style string](#read_cstring---read-memory-as-c-style-string)
+
+​     \* [jit_mem](#jit_mem---read-memory-with-JIT-code)
 
 Symbolize
 
@@ -246,6 +252,27 @@ Disable breakpoint(s) in the specified range.
 disable breakpoint 980.1: where = LLDBCode`-[Test .cxx_destruct] at Test.m:22, address = 0x00000001049fa1b0, unresolved, hit count = 0  Options: disabled 
 ...
 disable breakpoint 991.1: where = LLDBCode`func1 at Test.m:42, address = 0x00000001049faaf8, unresolved, hit count = 0  Options: disabled 
+```
+
+[back to commands list](#Commands-list)
+
+
+
+#### bdelr - breakpoint delete in range
+
+Delete breakpoint(s) in the specified range.
+
+```stylus
+(lldb) br list 9
+9: name = 'dlopen', locations = 1, resolved = 1, hit count = 0
+  9.1: where = libdyld.dylib`dlopen, address = 0x00000001e9c6cc04, resolved, hit count = 0 
+
+(lldb) bdelr 9-9
+delete breakpoint 9
+
+(lldb) br list 9
+error: '9' is not a currently valid breakpoint ID.
+error: Invalid breakpoint ID.
 ```
 
 [back to commands list](#Commands-list)
@@ -569,6 +596,36 @@ copy file JITDemo.app/embedded.mobileprovision
 no file need patch
 Generating "JITDemo.ipa"
 dump success, ipa path: /Users/xxx/lldb_dump_macho/JITDemo/JITDemo.ipa
+```
+
+[back to commands list](#Commands-list)
+
+
+
+#### denv - dump env
+
+```stylus
+(lldb) denv
+CFFIXED_USER_HOME=/private/var/mobile/Containers/Data/Application/72ACA6D5-EC32-4774-90A4-9C7C0C0981A4
+HOME=/private/var/mobile/Containers/Data/Application/72ACA6D5-EC32-4774-90A4-9C7C0C0981A4
+TMPDIR=/private/var/mobile/Containers/Data/Application/72ACA6D5-EC32-4774-90A4-9C7C0C0981A4/tmp/
+XPC_SERVICE_NAME=UIKitApplication:com.xxx.JITDemo[fa82][rb-legacy]
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+XPC_FLAGS=0x0
+LOGNAME=mobile
+USER=mobile
+SHELL=/bin/sh
+	
+hidden envs:
+executable_path=/var/containers/Bundle/Application/1CE672BD-2B29-48C3-B8E7-C1CCA3CAB4B2/JITDemo.app/JITDemo
+MallocNanoZone=1
+ptr_munge=
+main_stack=
+executable_file=0x1a01000007,0xce2f8f
+dyld_file=0x1a01000009,0x26089
+executable_cdhash=8b9ae8cd0fda83160427d2eac822afe97fbaac44
+executable_boothash=cbc87e2356dd5d5514484b2d950ed787e1da125e
+th_port=
 ```
 
 [back to commands list](#Commands-list)
@@ -1218,6 +1275,26 @@ Convert machine code to assembly instructions.
 0x1007857c8: "__OBJC_PROTOCOL_$_UIWindowSceneDelegate"
 338 locations found
 ```
+
+[back to commands list](#Commands-list)
+
+
+
+#### jit_mem - read memory with JIT code
+
+```stylus
+(lldb) x 0x1c40a8008 -c 4
+0x1c40a8008: c0 03 5f d6
+
+(lldb) jit_mem 0x1c40a8008 4
+0x1c40a8008: 00 00 20 d4
+```
+
+> lldb给_swift_runtime_on_report设置了断点
+>
+> 但是内置的lldb指令不体现这种变化
+>
+> 使用JIT代码可以读取到真实内存
 
 [back to commands list](#Commands-list)
 
