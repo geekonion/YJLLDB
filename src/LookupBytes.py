@@ -98,13 +98,15 @@ def lookup_bytes(debugger, command, result, internal_dict):
                         'read section {}:0x{:x} failed! {}'.format(in_sec_name, sec_addr, error_obj.GetCString()))
                     return 0
 
+                if not sec_data:
+                    return 0
+
                 pos = 0
                 while True:
                     pos = sec_data.find(input_bytes, pos)
                     if pos == -1:
                         break
 
-                    n_matches += 1
                     if options.size > 0:
                         fixed_pos = pos - pos % options.size
                     else:
@@ -112,12 +114,38 @@ def lookup_bytes(debugger, command, result, internal_dict):
 
                     bytes_addr = fixed_pos + sec_addr
                     inst_addr = target.ResolveLoadAddress(bytes_addr)
-                    addr_info = '{}'.format(inst_addr)
-                    if addr_info:
-                        result.AppendMessage('address = 0x{:x} where = {}'.format(bytes_addr, inst_addr))
-                    else:
-                        result.AppendMessage('address = 0x{:x} where = {}'.format(bytes_addr, seg_name))
 
+                    ninsts = int(bytes_len / 4)
+                    if ninsts == 0:
+                        ninsts = 1
+                    insts = target.ReadInstructions(inst_addr, ninsts)
+                    insts_str = ''
+                    filter = options.filter
+                    if filter:
+                        mnemonic_found = False
+                    else:
+                        mnemonic_found = True
+                    for inst in insts:
+                        if filter and inst.GetMnemonic(target) == options.filter:
+                            mnemonic_found = True
+                        inst_info = '{}'.format(inst)
+                        info_pos = inst_info.find(': ')
+                        if info_pos > 0:
+                            insts_str += inst_info[info_pos + 2:] + '; '
+                        else:
+                            insts_str += inst_info + '; '
+
+                    if mnemonic_found:
+                        addr_info = '{}'.format(inst_addr)
+                        if addr_info:
+                            result.AppendMessage('address = 0x{:x} where = {}, {}'.format(bytes_addr, inst_addr, insts_str))
+                        elif search_all:
+                            result.AppendMessage('address = 0x{:x} where = {}, {}'.format(bytes_addr, seg_name, insts_str))
+                        else:
+                            result.AppendMessage('address = 0x{:x}, {}'.format(bytes_addr, insts_str))
+
+                        n_matches += 1
+                        
                     if 0 < max_count <= n_matches:
                         break
 
@@ -187,5 +215,9 @@ def generate_option_parser():
                       type='int',
                       dest="size",
                       help="size of an asm instruction")
+    parser.add_option("-f", "--filter",
+                      action="store",
+                      dest="filter",
+                      help="filter instructions by mnemonic")
 
     return parser
