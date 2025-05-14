@@ -113,11 +113,19 @@ def lookup_bytes(debugger, command, result, internal_dict):
                         fixed_pos = pos
 
                     bytes_addr = fixed_pos + sec_addr
+                    # 需要获取额外指令时，地址前移
+                    if options.previous:
+                        bytes_addr -= options.previous * 4
+
                     inst_addr = target.ResolveLoadAddress(bytes_addr)
 
                     ninsts = int(bytes_len / 4)
                     if ninsts == 0:
                         ninsts = 1
+
+                    if options.previous:
+                        ninsts += options.previous
+
                     insts = target.ReadInstructions(inst_addr, ninsts)
                     insts_str = ''
                     filter = options.filter
@@ -126,26 +134,40 @@ def lookup_bytes(debugger, command, result, internal_dict):
                     else:
                         mnemonic_found = True
                     for inst in insts:
+                        # 过滤
                         if filter and inst.GetMnemonic(target) == options.filter:
                             mnemonic_found = True
                         inst_info = '{}'.format(inst)
                         info_pos = inst_info.find(': ')
                         if info_pos > 0:
-                            insts_str += inst_info[info_pos + 2:] + '; '
+                            insts_str += '\t' + inst_info[info_pos + 2:] + '\n'
                         else:
-                            insts_str += inst_info + '; '
+                            insts_str += '\t' + inst_info + '\n'
 
+                    # 符合条件的指令
                     if mnemonic_found:
+                        file_addr = inst_addr.GetFileAddress()
                         addr_info = '{}'.format(inst_addr)
                         if addr_info:
-                            result.AppendMessage('address = 0x{:x} where = {}, {}'.format(bytes_addr, inst_addr, insts_str))
+                            result.AppendMessage('address = {:#x}[{:#x}] where = {}\n{}'.format(bytes_addr, file_addr, inst_addr, insts_str))
                         elif search_all:
-                            result.AppendMessage('address = 0x{:x} where = {}, {}'.format(bytes_addr, seg_name, insts_str))
+                            result.AppendMessage('address = {:#x}[{:#x}] where = {}\n{}'.format(bytes_addr, file_addr, seg_name, insts_str))
                         else:
-                            result.AppendMessage('address = 0x{:x}, {}'.format(bytes_addr, insts_str))
+                            result.AppendMessage('address = {:#x}[{:#x}]\n{}'.format(bytes_addr, file_addr, insts_str))
 
                         n_matches += 1
-                        
+
+                        # 设置断点
+                        if options.breakpoint:
+                            brkpoint = target.BreakpointCreateBySBAddress(inst_addr)
+                            # 判断下断点是否成功
+                            if not brkpoint.IsValid() or brkpoint.num_locations == 0:
+                                result.AppendWarning("Breakpoint isn't valid or hasn't found any hits")
+                            elif options.expression:
+                                commands = lldb.SBStringList()
+                                commands.AppendString(options.expression)
+                                brkpoint.SetCommandLineCommands(commands)
+
                     if 0 < max_count <= n_matches:
                         break
 
@@ -219,5 +241,18 @@ def generate_option_parser():
                       action="store",
                       dest="filter",
                       help="filter instructions by mnemonic")
+    parser.add_option("-b", "--breakpoint",
+                      action="store_true",
+                      dest="breakpoint",
+                      help="set breakpoints on the filtered instructions")
+    parser.add_option("-e", "--expression",
+                      action="store",
+                      dest="expression",
+                      help="add commands expression for breakpoints")
+    parser.add_option("-p", "--previous",
+                      action="store",
+                      type='int',
+                      dest="previous",
+                      help="print instruction and its previous n instructions")
 
     return parser
