@@ -3,7 +3,6 @@
 import lldb
 import optparse
 import shlex
-import os
 
 
 def __lldb_init_module(debugger, internal_dict):
@@ -106,7 +105,12 @@ def lookup_bytes(debugger, command, result, internal_dict):
                         break
 
                     n_matches += 1
-                    bytes_addr = pos + sec_addr
+                    if options.size > 0:
+                        fixed_pos = pos - pos % options.size
+                    else:
+                        fixed_pos = pos
+
+                    bytes_addr = fixed_pos + sec_addr
                     inst_addr = target.ResolveLoadAddress(bytes_addr)
                     addr_info = '{}'.format(inst_addr)
                     if addr_info:
@@ -177,5 +181,11 @@ def generate_option_parser():
                       action="store",
                       dest="count",
                       help="max count")
+    parser.add_option("-s", "--size",
+                      action="store",
+                      default=4,
+                      type='int',
+                      dest="size",
+                      help="size of an asm instruction")
 
     return parser
