@@ -46,7 +46,7 @@ def jit_read_memory(start_addr, size):
     """
     给+[Checker checkModule:slide:name:dsc:]起始地址下断点
     分别使用dis和x命令读取内存
-    再使用hex_mem读取内存
+    再使用jit_mem读取内存
     可以看出lldb对下断点的地方进行了处理，返回的是函数原来的字节，而真是的字节是断点
 
     (lldb) dis -a 0x1025f4f6c -c 2
@@ -56,7 +56,7 @@ def jit_read_memory(start_addr, size):
     (lldb) x 0x1025f4f6c -c 8
     0x1025f4f6c: ff 43 04 d1 fc 6f 0f a9                          .C...o..
 
-    (lldb) hex_mem 0x1025f4f6c 8
+    (lldb) jit_mem 0x1025f4f6c 8
     0x1025f4f6c: 00 00 20 d4 fc 6f 0f a9                          .....o..
     (lldb) bytes2inst '00 00 20 d4'
     <+0>:	brk	#0
@@ -64,7 +64,7 @@ def jit_read_memory(start_addr, size):
     """
     command_script = '@import Foundation;'
     command_script += 'const unsigned char *startAddr = (const unsigned char *){};'.format(start_addr)
-    command_script += 'const unsigned char *size = (const unsigned char *){};'.format(size)
+    command_script += 'int size = (int){};'.format(size)
     command_script += r'''
     NSMutableString *hex_string = [NSMutableString string];
 
