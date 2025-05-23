@@ -112,6 +112,8 @@ Module:
 
 ​     \* [entitlements - dump entitlements](#entitlements---dump-entitlements)
 
+​     \* [offset - get file offset for address](#offset---get-file-offset-for-address)
+
 Objc
 
 ​     \* [classes - print class names](#classes---print-class-names)
@@ -1116,6 +1118,17 @@ Dump group ID(s) in the codesign entitlements.
 ```
 
 [back to commands list](#Commands-list)
+
+
+
+#### offset - get file offset for address
+
+```stylus
+(lldb) offset
+addr: 0x104dc45f0 -> file offset: 0x85f0
+(lldb) offset 0x104dc45f0
+addr: 0x104dc45f0 -> file offset: 0x85f0
+```
 
 
 
