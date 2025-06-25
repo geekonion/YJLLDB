@@ -33,11 +33,23 @@ def lookup_instructions(debugger, command, result, internal_dict):
         result.AppendMessage(parser.get_usage())
         return
 
-    input_args = ''.join(args)
+    if len(args) > 1:
+        input_args = ' '.join(args)
+    else:
+        input_args = ''.join(args)
+
     input_args = input_args.replace("'", "")
     input_args = input_args.replace("\"", "")
-    input_args = input_args.replace("\\x", "")
-    instruction = input_args
+
+    pos = input_args.find(' ')
+    if pos > 0:
+        inst_mnemonic = input_args[:pos]
+    else:
+        inst_mnemonic = input_args
+
+    inst_oprs = None
+    if len(args) > 1:
+        inst_oprs = input_args[pos:].strip()
 
     lookup_module = options.module
 
@@ -69,8 +81,12 @@ def lookup_instructions(debugger, command, result, internal_dict):
 
             insts = symbol.GetInstructions(target)
             for next_ins in insts:
-                if next_ins.GetMnemonic(target) == instruction:
-                    print(next_ins)
+                if (next_ins.GetMnemonic(target) == inst_mnemonic
+                        and (not inst_oprs or next_ins.GetOperands(target) == inst_oprs)):
+                    addr_obj = next_ins.GetAddress()
+                    load_addr = addr_obj.GetLoadAddress(target)
+                    inst_des = str(next_ins).replace('[', '[{:#x}, '.format(load_addr))
+                    print(inst_des)
                     hits_count += 1
 
         if hits_count == 0:
@@ -84,12 +100,14 @@ def lookup_instructions(debugger, command, result, internal_dict):
 def generate_option_parser():
     usage = "usage: %prog instruction\n" + \
             "for example:\n" + \
-            "\t%prog svc"
+            "\t%prog svc\n" + \
+            "\t%prog svc #0x80\n" + \
+            "\t%prog 'svc #0x80'"
 
     parser = optparse.OptionParser(usage=usage, prog='ilookup')
     parser.add_option("-m", "--module",
                       action="store",
                       dest="module",
-                      help="lookup bytes in the specified module")
+                      help="lookup instructions in the specified module")
 
     return parser

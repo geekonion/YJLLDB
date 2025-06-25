@@ -40,6 +40,8 @@ Search:
 
 ​     \* [ffunc - find function](#ffunc---find-function)
 
+​     \* [ilookup - find instructions](#ilookup---find-instructions)
+
 Trace:
 
 ​     \* [mtrace - trace module](#mtrace---trace-module)
@@ -481,6 +483,20 @@ find function by c string
 ```
 
 [back to commands list](#Commands-list)
+
+
+
+#### ilookup - find instructions
+
+```stylus
+(lldb) ilookup svc
+lookup instructions, this may take a while
+-----try to lookup instructions in Demo-----
+Demo[0x102ea83c8, 0x343c8]: svc    #0x80
+Demo[0x102ea841c, 0x3441c]: svc    #0x80
+...
+15 locations found
+```
 
 
 
