@@ -1145,9 +1145,9 @@ def get_blocks_info(module):
     void (^parse_g_block)(struct section_64 *) = ^(struct section_64 *data_const_sec){
         uint64_t sec_size = data_const_sec->size;
         int pointer_size = sizeof(void *);
-        uint64_t count = sec_size / pointer_size;
+        uint64_t g_count = sec_size / pointer_size;
         void **ptr = (void **)(slide + data_const_sec->addr);
-        for (uint64_t i = 0; i < count; i++) {
+        for (uint64_t i = 0; i < g_count; i++) {
             void *tmp = ptr[i];
             if (tmp == globalBlock) {
                 [globalBlocks appendFormat:@"%p:%p;", &ptr[i], ptr[i + 2]];
@@ -1158,9 +1158,9 @@ def get_blocks_info(module):
     void (^parse_s_block)(struct section_64 *) = ^(struct section_64 *data_got_sec){
         uint64_t sec_size = data_got_sec->size;
         int pointer_size = sizeof(void *);
-        uint64_t count = sec_size / pointer_size;
+        uint64_t s_count = sec_size / pointer_size;
         void **ptr = (void **)(slide + data_got_sec->addr);
-        for (uint64_t i = 0; i < count; i++) {
+        for (uint64_t i = 0; i < s_count; i++) {
             void *tmp = ptr[i];
             if (tmp == stackBlock) {
                 [stackBlockAddr appendFormat:@"%p;", &ptr[i]];
