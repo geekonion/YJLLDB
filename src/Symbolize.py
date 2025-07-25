@@ -944,8 +944,8 @@ class Thread:
 
 
 def generate_option_parser():
-    usage = "usage: \n%prog addr1 [addr2 ...]" \
-            "%prog /path/to/crash report file"
+    usage = "usage: \n  %prog addr1 [addr2 ...]\n" + \
+            "  %prog /path/to/crash_report_file"
 
     parser = optparse.OptionParser(usage=usage, prog='symbolize')
     parser.add_option("-s", "--dsym",
