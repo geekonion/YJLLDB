@@ -126,6 +126,10 @@ Objc
 
 ​     \* [duplicate_class](#duplicate_class)
 
+​     \* [overridden_method](#overridden_method)
+
+
+
 Assembly:
 
 ​     \* [inst2bytes](#inst2bytes)
@@ -496,14 +500,6 @@ Demo[0x102ea83c8, 0x343c8]: svc    #0x80
 Demo[0x102ea841c, 0x3441c]: svc    #0x80
 ...
 15 locations found
-```
-
-
-
-#### overridden_method
-
-```stylus
-(lldb) overridden_method
 ```
 
 [back to commands list](#Commands-list)
@@ -1208,6 +1204,16 @@ class DDLoggingContextSet is implemented in:
 	/JITDemo.app/Frameworks/LLDBLog.framework/LLDBLog
 24 duplicate classes were found
 ```
+
+#### overridden_method
+
+```stylus
+(lldb) overridden_method
+```
+
+[back to commands list](#Commands-list)
+
+
 
 
 
