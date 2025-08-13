@@ -28,6 +28,12 @@ Breakpoint:
 
 ​     \* [bmain - break main function](#bmain---break-main-function)
 
+​     \* [bsave - save breakpoints](#bsave---save-breakpoints)
+
+​     \* [bload - restore breakpoints](#bload---restore-breakpoints)
+
+​     \* [bclear - clear unresolved breakpoints](#bclear---clear-unresolved-breakpoints)
+
 Search:
 
 ​     \* [slookup - lookup string](#slookup---lookup-string)
@@ -362,6 +368,49 @@ Breakpoint 9: BasicSyntax`___lldb_unnamed_symbol266, address = 0x10017c3fc
 ```
 
 [back to commands list](#Commands-list)
+
+
+
+#### bsave - save breakpoints
+
+Save breakpoints (set by address) to a file.
+
+List breakpoints
+
+```stylus
+(lldb) br list
+Current breakpoints:
+1: name = '_platform_memmove', locations = 1, resolved = 1, hit count = 3
+  1.1: where = libsystem_platform.dylib`_platform_memmove, address = 0x00000001dc558e60, resolved, hit count = 3 
+2: address = libsystem_platform.dylib[0x00000001d09d4e68], locations = 1, resolved = 1, hit count = 0
+  2.1: where = libsystem_platform.dylib`_platform_memmove + 8, address = 0x00000001dc558e68, resolved, hit count = 0
+```
+
+
+
+save breakpoints
+
+```stylus
+(lldb) bsave
+Breakpoints saved to /Users/xxx/YJLLDB/Caches/ACEObject.json
+```
+
+
+
+#### bload - restore breakpoints
+
+```stylus
+(lldb) bload
+Breakpoint 3: where = libsystem_platform.dylib`_platform_memmove + 8, address = 0x1dc558e68
+```
+
+
+
+#### bclear - clear unresolved breakpoints
+
+```stylus
+(lldb) bclear
+```
 
 
 
