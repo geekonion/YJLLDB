@@ -108,7 +108,7 @@ def find_duplicate_classes(debugger, command, result, internal_dict):
         for image_path in paths:
             print('\t{}'.format(image_path))
 
-    print('{} duplicate classes were found'.format(len(class_dict)))
+    print('{} duplicate classes found'.format(len(class_dict)))
 
 
 def get_module_regions(module):
