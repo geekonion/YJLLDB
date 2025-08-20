@@ -1,234 +1,222 @@
-## YJLLDB
-
-一些用于调试iOS应用的lldb命令。Some very useful lldb commands for iOS debugging and reverse engineering.
-
-
-
-## Commands list
-
-Breakpoint:
-
-​     \* [bab - break at bytes](#bab---break-at-bytes)
-
-​     \* [baf - break all functions in module](#baf---break-all-functions-in-module)
-
-​     \* [bdc - breakpoint disable current](#bdc---breakpoint-disable-current)
-
-​     \* [bda - breakpoint disable at class](#bda---breakpoint-disable-at-class)
-
-​     \* [bdr - breakpoint disable in range](#bdr---breakpoint-disable-in-range)
-
-​     \* [bdelr - breakpoint delete in range](#bdelr---breakpoint-delete-in-range)
-
-​     \* [bblocks - break blocks (arm64 only)](#bblocks---break-blocks-arm64-only)
-
-​     \* [binitfunc - break init func](#binitfunc---break-init-func)
-
-​     \* [bmethod - break method](#bmethod---break-method)
-
-​     \* [bmain - break main function](#bmain---break-main-function)
-
-​     \* [bsave - save breakpoints](#bsave---save-breakpoints)
-
-​     \* [bload - restore breakpoints](#bload---restore-breakpoints)
-
-​     \* [bclear - clear unresolved breakpoints](#bclear---clear-unresolved-breakpoints)
-
-Search:
-
-​     \* [slookup - lookup string](#slookup---lookup-string)
-
-​     \* [blookup - lookup bytes](#blookup---lookup-bytes)
-
-​     \* [fblock - find block (arm64 only)](#fblock---find-block-arm64-only)
-
-​     \* [blocks - find blocks (arm64 only)](#blocks---find-blocks-arm64-only)
-
-​     \* [ffunc - find function](#ffunc---find-function)
-
-​     \* [ilookup - find instructions](#ilookup---find-instructions)
-
-Trace:
-
-​     \* [mtrace - trace module](#mtrace---trace-module)
-
-​     \* [rtrace](#rtrace)
-
-​     \* [notifier](#notifier)
-
-Patch:
-
-​     \* [patch (private)](#patch-(private))
-
-Dump:
-
-​     \* [dmodule - dump module (private)](#dmodule---dump-module-private)
-
-​     \* [dapp - dump App (private)](#dapp---dump-app-private)
-
-​     \* [denv - dump env](#denv---dump-env)
-
-Shell command
-
-​     \* [addcmd](#addcmd)
-
-​     \* [delcmd](#delcmd)
-
-​     \* [pwd](#pwd)
-
-​     \* [cd](#cd)
-
-​     \* [ls](#ls)
-
-File:
-
-​     \* [commads to get common directory](#commads-to-get-common-directory)
-
-​     \* [ils](#ils)
-
-​     \* [dfile - download file](#dfile---download-file)
-
-​     \* [ddir - download directory](#ddir---download-directory)
-
-​     \* [ufile - upload local file to device](#ufile---upload-local-file-to-device)
-
-​     \* [irm - remove file](#irm---remove-file)
-
-Module:
-
-​     \* [image_list](#image_list)
-
-​     \* [info_plist](#info_plist---print-Info.plist)
-
-​     \* [executable - print main executable name](#executable---print-main-executable-name)
-
-​     \* [appdelegate](#appdelegate)
-
-​     \* [mname - module name](#mname---module-name)
-
-​     \* [segments - print segments](#segments---print-segments)
-
-​     \* [main](#main)
-
-​     \* [initfunc - print init func](#initfunc---print-init-func)
-
-​     \* [func_starts - function starts](#func_starts---function-starts)
-
-​     \* [got - print __got section](#got---print-__got-section)
-
-​     \* [lazy_sym - print __la_symbol_ptr section](#lazy_sym---print-__la_symbol_ptr-section)
-
-​     \* [entitlements - dump entitlements](#entitlements---dump-entitlements)
-
-​     \* [offset - get file offset for address](#offset---get-file-offset-for-address)
-
-Objc
-
-​     \* [classes - print class names](#classes---print-class-names)
-
-​     \* [dmethods](#dmethods)
-
-​     \* [divars](#divars)
-
-​     \* [duplicate_class](#duplicate_class)
-
-​     \* [overridden_method](#overridden_method)
-
-
-
-Assembly:
-
-​     \* [inst2bytes](#inst2bytes)
-
-​     \* [bytes2inst](#bytes2inst)
-
-Memory:
-
-​     \* [read_mem_as_addr](#read_mem_as_addr)
-
-​     \* [read_cstring - read memory as c style string](#read_cstring---read-memory-as-c-style-string)
-
-​     \* [jit_mem](#jit_mem---read-memory-with-JIT-code)
-
-Symbolize
-
-​     \* [load_dSYM](#load_dSYM)
-
-​     \* [symbolize](#symbolize)
-
-DebugKit
-
-​     \* [UIControl extension](#UIControl-extension)
-
-​     \* [NSObject extension](#NSObject-extension)
-
-​     \* [NSBlock extension](#NSBlock-extension)
-
-​     \* [iOS Sandbox Explorer](#iOS-Sandbox-Explorer)
-
-​     \* [vmmap](#vmmap)
-
-Others:
-
-​     \* [find_el - find endless loop](#find_el---find-endless-loop)
-
-​     \* [thread_eb - extended backtrace of thread](#thread_eb---extended-backtrace-of-thread)
-
-
+# YJLLDB
+
+一些常用的 LLDB 命令，用于 iOS 调试与逆向工程。
+Some commonly used LLDB commands for iOS debugging and reverse engineering.
+
+## Documentation
+
+- [Installation](#installation)
+- [Available Commands](##-available-commands)
+  - [Breakpoint Commands](#breakpoint-commands)
+  - [Search Commands](#search-commands)
+  - [Trace Commands](#trace-commands)
+  - [Patch Commands](#patch-commands)
+  - [Dump Commands](#dump-commands)
+  - [Shell Commands](#shell-commands)
+  - [File Operations](#file-operations)
+  - [Module Analysis](#module-analysis)
+  - [Objective-C Commands](#objective-c-commands)
+  - [Assembly Commands](#assembly-commands)
+  - [Memory Commands](#memory-commands)
+  - [Symbolize Commands](#symbolize-commands)
+  - [DebugKit Commands](#debugkit-commands)
+  - [Other Commands](#other-commands)
+- [Commands in Detail](#commands-in-detail)
+- [Credits](#credits)
+- [License](#license)
+
+## Available Commands
+
+### Breakpoint Commands
+- [bab - break at bytes](#bab---break-at-bytes)
+- [baf - break all functions in module](#baf---break-all-functions-in-module)
+- [bdc - breakpoint disable current](#bdc---breakpoint-disable-current)
+- [bda - breakpoint disable at class](#bda---breakpoint-disable-at-class)
+- [bdr - breakpoint disable in range](#bdr--breakpoint-disable-in-range)
+- [bdelr - breakpoint delete in range](#bdelr---breakpoint-delete-in-range)
+- [bblocks - break blocks (arm64 only)](#bblocks---break-blocks-arm64-only)
+- [binitfunc - break init func](#binitfunc---break-init-func)
+- [bmethod - break method](#bmethod---break-method)
+- [bmain - break main function](#bmain---break-main-function)
+- [bsave - save breakpoints](#bsave---save-breakpoints)
+- [bload - restore breakpoints](#bload---restore-breakpoints)
+- [bclear - clear unresolved breakpoints](#bclear---clear-unresolved-breakpoints)
+
+### Search Commands
+- [slookup - lookup string](#slookup---lookup-string)
+- [blookup - lookup bytes](#blookup---lookup-bytes)
+- [fblock - find block (arm64 only)](#fblock---find-block-arm64-only)
+- [blocks - find blocks (arm64 only)](#blocks---find-blocks-arm64-only)
+- [ffunc - find function](#ffunc---find-function)
+- [ilookup - find instructions](#ilookup---find-instructions)
+
+### Trace Commands
+- [mtrace - trace module](#mtrace---trace-module)
+- [rtrace](#rtrace)
+- [notifier](#notifier)
+
+### Patch Commands
+- [patch (private)](#patch-(private))
+
+### Dump Commands
+- [dmodule - dump module (private)](#dmodule---dump-module-private)
+- [dapp - dump App (private)](#dapp---dump-app-private)
+- [denv - dump env](#denv---dump-env)
+
+### Shell Commands
+- [addcmd](#addcmd)
+- [delcmd](#delcmd)
+- [pwd](#pwd)
+- [cd](#cd)
+- [ls](#ls)
+
+### File Operations
+- [commads to get common directory](#commads-to-get-common-directory)
+- [ils](#ils)
+- [dfile - download file](#dfile---download-file)
+- [ddir - download directory](#ddir---download-directory)
+- [ufile - upload local file to device](#ufile---upload-local-file-to-device)
+- [irm - remove file](#irm---remove-file)
+
+### Module Analysis
+- [image_list](#image_list---list-loaded-modules)
+- [info_plist](#info_plist---print-infoplist)
+- [executable - print main executable name](#executable---print-main-executable-name)
+- [appdelegate](#appdelegate)
+- [mname - module name](#mname---module-name)
+- [segments - print segments](#segments---print-segments)
+- [main](#main)
+- [initfunc - print init func](#initfunc---print-init-func)
+- [func_starts - function starts](#func_starts---function-starts)
+- [got - print __got section](#got---print-__got-section)
+- [lazy_sym - print __la_symbol_ptr section](#lazy_sym---print-__la_symbol_ptr-section)
+- [entitlements - dump entitlements](#entitlements---dump-entitlements)
+- [offset - get file offset for address](#offset---get-file-offset-for-address)
+
+### Objective-C Commands
+- [classes - print class names](#classes---print-class-names)
+- [dmethods](#dmethods)
+- [divars](#divars)
+- [duplicate_class](#duplicate_class)
+- [overridden_method](#overridden_method)
+
+### Assembly Commands
+- [inst2bytes](#inst2bytes---instructions-to-bytes)
+- [bytes2inst](#bytes2inst---bytes-to-instructions)
+
+### Memory Commands
+- [read_mem_as_addr](#read_mem_as_addr)
+- [read_cstring - read memory as c style string](#read_cstring---read-memory-as-c-style-string)
+- [jit_mem](#jit_mem---read-memory-with-JIT-code)
+
+### Symbolize Commands
+- [load_dSYM](#load_dSYM)
+- [symbolize](#symbolize)
+
+### DebugKit Commands
+- [UIControl extension](#uicontrol-extension)
+- [NSObject extension](#NSObject-extension)
+- [NSBlock extension](#NSBlock-extension)
+- [iOS Sandbox Explorer](#iOS-Sandbox-Explorer)
+- [vmmap](#vmmap)
+
+### Other Commands
+- [find_el - find endless loop](#find_el---find-endless-loop)
+- [thread_eb - extended backtrace of thread](#thread_eb---extended-backtrace-of-thread)
 
 ## Installation
 
-1. Clone this repo
-2. Open up (or create) **~/.lldbinit**
-3. Add the following command to your ~/.lldbinit file: `command script import /path/to/YJLLDB/src/yjlldb.py`
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/geekonion/YJLLDB.git
+   cd YJLLDB
+   ```
 
-## Usage
+2. **Locate or create the LLDB initialization file**
 
-### Breakpoint:
+   The LLDB initialization file is located at `~/.lldbinit`. If it doesn't exist, create it:
+   ```bash
+   touch ~/.lldbinit
+   ```
 
-#### bab - break at bytes
+3. **Add YJLLDB to your LLDB configuration**
 
-Set breakpoints at the specified bytes in user modules.
+   Open `~/.lldbinit` in your preferred text editor and add the following line:
+   ```bash
+   command script import /path/to/YJLLDB/src/yjlldb.py
+   ```
 
-```stylus
-// for example, break at ret
+   **Replace `/path/to/YJLLDB` with the actual path where you cloned the repository.**
+
+   For example, if you cloned it to your home directory:
+   ```bash
+   command script import ~/YJLLDB/src/yjlldb.py
+   ```
+
+4. **Verify the installation**
+
+   Start LLDB and check if YJLLDB commands are available:
+   ```bash
+   lldb
+   (lldb) help
+   ```
+
+   You should see YJLLDB commands listed in the help output.
+
+---
+
+## Commands in Detail
+
+### Breakpoint Commands
+
+#### `bab` - break at bytes
+
+Set breakpoints at specific byte patterns in user modules.
+Useful for locating instructions such as `ret`, `nop`, etc. across your application.
+
+```bash
+# Break at all 'ret' instructions (ARM64: c0 03 5f d6)
 (lldb) bab c0 03 5f d6
 Breakpoint 1: where = LLDBCode`-[ViewController viewDidLoad] + 240 at ViewController.m:29:1, address = 0x1029b3008
 ...
 set 728 breakpoints
 
+# Verify the breakpoint location
 (lldb) x 0x1029b3008
 0x1029b3008: c0 03 5f d6 ff 03 03 d1 fd 7b 0b a9 fd c3 02 91  .._......{......
-0x1029b3018: e8 03 01 aa e1 03 02 aa e3 0f 00 f9 a0 83 1f f8  ................
+
 (lldb) dis -s 0x1029b3008 -c 1
 LLDBCode`-[ViewController viewDidLoad]:
     0x1029b3008 <+240>: ret
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### baf - break all functions in module
+#### `baf` - break all functions in-module
 
-Break all functions and methods in the specified module.
+Set breakpoints on all functions and methods in the specified module.
+Extremely useful for comprehensive tracing and understanding program flow.
 
-For example，break Foundation:
-
-```stylus
+```bash
+# Break all functions in Foundation framework
 (lldb) baf Foundation
 -----break functions in Foundation-----
 will set breakpoint for 13880 names
 Breakpoint 4: 13961 locations
 ```
 
+[⬆ Back to Available Commands](##available-commands)
 
 
-#### bdc - breakpoint disable current
 
-Disable current breakpoint and continue.
+#### `bdc` - breakpoint disable current
 
-```stylus
+Disable current breakpoint and continue execution.
+Quick way to bypass a breakpoint without deleting it.
+
+```bash
 (lldb) thread info
 thread #1: tid = 0x2cb739, 0x000000018354f950 libsystem_kernel.dylib`open, queue = 'com.apple.main-thread', stop reason = breakpoint 5.13
 
@@ -237,42 +225,44 @@ disable breakpoint 5.13 [0x18354f950]libsystem_kernel.dylib`open
 and continue
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### bda - breakpoint disable at class
+#### `bda` - breakpoint disable at class
 
 Disable breakpoint(s) at the specified class.
 
-```stylus
+```bash
 (lldb) bda -i ViewController
-disable breakpoint 1.8: where = LLDBCode`__41-[ViewController touchesBegan:withEvent:]_block_invoke_4 at ViewController.m:57, address = 0x00000001040e32f8, unresolved, hit count = 1  Options: disabled 
+disable breakpoint 1.8: where = LLDBCode`__41-[ViewController touchesBegan:withEvent:]_block_invoke_4 at ViewController.m:57, address = 0x00000001040e32f8, unresolved, hit count = 1  Options: disabled
 ...
-disable breakpoint 1.27: where = LLDBCode`__41-[ViewController touchesBegan:withEvent:]_block_invoke at ViewController.m:45, address = 0x00000001040e318c, unresolved, hit count = 1  Options: disabled 
+disable breakpoint 1.27: where = LLDBCode`__41-[ViewController touchesBegan:withEvent:]_block_invoke at ViewController.m:45, address = 0x00000001040e318c, unresolved, hit count = 1  Options: disabled
 
 (lldb) bda -i ViewController(extension)
-disable breakpoint 1.23: where = LLDBCode`-[ViewController(extension) test] at ViewController.m:20, address = 0x0000000102ec2e7c, unresolved, hit count = 0  Options: disabled 
+disable breakpoint 1.23: where = LLDBCode`-[ViewController(extension) test] at ViewController.m:20, address = 0x0000000102ec2e7c, unresolved, hit count = 0  Options: disabled
 ```
 
+[⬆ Back to Available Commands](##available-commands)
 
 
-#### bdr - breakpoint disable in range
+
+#### `bdr`- breakpoint disable in range
 
 Disable breakpoint(s) in the specified range.
 
-```stylus
+```bash
 (lldb) bdr 980~992
-disable breakpoint 980.1: where = LLDBCode`-[Test .cxx_destruct] at Test.m:22, address = 0x00000001049fa1b0, unresolved, hit count = 0  Options: disabled 
+disable breakpoint 980.1: where = LLDBCode`-[Test .cxx_destruct] at Test.m:22, address = 0x00000001049fa1b0, unresolved, hit count = 0  Options: disabled
 ...
-disable breakpoint 991.1: where = LLDBCode`func1 at Test.m:42, address = 0x00000001049faaf8, unresolved, hit count = 0  Options: disabled 
+disable breakpoint 991.1: where = LLDBCode`func1 at Test.m:42, address = 0x00000001049faaf8, unresolved, hit count = 0  Options: disabled
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### bdelr - breakpoint delete in range
+#### `bdelr` - breakpoint delete in range
 
 Delete breakpoint(s) in the specified range.
 
@@ -289,11 +279,11 @@ error: '9' is not a currently valid breakpoint ID.
 error: Invalid breakpoint ID.
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### bblocks - break blocks (arm64 only)
+#### `bblocks` - break blocks (arm64 only)
 
 Break all blocks in user modules
 
@@ -325,11 +315,11 @@ break stack block with Breakpoint 93: JITDemo`___lldb_unnamed_symbol83, address 
 set 7 breakpoints
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### binitfunc - break init func
+#### `binitfunc` - break init func
 
 Break module init function(s) of specified module.
 
@@ -343,7 +333,7 @@ Breakpoint 7: JITDemo`entry2 at main.m:740:0, address = 0x100e0960c
 
 
 
-#### bmethod - break method
+#### `bmethod` - break method
 
 Break the specified method(s) in user modules
 
@@ -356,22 +346,22 @@ Breakpoint 4: JITDemo`+[AppDelegate load] at AppDelegate.m:16:0, address = 0x102
 set 2 breakpoints
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### bmain - break main function
+#### `bmain` - break main function
 
 ```stylus
 (lldb) bmain
 Breakpoint 9: BasicSyntax`___lldb_unnamed_symbol266, address = 0x10017c3fc
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### bsave - save breakpoints
+#### `bsave` - save breakpoints
 
 Save breakpoints (set by address) to a file.
 
@@ -386,8 +376,6 @@ Current breakpoints:
   2.1: where = libsystem_platform.dylib`_platform_memmove + 8, address = 0x00000001dc558e68, resolved, hit count = 0
 ```
 
-
-
 save breakpoints
 
 ```stylus
@@ -397,7 +385,7 @@ Breakpoints saved to /Users/xxx/YJLLDB/Caches/ACEObject.json
 
 
 
-#### bload - restore breakpoints
+#### `bload` - restore breakpoints
 
 ```stylus
 (lldb) bload
@@ -406,7 +394,7 @@ Breakpoint 3: where = libsystem_platform.dylib`_platform_memmove + 8, address = 
 
 
 
-#### bclear - clear unresolved breakpoints
+#### `bclear` - clear unresolved breakpoints
 
 ```stylus
 (lldb) bclear
@@ -414,13 +402,15 @@ Breakpoint 3: where = libsystem_platform.dylib`_platform_memmove + 8, address = 
 
 
 
-### Search:
+### Search Commands
 
-#### slookup - lookup string
+### `slookup` - Lookup String
 
-Lookup the specified string, between start addr and end addr.
+Search for a specific string within a memory range.
+Useful for finding hardcoded strings, API keys, or other text data in memory.
 
-```stylus
+```bash
+# First, get module information
 (lldb) image_list -c 8
 index   load addr(slide)       vmsize path
 --------------------------------------------------------
@@ -428,11 +418,13 @@ index   load addr(slide)       vmsize path
 ...
 [  6] 0x18406f000(0x004044000)   8.7K /usr/lib/libSystem.B.dylib
 [  7] 0x184071000(0x004044000) 394.1K /usr/lib/libc++.1.dylib
-  
+
+# Search for "PROGRAM" string in libSystem.B.dylib
 (lldb) slookup PROGRAM 0x18406f000 0x184071000
 found at 0x184070f7c where = [0x000000018002cf78-0x000000018002cfb8) libSystem.B.dylib.__TEXT.__const
 1 locations found
 
+# Examine the found location
 (lldb) x 0x184070f7c -c 64
 0x184070f7c: 50 52 4f 47 52 41 4d 3a 53 79 73 74 65 6d 2e 42  PROGRAM:System.B
 0x184070f8c: 20 20 50 52 4f 4a 45 43 54 3a 4c 69 62 73 79 73    PROJECT:Libsys
@@ -440,11 +432,11 @@ found at 0x184070f7c where = [0x000000018002cf78-0x000000018002cfb8) libSystem.B
 0x184070fac: 00 00 00 00 00 00 00 00 00 92 93 40 01 00 00 00  ...........@....
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### blookup - lookup bytes
+#### `blookup` - lookup bytes
 
 Lookup the specified bytes in user modules.
 
@@ -457,11 +449,11 @@ Lookup the specified bytes in user modules.
 32 locations found
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### fblock - find block (arm64 only)
+#### `fblock` - find block (arm64 only)
 
 Find the specified block(s) in user modules.
 
@@ -480,11 +472,11 @@ find a block: 0x100f18210 in JITDemo`-[ViewController touchesBegan:withEvent:]
 1 block(s) resolved
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### blocks - find blocks (arm64 only)
+#### `blocks` - find blocks (arm64 only)
 
 Find blocks in user modules and save block symbols to block_symbol.json
 
@@ -505,11 +497,11 @@ find a stack block @0x104b32080 in LLDBJIT`+[Image getBlocksInfo:] at Image.m:0:
 85 block(s) resolved
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### ffunc - find function
+#### `ffunc` - find function
 
 find function by callee function name
 
@@ -535,11 +527,11 @@ find function by c string
 	keyword test found at 0x105bb5227
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### ilookup - find instructions
+#### `ilookup` - find instructions
 
 ```stylus
 (lldb) ilookup svc
@@ -551,31 +543,29 @@ Demo[0x102ea841c, 0x3441c]: svc    #0x80
 15 locations found
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-### Trace:
+### Trace Commands
 
-#### mtrace - trace module
+#### `mtrace` - trace module
 
 Trace all functions in the specified module. By default, only OC methods are traced. To trace swift module, you need to add the -a option.
 
-```stylus
-// begin trace
+```bash
+# Begin trace
 (lldb) mtrace LLDBCode
 -----trace functions in LLDBCode-----
 will trace 35 names
 begin trace with Breakpoint 1: 35 locations
 (lldb) c
 
-// trace log
+# Trace log
 frame #0: 0x0000000102dd2fb8 LLDBCode`-[ViewController touchesBegan:withEvent:](self=0x00000001d4108040, _cmd="touchesBegan:withEvent:", touches=0x000000015fd0fff0, event=1 element) at ViewController.m:35
 ...
 frame #0: 0x0000000102dd318c LLDBCode`__41-[ViewController touchesBegan:withEvent:]_block_invoke(.block_descriptor=0x0000000102ec1500) at ViewController.m:45
 ```
-
-[back to commands list](#Commands-list)
 
 
 
@@ -604,7 +594,7 @@ begin trace -[NSNotificationCenter postNotificationName:object:userInfo:] with B
 begin trace CFNotificationCenterPostNotificationWithOptions with Breakpoint 10
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
@@ -620,17 +610,17 @@ Patch bytes in user modules.
 patch 32 locations
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-### Dump:
+### Dump Commands
 
-#### dmodule - dump module (private)
+#### `dmodule` - dump module (private)
 
 Dump the specified module from memory.
 
-```stylus
+```bash
 (lldb) dmodule UIKit
 dumping UIKit, this may take a while
 ignore __DATA.__bss
@@ -640,13 +630,11 @@ ignore __DATA_DIRTY.__common
 924057600 bytes dump to ~/lldb_dump_macho/UIKit/macho_UIKit
 ```
 
-> 注意：加载时被修改的数据未恢复
-
-[back to commands list](#Commands-list)
+**Note:** Data modified during loading is not restored.
 
 
 
-#### dapp - dump App (private)
+#### `dapp` - dump App (private)
 
 Dump current iOS App (arm64 only). Typically, dump decrypted ipa from jailbreak device.
 
@@ -661,11 +649,11 @@ Generating "JITDemo.ipa"
 dump success, ipa path: /Users/xxx/lldb_dump_macho/JITDemo/JITDemo.ipa
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### denv - dump env
+#### `denv` - dump env
 
 ```stylus
 (lldb) denv
@@ -691,17 +679,17 @@ executable_boothash=cbc87e2356dd5d5514484b2d950ed787e1da125e
 th_port=
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-### Shell command
+### Shell Commands
 
-#### addcmd
+#### `addcmd`
 
 Add a lldb command for mac command line tool.
 
-```stylus
+```bash
 (lldb) addcmd which
 Add command script successfully, try using it
 (lldb) which
@@ -710,29 +698,29 @@ usage: which [-as] program ...
 /bin/ls
 ```
 
-#### delcmd
+#### `delcmd`
 
 Delete lldb command added by addcmd.
 
-```stylus
+```bash
 (lldb) delcmd which
 command "which" has been deleted
 (lldb) which
 error: 'which' is not a valid command.
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### pwd
+#### `pwd`
 
 ```stylus
 (lldb) pwd
 /Users/xxx
 ```
 
-#### cd
+#### `cd`
 
 ```stylus
 (lldb) cd /
@@ -740,11 +728,9 @@ error: 'which' is not a valid command.
 /
 ```
 
-[back to commands list](#Commands-list)
 
 
-
-#### ls
+#### `ls`
 
 List directory contents on Mac.
 
@@ -769,13 +755,15 @@ drwxr-xr-x@ 11 root  wheel   352 May  7 15:01 usr
 lrwxr-xr-x@  1 root  wheel    11 May  7 15:01 var -> private/var
 ```
 
+[⬆ Back to Available Commands](##available-commands)
 
-
-### File:
+### File Operations
 
 #### commads to get common directory
 
-```stylus
+Get common iOS app directories.
+
+```bash
 (lldb) bundle_dir
 /var/containers/Bundle/Application/63954B0E-79FA-42F2-A7EA-3568026008A1/Interlock.app
 (lldb) home_dir
@@ -792,11 +780,9 @@ lrwxr-xr-x@  1 root  wheel    11 May  7 15:01 var -> private/var
 /private/var/mobile/Containers/Shared/AppGroup/9460EA21-AE6A-4220-9BB3-6EC8B971CDAE
 ```
 
-[back to commands list](#Commands-list)
 
 
-
-#### ils
+#### `ils`
 
 List directory contents on remote device, just like `ls -lh` on Mac.
 
@@ -820,33 +806,52 @@ drwxr-xr-x         64B 2023-05-16 04:51:14 +0000 tmp
 -rw-r--r--         18B 2023-05-16 05:36:05 +0000 report.txt
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### dfile - download file
+### `dfile` — Download File
 
-Download file from home, bundle or group path.
+Download files from the iOS device to your local machine.
+Supports both absolute paths and convenient shortcuts.
 
-```stylus
+Using absolute path:
+
+```bash
 (lldb) dfile /var/containers/Bundle/Application/7099B2B8-39BE-4204-9BEB-5DF6A75BAA29/JITDemo.app/Info.plist
 dumping Info.plist, this may take a while
 1464 bytes written to '/Users/xxx/Info.plist'
 ```
 
-or
-
-```stylus
+Using convenient shortcuts:
+```bash
+# Download from bundle directory
 (lldb) dfile bundle/Info.plist
 dumping Info.plist, this may take a while
 1464 bytes written to '/Users/xxx/Info.plist'
+
+# Download from documents directory
+(lldb) dfile doc/data.sqlite
+
+# Download from home directory
+(lldb) dfile home/Library/Preferences/com.app.plist
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### ddir - download directory
+#### Available Shortcuts
+
+- `bundle/` - App bundle directory
+- `home/` - App home directory
+- `doc/` - Documents directory
+- `lib/` - Library directory
+- `tmp/` - Temporary directory
+
+
+
+#### `ddir` - download directory
 
 Download dir from home, bundle or group path.
 
@@ -859,11 +864,11 @@ dumping JITDemo.app, this may take a while
 196731 bytes written to '/Users/xxx/JITDemo.app/embedded.mobileprovision'
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### ufile - upload local file to device
+#### `ufile` - upload local file to device
 
 Upload local file to the specified directory or path on device.
 
@@ -882,11 +887,11 @@ upload success
 -rw-r--r--       12.1K 2023-08-10 07:11:22 +0000 uploadfile
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### irm - remove file
+#### `irm` - remove file
 
 Remove file or directory on remote device.
 
@@ -902,17 +907,17 @@ remove success
 -rw-r--r--       12.1K 2023-08-10 07:32:05 +0000 test
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-### Module:
+### Module Analysis
 
-#### image_list
+### `image_list` - list loaded modules
 
 List current executable and dependent shared library images, sorted by load address.
 
-```stylus
+```bash
 (lldb) image_list
 index     load_addr(slide)     vmsize path
 ------------------------------------------------------------
@@ -921,7 +926,7 @@ index     load_addr(slide)     vmsize path
 ...
 ```
 
-```stylus
+```bash
 (lldb) image_list -v
 index    load_addr - end_addr(slide)         vmsize arch  uuid   path
 ------------------------------------------------------------
@@ -930,7 +935,7 @@ index    load_addr - end_addr(slide)         vmsize arch  uuid   path
 ...
 ```
 
-```stylus
+```bash
 (lldb) image_list -u
 index     load_addr(slide)     vmsize path
 ------------------------------------------------------------
@@ -939,11 +944,13 @@ index     load_addr(slide)     vmsize path
 [  2] 0x1027a0000(0x1027a0000) 655.4K /Users/xxx/Library/Developer/Xcode/DerivedData/LLDBJIT-bwkzhcqdptajftbnezhkwkpwqlqb/Build/Products/Debug-iphoneos/JITDemo.app/JITDemo.debug.dylib
 ```
 
-[back to commands list](#Commands-list)
+
+
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### info_plist - print Info.plist
+#### `info_plist` - print Info.plist
 
 ```stylus
 (lldb) info_plist
@@ -957,11 +964,11 @@ index     load_addr(slide)     vmsize path
 </plist>
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### executable - print main executable name
+#### `executable` - print main executable name
 
 Print main executable name.
 
@@ -970,11 +977,11 @@ Print main executable name.
 LLDBCode
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### appdelegate
+#### `appdelegate`
 
 Find the class that conforms to the UIApplicationDelegate protocol.
 
@@ -985,7 +992,7 @@ AppDelegate
 
 
 
-#### mname - module name
+#### `mname` - module name
 
 Get module name with header address.
 
@@ -1000,11 +1007,11 @@ LLDBCode
 LLDBCode
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### segments - print segments
+#### `segments` - print segments
 
 Print segments and section info of macho.
 
@@ -1053,11 +1060,11 @@ Print segments and section info of macho.
 	[0x10498b470-0x104990140)	0x4cd0        Code Signature
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### main
+#### `main`
 
 Print the address of main function.
 
@@ -1068,7 +1075,7 @@ function main at 0x102911b70, fileoff: 0x5b70
 
 
 
-#### initfunc - print init func
+#### `initfunc` - print init func
 
 Dump module init function(s) of specified module.
 
@@ -1080,11 +1087,11 @@ address = 0x100e08cb0 JITDemo`entry1 at main.m:708:0
 address = 0x100e0960c JITDemo`entry2 at main.m:740:0
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### func_starts - function starts
+#### `func_starts` - function starts
 
 Print function starts
 
@@ -1100,7 +1107,7 @@ address = 0x1021bdae0 size = 56 where = JITDemo`-[SceneDelegate .cxx_destruct] a
 
 
 
-#### got - print `__got` section
+#### `got` - print `__got` section
 
 ```stylus
 (lldb) got
@@ -1112,11 +1119,11 @@ address = 0x1814ce1c0 where = libdyld.dylib`dyld_stub_binder (matched)
 13 location(s) found
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### lazy_sym - print `__la_symbol_ptr` section
+#### `lazy_sym` - print `__la_symbol_ptr` section
 
 ```stylus
 (lldb) lazy_sym
@@ -1129,7 +1136,7 @@ address = 0x1815fb950 where = libsystem_kernel.dylib`open (matched)
 
 
 
-#### entitlements - dump entitlements
+#### `entitlements` - dump entitlements
 
 Dump codesign entitlements of the specified module if any.
 
@@ -1178,11 +1185,11 @@ Dump group ID(s) in the codesign entitlements.
 ['group.com.xxx.JITDemo']
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### offset - get file offset for address
+#### `offset` - get file offset for address
 
 ```stylus
 (lldb) offset
@@ -1193,24 +1200,22 @@ addr: 0x104dc45f0 -> file offset: 0x85f0
 
 
 
-### Objc
+### Objective-C Commands
 
-#### classes - print class names
+#### `classes` - print class names
 
 Print class names in the specified module.
 
-```stylus
+```bash
 (lldb) classes
 AppDelegate <0x10468e378>
 SceneDelegate <0x10468e418>
 ViewController <0x10468e260>
 ```
 
-[back to commands list](#Commands-list)
 
 
-
-##### dmethods
+##### `dmethods`
 
 Dumps all methods implemented by the NSObject subclass, supporting both iOS and MacOS.
 
@@ -1230,7 +1235,7 @@ in ViewController:
 
 
 
-##### divars
+##### `divars`
 
 Dumps all ivars for an instance of a particular class which inherits from NSObject, supporting both iOS and MacOS.
 
@@ -1240,7 +1245,7 @@ in ViewController:
 	_test (unsigned long): {length = 8, bytes = 0x5a00ab0000000000}
 ```
 
-##### duplicate_class
+##### `duplicate_class`
 
 ```stylus
 (lldb) duplicate_class
@@ -1254,53 +1259,57 @@ class DDLoggingContextSet is implemented in:
 24 duplicate classes were found
 ```
 
-##### overridden_method
+##### `overridden_method`
 
 ```stylus
 (lldb) overridden_method
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
+### Assembly Commands
 
-
-### Assembly
-
-#### inst2bytes
+### `inst2bytes` - instructions to bytes
 
 Convert assembly instructions to machine code.
+Useful for understanding instruction encoding and creating byte patterns.
 
-```stylus
+```bash
 (lldb) inst2bytes 'mov    x9, sp;mov    x8, x0'
-disassembly: 
+disassembly:
        0: 910003e9     	mov	x9, sp
        4: aa0003e8     	mov	x8, x0
 machine code: e9030091e80300aa
 ```
 
+[⬆ Back to Available Commands](##available-commands)
 
 
-#### bytes2inst
+
+### `bytes2inst` - bytes to instructions
 
 Convert machine code to assembly instructions.
+Useful for disassembling raw bytes and understanding their meaning.
 
-```stylus
+```bash
 (lldb) bytes2inst e9030091e80300aa
 <+0>:	mov	x9, sp
 <+4>:	mov	x8, x0
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-### Memory:
+### Memory Commands
 
-#### read_mem_as_addr
+#### `read_mem_as_addr`
 
-```stylus
+Read memory and interpret as addresses with symbol information.
+
+```bash
 (lldb) seg
 ...
 ------------------------------------------------------------
@@ -1310,14 +1319,14 @@ Convert machine code to assembly instructions.
 	[0x102ee02e0-0x102ee0560)	0x280         __cfstring
 ...
 
-// read __got section
+# Read __got section
 (lldb) read_mem_as_addr 0x102ee0000 0x102ee0068
 0x102ee0000: 0x00000001ac734ce0 Foundation`NSFileModificationDate
 ...
 0x102ee0058: 0x0000000180d44900 libobjc.A.dylib`objc_msgSend
 0x102ee0060: 0x00000001814ce1c0 libdyld.dylib`dyld_stub_binder
 
-// read __cfstring section
+# Read __cfstring section
 (lldb) read_mem_as_addr 0x102ee02e0 0x102ee0560
 0x102ee02e0: 0x00000001b40b2610 (void *)0x00000001b40b25c0: __NSCFConstantString
 0x102ee02e8: 0x00000000000007c8
@@ -1330,11 +1339,9 @@ Convert machine code to assembly instructions.
 0x102ee0558: 0x0000000000000015
 ```
 
-[back to commands list](#Commands-list)
 
 
-
-#### read_cstring - read memory as c style string
+#### `read_cstring` - read memory as c style string
 
 ```stylus
 (lldb) seg
@@ -1360,11 +1367,11 @@ Convert machine code to assembly instructions.
 338 locations found
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### jit_mem - read memory with JIT code
+#### `jit_mem` - read memory with JIT code
 
 ```stylus
 (lldb) x 0x1c40a8008 -c 4
@@ -1374,37 +1381,37 @@ Convert machine code to assembly instructions.
 0x1c40a8008: 00 00 20 d4
 ```
 
-> lldb给_swift_runtime_on_report设置了断点
->
-> 但是内置的lldb指令不体现这种变化
->
-> 使用JIT代码可以读取到真实内存
+- lldb给_swift_runtime_on_report设置了断点
 
-[back to commands list](#Commands-list)
+- 但是内置的lldb指令不体现这种变化
+
+- 使用JIT代码可以读取到真实内存
+
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-### symbolize:
+### Symbolize Commands
 
-#### load_dSYM
+#### `load_dSYM`
 
-Add debug symbol file(s) to corresponding module(s)
+Add debug symbol file(s) to corresponding module(s).
 
-```stylus
+**Load single dSYM:**
+```bash
 (lldb) load_dSYM /path/to/dSYMs/Alamofire.framework.dSYM
 1 dSYM file(s) loaded
 ```
 
-or
-
-```stylus
+**Load multiple dSYMs from directory:**
+```bash
 (lldb) load_dSYM /path/to/dSYMs
 16 dSYM file(s) loaded
 ```
 
 
 
-#### symbolize
+#### `symbolize`
 
 Symbolize address, uncaught exception address list or crash report file.
 
@@ -1418,7 +1425,7 @@ JITDemo`___lldb_unnamed_symbol302:
 0x1045843d4: JITDemo`-[ViewController ls_dir:] + 0
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
@@ -1460,17 +1467,17 @@ or
 (lldb) symbolize /Users/xxx/Desktop/JITDemo.crash
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-### DebugKit
+### DebugKit Commands
 
-Debugkit is a framework for debugging, it is not loaded by default. 
+Debugkit is a framework for debugging, it is not loaded by default.
 
-You can load it using the `debugkit` command.
+**Loading DebugKit:**
 
-```stylus
+```bash
 (lldb) debugkit
 loading DebugKit, this may take a while
 [INFO] GCDWebUploader started on port 80 and reachable at http://xxx.xxx.xxx.xxx/
@@ -1479,18 +1486,19 @@ DebugKit loaded
 
 
 
-#### UIControl extension
+### `UIControl` Extension
 
-```stylus
+Enhanced UIControl debugging that shows all target-action pairs for UI controls.
+Helps you quickly understand what happens when a button is tapped or other control events occur.
+
+```bash
 (lldb) po btn
 <UIButton: 0x107d2eaf0; frame = (100 100; 200 30); opaque = NO; layer = <CALayer: 0x282f4ee20>>
     control events list:
         target: <ViewController: 0x107e2ac90>, action: -[ViewController clicked:], event: UIControlEventTouchUpInside
 ```
 
-
-
-#### NSObject extension
+#### `NSObject` extension
 
 UIKit provides debugging methods in `NSObject(IvarDescription)`，It works on iOS but not on macOS.Debugkit provides several alternative solutions for this.
 
@@ -1548,11 +1556,11 @@ in CDMachOFile:
 (CDFile ...)
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### NSBlock extension
+#### `NSBlock` extension
 
 block code sample
 
@@ -1586,7 +1594,7 @@ Here is DebugKit's block description, it's clearer and more straightforward.
         - int 20
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
@@ -1603,7 +1611,7 @@ Process 4569 resuming
 
 
 
-#### vmmap
+#### `vmmap`
 
 show vm map info of address
 
@@ -1641,16 +1649,18 @@ DYLD all image info: 0000000104cd0000 + 170 format = 1
 0000001000000000-0000007000000000 [ 384.0G] ---/--- SM=EMPTY
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-### Others:
+### Other Commands
 
-#### find_el - find endless loop
+### `find_el` — Find Endless Loop
 
-Detects endless loop in all threads at this point.
+Detects endless loops in all threads at the current execution point.
+Useful for identifying performance issues and infinite loops.
 
+**Example code with endless loop:**
 ```objective-c
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     int a = 1;
@@ -1661,10 +1671,11 @@ Detects endless loop in all threads at this point.
 }
 ```
 
-```stylus
-# touch device screen
+**Detection process:**
+```bash
+# Touch device screen
 2023-05-20 12:29:52.604910+0800 Interlock[56660:1841567] -[ViewController touchesBegan:withEvent:]
-# pause program execution, then execute find_el in lldb
+# Pause program execution, then execute find_el in lldb
 (lldb) find_el
 Breakpoint 1: where = Interlock`-[ViewController touchesBegan:withEvent:] + 136 at ViewController.mm:34:5, address = 0x109dd8d48
 Breakpoint 2: where = Interlock`main + 110 at main.m:17:5, address = 0x109dd911e
@@ -1673,11 +1684,11 @@ call Interlock`-[ViewController touchesBegan:withEvent:] + 136 at ViewController
 ...
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
 
 
-#### thread_eb - extended backtrace of thread
+#### `thread_eb` - extended backtrace of thread
 
 Get extended backtrace of thread.
 
@@ -1702,27 +1713,51 @@ thread #4294967295: tid = 0x190c, 0x0000000104e907cc libdispatch.dylib`_dispatch
 ...
 ```
 
-[back to commands list](#Commands-list)
+[⬆ Back to Available Commands](##available-commands)
 
+---
 
+## Tips and Best Practices
+
+### Common Workflows
+
+**1. Initial App Analysis:**
+```bash
+(lldb) image_list -u          # List user modules
+(lldb) classes                # List Objective-C classes
+(lldb) executable             # Get main executable name
+(lldb) appdelegate           # Find app delegate class
+```
+
+**2. Function Analysis:**
+```bash
+(lldb) func_starts           # List all function starts
+(lldb) segments YourApp      # Analyze memory segments
+(lldb) got                   # Check Global Offset Table
+```
+
+**3. Dynamic Analysis:**
+```bash
+(lldb) mtrace YourApp        # Trace all app functions
+(lldb) bmethod viewDidLoad   # Break on specific methods
+(lldb) debugkit              # Load enhanced debugging tools
+```
+
+---
 
 ## Credits
 
-https://github.com/DerekSelander/LLDB
+This project builds upon and is inspired by several excellent open-source projects:
 
-https://github.com/facebook/chisel
-
-https://github.com/aaronst/macholibre
-
-https://github.com/swisspol/GCDWebServer
-
-https://github.com/pookjw/IvarDescription
-
-https://github.com/yulingtianxia/BlockHook (block with private data)
-
-https://github.com/comex/myvmmap
+- [DerekSelander/LLDB](https://github.com/DerekSelander/LLDB) - LLDB debugging scripts
+- [facebook/chisel](https://github.com/facebook/chisel) - Collection of LLDB commands
+- [aaronst/macholibre](https://github.com/aaronst/macholibre) - Mach-O analysis library
+- [swisspol/GCDWebServer](https://github.com/swisspol/GCDWebServer) - Lightweight HTTP server
+- [pookjw/IvarDescription](https://github.com/pookjw/IvarDescription) - Instance variable description
+- [yulingtianxia/BlockHook](https://github.com/yulingtianxia/BlockHook) - Block hooking (for private data)
+- [comex/myvmmap](https://github.com/comex/myvmmap) - Virtual memory mapping
 
 ## License
 
-YJLLDB is released under the Apache License 2.0. See LICENSE file for details.
+YJLLDB is released under the Apache License 2.0. See [LICENSE](LICENSE) file for details.
 
