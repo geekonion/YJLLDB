@@ -53,7 +53,7 @@ def break_method(debugger, command, result, internal_dict):
         if module_name.startswith('libswift'):
             continue
 
-        print("-----try to method in %s-----" % module_name)
+        print("-----try to break method in %s-----" % module_name)
         for symbol in module:
             # 2为Code，5为Trampoline，即调用的系统函数
             if symbol.GetType() != 2:
