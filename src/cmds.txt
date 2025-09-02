@@ -8,3 +8,5 @@ command alias doc_dir po [NSHomeDirectory() stringByAppendingPathComponent:@"Doc
 command alias lib_dir po [NSHomeDirectory() stringByAppendingPathComponent:@"Library"]
 command alias tmp_dir po [NSHomeDirectory() stringByAppendingPathComponent:@"tmp"]
 command alias caches_dir po [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Caches"]
+
+command alias load_UIKitCore process load /System/Library/PrivateFrameworks/UIKitCore.framework/UIKitCore

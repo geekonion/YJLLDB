@@ -33,7 +33,7 @@ def dump_classes_in_module(debugger, command, result, internal_dict):
     dump all classes in the specified module
     implemented in YJLLDB/src/Objc.py
     """
-    handle_command(command, result, 'classes')
+    handle_command(debugger, command, result, 'classes')
 
 
 def dump_methods(debugger, command, result, internal_dict):
@@ -41,7 +41,7 @@ def dump_methods(debugger, command, result, internal_dict):
     Dumps all methods implemented by the NSObject subclass, supporting both iOS and MacOS.
     implemented in YJLLDB/src/Objc.py
     """
-    handle_command(command, result, 'dmethods')
+    handle_command(debugger, command, result, 'dmethods')
 
 
 def dump_ivars(debugger, command, result, internal_dict):
@@ -49,10 +49,10 @@ def dump_ivars(debugger, command, result, internal_dict):
     Dumps all ivars for an instance of a particular class which inherits from NSObject, supporting both iOS and MacOS.
     implemented in YJLLDB/src/Objc.py
     """
-    handle_command(command, result, 'ivars')
+    handle_command(debugger, command, result, 'ivars')
 
 
-def handle_command(command, result, name):
+def handle_command(debugger, command, result, name):
     # 去掉转义符
     command = command.replace('\\', '\\\\')
     # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-
@@ -89,10 +89,25 @@ def handle_command(command, result, name):
 
         return
 
+    module = find_module(debugger.GetSelectedTarget(), "UIKitCore")
+    if not module:
+        print(util.exe_command("process load /System/Library/PrivateFrameworks/UIKitCore.framework/UIKitCore"))
     if name == 'dmethods':
         result.AppendMessage(get_methods(input_arg))
     elif name == 'ivars':
         result.AppendMessage(get_ivars(input_arg))
+
+
+def find_module(target, name):
+    target_module = None
+    for module in target.module_iter():
+        mod_spec = module.GetFileSpec()
+        module_name = mod_spec.GetFilename()
+        if module_name == name:
+            target_module = module
+            break
+
+    return target_module
 
 
 def find_duplicate_classes(debugger, command, result, internal_dict):
@@ -166,10 +181,23 @@ def get_module_regions(module):
     return ret_str
 
 
+def is_unknown_class_name(token):
+    command_script = '@import Foundation;\n@import ObjectiveC;\n'
+    command_script += 'Class mthd_cls = (Class)[' + token + ' class];'
+    command_script += 'mthd_cls;'
+
+    ret_str = util.exe_script(command_script, False)
+
+    return "use of undeclared identifier" in ret_str or "unexpected interface name" in ret_str
+
+
 def get_methods(input_arg):
     command_script = '@import Foundation;\n@import ObjectiveC;\n'
+
     if input_arg.startswith('0x'):
         command_script += 'Class mthd_cls = (Class)[(id)' + input_arg + ' class];'
+    elif is_unknown_class_name(input_arg):
+        command_script += 'Class mthd_cls = (Class)objc_getClass("' + input_arg + '");'
     else:
         command_script += 'Class mthd_cls = (Class)[' + input_arg + ' class];'
     command_script += r'''
@@ -245,6 +273,8 @@ def get_ivars(input_arg):
     command_script = '@import Foundation;\n@import ObjectiveC;\n'
     if input_arg.startswith('0x'):
         command_script += 'id ivar_obj = (id)' + input_arg + ';'
+    elif is_unknown_class_name(input_arg):
+        command_script += 'id ivar_obj = (Class)objc_getClass("' + input_arg + '");'
     else:
         command_script += 'id ivar_obj = ' + input_arg + ';'
     command_script += r'''

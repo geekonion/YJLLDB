@@ -90,8 +90,8 @@ def try_macho_address(addr, target, verbose, only_sec_name=False):
     return return_desc
 
 
-def exe_script(command_script):
-    return exe_command('exp -l objc -O -- ' + command_script)
+def exe_script(command_script, log=True):
+    return exe_command('exp -l objc -O -- ' + command_script, log)
 
 
 def exe_command(command, log=True):
@@ -100,9 +100,10 @@ def exe_command(command, log=True):
     interpreter.HandleCommand(command, res)
 
     if not res.Succeeded():
+        message = 'execute JIT code failed: \n{}'.format(res.GetError())
         if log:
-            print('execute JIT code failed: \n{}'.format(res.GetError()))
-        return ''
+            print(message)
+        return message
 
     response = res.GetOutput()
 
