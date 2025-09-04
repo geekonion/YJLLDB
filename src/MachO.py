@@ -208,7 +208,9 @@ def parse_segment(base, m_offset, cmd, cmd_size):
         'segsize': '{:X}'.format(segsize),
         'nsects': '{:X}'.format(nsects),
         'sects': [],
-        'lc_offset': m_offset
+        'lc_offset': m_offset,
+        'initprot': initprot,
+        'maxprot': maxprot,
     }
 
     for _ in range(nsects):
