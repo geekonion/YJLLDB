@@ -124,6 +124,9 @@ def exe_shell_command(cmd, cwd=None):
     """
     if "/usr/local/bin" not in os.environ["PATH"]:
         os.environ["PATH"] += os.pathsep + "/usr/local/bin/"
+        
+    if "/opt/homebrew/bin" not in os.environ["PATH"]:
+        os.environ["PATH"] += os.pathsep + "/opt/homebrew/bin"
 
     comps = cmd.split(' ')
     prog = comps[0]
@@ -430,6 +433,9 @@ def xml_to_obj(element):
 
 def parse_arg(name_or_var_or_addr):
     cmd_ret = exe_command('p/x {}'.format(name_or_var_or_addr), False)
+    if "error: " in cmd_ret:
+        return False, name_or_var_or_addr
+    
     is_addr_or_var = len(cmd_ret) > 0
 
     # 16进制地址

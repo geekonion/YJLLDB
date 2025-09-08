@@ -62,7 +62,7 @@ def show_info_plist(debugger, command, result, field):
                 print("Info.plist not found")
                 continue
 
-            cmd_str = "/usr/local/bin/plistutil -i '{}' -f xml".format(info_plist_path)
+            cmd_str = "plistutil -i '{}' -f xml".format(info_plist_path)
             code, out, err = util.exe_shell_command(cmd_str)
             if code == 0:
                 print(out)

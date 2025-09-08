@@ -80,6 +80,8 @@ def break_at_bytes(debugger, command, result, internal_dict):
                 sec_addr = sec.GetLoadAddress(target)
                 error = lldb.SBError()
                 sec_size = sec.GetByteSize()
+                if sec_size == 0:
+                    continue
 
                 if options.verbose:
                     print("{} {:x}-{:x}".format(sec_name, sec_addr, sec_size))

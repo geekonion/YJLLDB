@@ -91,8 +91,8 @@ def jit_read_memory(start_addr, size):
     }
     int mod = len % 16;
     if (mod) {
-        int count = 16 - mod;
-        for (int i = 0; i < count; i++) {
+        int jrm_count = 16 - mod;
+        for (int i = 0; i < jrm_count; i++) {
             [hex_string appendString:@"   "];
         }
         

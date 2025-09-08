@@ -9,4 +9,4 @@ command alias lib_dir po [NSHomeDirectory() stringByAppendingPathComponent:@"Lib
 command alias tmp_dir po [NSHomeDirectory() stringByAppendingPathComponent:@"tmp"]
 command alias caches_dir po [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Caches"]
 
-command alias load_UIKitCore process load /System/Library/PrivateFrameworks/UIKitCore.framework/UIKitCore
+command alias -h "load UIKitCore into the current process." -- load_UIKitCore process load /System/Library/PrivateFrameworks/UIKitCore.framework/UIKitCore
