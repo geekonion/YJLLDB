@@ -2,7 +2,7 @@ command alias stack memory read --force -f A $sp $fp
 
 command regex -h "[cmds.txt] read memory region as address" -s "read_mem_as_addr start_addr end_addr" -- read_mem_as_addr 's/(.*)[[:space:]]*(.*)/memory read --force -f A %1 %2/'
 
-command alias bundle_dir po [(NSBundle *)[NSBundle mainBundle] bundlePath]
+command alias bundle_dir po [[[NSBundle mainBundle] bundleURL] path]
 command alias home_dir po NSHomeDirectory()
 command alias doc_dir po [NSHomeDirectory() stringByAppendingPathComponent:@"Documents"]
 command alias lib_dir po [NSHomeDirectory() stringByAppendingPathComponent:@"Library"]
