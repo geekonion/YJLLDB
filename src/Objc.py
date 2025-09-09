@@ -370,18 +370,18 @@ def dump_duplicate_oc_classes():
         }
     }
     
-    NSString *bundle_path = [NSBundle mainBundle].bundlePath;
+    NSString *bundle_path = [NSBundle mainBundle].bundleURL.path;
     NSString *bundle_parent = [bundle_path stringByDeletingLastPathComponent];
     NSMutableDictionary *class_dict = [NSMutableDictionary dictionary];
-    NSInteger count = [cls_array count];
-    for (NSInteger i = 0; i < count; i++) {
-        NSString *path = path_array[i];
-        if (![path containsString:bundle_path]) {
+    NSInteger ncls = [cls_array count];
+    for (NSInteger i = 0; i < ncls; i++) {
+        NSString *img_path = path_array[i];
+        if (![img_path containsString:bundle_path]) {
             continue;
         }
         @autoreleasepool {
             NSArray *cls_arr1 = cls_array[i];
-            for (NSInteger j = i + 1; j < count; j++) {
+            for (NSInteger j = i + 1; j < ncls; j++) {
                 @autoreleasepool {
                     NSMutableSet *cls_set1 = [NSMutableSet setWithArray:cls_arr1];
                     NSArray *cls_arr2 = cls_array[j];
@@ -392,7 +392,7 @@ def dump_duplicate_oc_classes():
                         if (!paths) {
                             paths = [NSMutableArray array];
                             class_dict[cls_name] = paths;
-                            NSString *rel_path = [path stringByReplacingOccurrencesOfString:bundle_parent withString:@""];
+                            NSString *rel_path = [img_path stringByReplacingOccurrencesOfString:bundle_parent withString:@""];
                             [paths addObject:rel_path];
                         }
                         
@@ -404,9 +404,9 @@ def dump_duplicate_oc_classes():
         }
     }
     
-    NSData *data = [NSJSONSerialization dataWithJSONObject:class_dict options:kNilOptions error:nil];
+    NSData *dcl_data = [NSJSONSerialization dataWithJSONObject:class_dict options:kNilOptions error:nil];
     // 4 NSUTF8StringEncoding
-    NSString *cls_json_str = [[NSString alloc] initWithData:data encoding:4];
+    NSString *cls_json_str = [[NSString alloc] initWithData:dcl_data encoding:4];
     
     cls_json_str;
     '''
