@@ -49,6 +49,7 @@ Some commonly used LLDB commands for iOS debugging and reverse engineering.
 - [blocks - find blocks (arm64 only)](#blocks---find-blocks-arm64-only)
 - [ffunc - find function](#ffunc---find-function)
 - [ilookup - find instructions](#ilookup---find-instructions)
+- [finlinehooked (private)](#finlinehooked-private)
 
 ### Trace Commands
 - [mtrace - trace module](#mtrace---trace-module)
@@ -56,7 +57,7 @@ Some commonly used LLDB commands for iOS debugging and reverse engineering.
 - [notifier](#notifier)
 
 ### Patch Commands
-- [patch (private)](#patch-(private))
+- [patch (private)](#patch-private)
 
 ### Dump Commands
 - [dmodule - dump module (private)](#dmodule---dump-module-private)
@@ -190,7 +191,7 @@ LLDBCode`-[ViewController viewDidLoad]:
     0x1029b3008 <+240>: ret
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Breakpoint Commands](#Breakpoint-Commands)
 
 
 
@@ -207,7 +208,7 @@ will set breakpoint for 13880 names
 Breakpoint 4: 13961 locations
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Breakpoint Commands](#Breakpoint-Commands)
 
 
 
@@ -225,7 +226,7 @@ disable breakpoint 5.13 [0x18354f950]libsystem_kernel.dylib`open
 and continue
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Breakpoint Commands](#Breakpoint-Commands)
 
 
 
@@ -243,7 +244,7 @@ disable breakpoint 1.27: where = LLDBCode`__41-[ViewController touchesBegan:with
 disable breakpoint 1.23: where = LLDBCode`-[ViewController(extension) test] at ViewController.m:20, address = 0x0000000102ec2e7c, unresolved, hit count = 0  Options: disabled
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Breakpoint Commands](#Breakpoint-Commands)
 
 
 
@@ -258,7 +259,7 @@ disable breakpoint 980.1: where = LLDBCode`-[Test .cxx_destruct] at Test.m:22, a
 disable breakpoint 991.1: where = LLDBCode`func1 at Test.m:42, address = 0x00000001049faaf8, unresolved, hit count = 0  Options: disabled
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Breakpoint Commands](#Breakpoint-Commands)
 
 
 
@@ -279,7 +280,7 @@ error: '9' is not a currently valid breakpoint ID.
 error: Invalid breakpoint ID.
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Breakpoint Commands](#Breakpoint-Commands)
 
 
 
@@ -315,7 +316,7 @@ break stack block with Breakpoint 93: JITDemo`___lldb_unnamed_symbol83, address 
 set 7 breakpoints
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Breakpoint Commands](#Breakpoint-Commands)
 
 
 
@@ -346,7 +347,7 @@ Breakpoint 4: JITDemo`+[AppDelegate load] at AppDelegate.m:16:0, address = 0x102
 set 2 breakpoints
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Breakpoint Commands](#Breakpoint-Commands)
 
 
 
@@ -357,7 +358,7 @@ set 2 breakpoints
 Breakpoint 9: BasicSyntax`___lldb_unnamed_symbol266, address = 0x10017c3fc
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Breakpoint Commands](#Breakpoint-Commands)
 
 
 
@@ -400,11 +401,13 @@ Breakpoint 3: where = libsystem_platform.dylib`_platform_memmove + 8, address = 
 (lldb) bclear
 ```
 
+[⬆ Back to Breakpoint Commands](#Breakpoint-Commands)
+
 
 
 ### Search Commands
 
-### `slookup` - Lookup String
+#### `slookup` - Lookup String
 
 Search for a specific string within a memory range.
 Useful for finding hardcoded strings, API keys, or other text data in memory.
@@ -432,7 +435,7 @@ found at 0x184070f7c where = [0x000000018002cf78-0x000000018002cfb8) libSystem.B
 0x184070fac: 00 00 00 00 00 00 00 00 00 92 93 40 01 00 00 00  ...........@....
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Search Commands](#Search-Commands)
 
 
 
@@ -449,7 +452,7 @@ Lookup the specified bytes in user modules.
 32 locations found
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Search Commands](#Search-Commands)
 
 
 
@@ -472,7 +475,7 @@ find a block: 0x100f18210 in JITDemo`-[ViewController touchesBegan:withEvent:]
 1 block(s) resolved
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Search Commands](#Search-Commands)
 
 
 
@@ -497,7 +500,7 @@ find a stack block @0x104b32080 in LLDBJIT`+[Image getBlocksInfo:] at Image.m:0:
 85 block(s) resolved
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Search Commands](#Search-Commands)
 
 
 
@@ -527,7 +530,7 @@ find function by c string
 	keyword test found at 0x105bb5227
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Search Commands](#Search-Commands)
 
 
 
@@ -543,7 +546,38 @@ Demo[0x102ea841c, 0x3441c]: svc    #0x80
 15 locations found
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Search Commands](#Search-Commands)
+
+
+
+#### `finlinehooked` (private)
+
+```stylus
+(lldb) finlinehooked -s
+-----parse functions in libBacktraceRecording.dylib-----
+...
+-----parse functions in libsystem_kernel.dylib-----
+__execve 0x1d6efc094 is Dopamine inline hooked
+...
+necp_session_open 0x1d6efb1e4 is Dopamine inline hooked
+-----parse functions in libc++abi.dylib-----
+...
+
+(lldb) dis -a 0x1d6efc094
+libsystem_kernel.dylib`__execve:
+    0x1d6efc094 <+0>:  movk   x16, #0xd240
+    0x1d6efc098 <+4>:  movk   x16, #0x1f, lsl #16
+    0x1d6efc09c <+8>:  movk   x16, #0x1, lsl #32
+    0x1d6efc0a0 <+12>: movk   x16, #0x0, lsl #48
+    0x1d6efc0a4 <+16>: br     x16
+    0x1d6efc0a8 <+20>: bl     0x1d6ef1b30               ; cerror_nocancel
+    0x1d6efc0ac <+24>: mov    sp, x29
+    0x1d6efc0b0 <+28>: ldp    x29, x30, [sp], #0x10
+    0x1d6efc0b4 <+32>: ret    
+    0x1d6efc0b8 <+36>: ret    
+```
+
+[⬆ Back to Search Commands](#Search-Commands)
 
 
 
@@ -569,7 +603,7 @@ frame #0: 0x0000000102dd318c LLDBCode`__41-[ViewController touchesBegan:withEven
 
 
 
-#### **rtrace**
+#### `rtrace`
 
 trace functions using regular expressions
 
@@ -583,7 +617,7 @@ begin trace with 5 breakpoint(s)
 
 
 
-#### notifier
+#### `notifier`
 
 trace notificaton posting action
 
@@ -594,13 +628,13 @@ begin trace -[NSNotificationCenter postNotificationName:object:userInfo:] with B
 begin trace CFNotificationCenterPostNotificationWithOptions with Breakpoint 10
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Trace Commands](#Trace-Commands)
 
 
 
 ### Patch:
 
-#### patch (private)
+#### `patch` (private)
 
 Patch bytes in user modules.
 
@@ -610,7 +644,7 @@ Patch bytes in user modules.
 patch 32 locations
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Patch Commands](#Patch-Commands)
 
 
 
@@ -649,7 +683,7 @@ Generating "JITDemo.ipa"
 dump success, ipa path: /Users/xxx/lldb_dump_macho/JITDemo/JITDemo.ipa
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Dump Commands](#Dump-Commands)
 
 
 
@@ -679,7 +713,7 @@ executable_boothash=cbc87e2356dd5d5514484b2d950ed787e1da125e
 th_port=
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Dump Commands](#Dump-Commands)
 
 
 
@@ -709,7 +743,7 @@ command "which" has been deleted
 error: 'which' is not a valid command.
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Shell Commands](#Shell-Commands)
 
 
 
@@ -755,7 +789,9 @@ drwxr-xr-x@ 11 root  wheel   352 May  7 15:01 usr
 lrwxr-xr-x@  1 root  wheel    11 May  7 15:01 var -> private/var
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Shell Commands](#Shell-Commands)
+
+
 
 ### File Operations
 
@@ -806,11 +842,11 @@ drwxr-xr-x         64B 2023-05-16 04:51:14 +0000 tmp
 -rw-r--r--         18B 2023-05-16 05:36:05 +0000 report.txt
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to File Operations](#File-Operations)
 
 
 
-### `dfile` — Download File
+#### `dfile` - Download File
 
 Download files from the iOS device to your local machine.
 Supports both absolute paths and convenient shortcuts.
@@ -837,17 +873,16 @@ dumping Info.plist, this may take a while
 (lldb) dfile home/Library/Preferences/com.app.plist
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+> Available Shortcuts
+>
+> - `bundle/` - App bundle directory
+> - `home/` - App home directory
+> - `doc/` - Documents directory
+> - `lib/` - Library directory
+> - `tmp/` - Temporary directory
+>
 
-
-
-#### Available Shortcuts
-
-- `bundle/` - App bundle directory
-- `home/` - App home directory
-- `doc/` - Documents directory
-- `lib/` - Library directory
-- `tmp/` - Temporary directory
+[⬆ Back to File Operations](#File-Operations)
 
 
 
@@ -864,7 +899,7 @@ dumping JITDemo.app, this may take a while
 196731 bytes written to '/Users/xxx/JITDemo.app/embedded.mobileprovision'
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to File Operations](#File-Operations)
 
 
 
@@ -887,7 +922,7 @@ upload success
 -rw-r--r--       12.1K 2023-08-10 07:11:22 +0000 uploadfile
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to File Operations](#File-Operations)
 
 
 
@@ -907,13 +942,13 @@ remove success
 -rw-r--r--       12.1K 2023-08-10 07:32:05 +0000 test
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to File Operations](#File-Operations)
 
 
 
 ### Module Analysis
 
-### `image_list` - list loaded modules
+#### `image_list` - list loaded modules
 
 List current executable and dependent shared library images, sorted by load address.
 
@@ -944,9 +979,7 @@ index     load_addr(slide)     vmsize path
 [  2] 0x1027a0000(0x1027a0000) 655.4K /Users/xxx/Library/Developer/Xcode/DerivedData/LLDBJIT-bwkzhcqdptajftbnezhkwkpwqlqb/Build/Products/Debug-iphoneos/JITDemo.app/JITDemo.debug.dylib
 ```
 
-
-
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Module Analysis](#Module-Analysis)
 
 
 
@@ -964,7 +997,7 @@ index     load_addr(slide)     vmsize path
 </plist>
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Module Analysis](#Module-Analysis)
 
 
 
@@ -977,7 +1010,7 @@ Print main executable name.
 LLDBCode
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Module Analysis](#Module-Analysis)
 
 
 
@@ -1007,7 +1040,7 @@ LLDBCode
 LLDBCode
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Module Analysis](#Module-Analysis)
 
 
 
@@ -1018,49 +1051,46 @@ Print segments and section info of macho.
 ```stylus
 (lldb) segments JITDemo
 -----parsing module JITDemo-----
-       [start - end)			size		name
-------------------------------------------------------------
-[0x497c000  -0x10497c000)		0x100000000 __PAGEZERO
-------------------------------------------------------------
-[0x10497c000-0x104984000)		0x8000      __TEXT
-	[0x104980000-0x1049811b0)	0x11b0        __text
-	[0x1049811b0-0x104981270)	0xc0          __stubs
-	[0x104981270-0x104981348)	0xd8          __stub_helper
-	[0x104981348-0x1049815a8)	0x260         __objc_stubs
-	[0x1049815a8-0x1049824e5)	0xf3d         __objc_methname
-	[0x1049824e5-0x104982736)	0x251         __cstring
-	[0x104982736-0x1049827b5)	0x7f          __objc_classname
-	[0x1049827b5-0x1049832de)	0xb29         __objc_methtype
-	[0x1049832e0-0x104983360)	0x80          __unwind_info
-------------------------------------------------------------
-[0x104984000-0x104988000)		0x4000      __DATA
-	[0x104984000-0x104984030)	0x30          __got
-	[0x104984030-0x1049840b0)	0x80          __la_symbol_ptr
-	[0x1049840b0-0x1049841f0)	0x140         __cfstring
-	[0x1049841f0-0x104984210)	0x20          __objc_classlist
-	[0x104984210-0x104984218)	0x8           __objc_nlclslist
-	[0x104984218-0x104984238)	0x20          __objc_protolist
-	[0x104984238-0x104984240)	0x8           __objc_imageinfo
-	[0x104984240-0x104985408)	0x11c8        __objc_const
-	[0x104985408-0x1049854a8)	0xa0          __objc_selrefs
-	[0x1049854a8-0x1049854e0)	0x38          __objc_classrefs
-	[0x1049854e0-0x1049854e8)	0x8           __objc_superrefs
-	[0x1049854e8-0x1049854f0)	0x8           __objc_ivar
-	[0x1049854f0-0x104985630)	0x140         __objc_data
-	[0x104985630-0x1049857c0)	0x190         __data
-	[0x1049857c0-0x104985800)	0x40          __common
-	[0x104985800-0x104985818)	0x18          __bss
-------------------------------------------------------------
-[0x104988000-0x104994000)		0xc000      __LINKEDIT
-	[0x1049887c0-0x1049887f0)	0x30          Function Starts
-	[0x1049887f0-0x104989d10)	0x1520        Symbol Table
-	[0x1049887f0-0x1049887f0)	0x0           Data In Code Entries
-	[0x104989d10-0x104989da8)	0x98          Dynamic Symbol Table
-	[0x104989da8-0x10498b470)	0x16c8        String Table
-	[0x10498b470-0x104990140)	0x4cd0        Code Signature
+       [start - end)			size		name				prot/flags
+----------------------------------------------------------------------------------------------------
+[0x4570000  -0x104570000)		0x100000000 __PAGEZERO			---/---
+----------------------------------------------------------------------------------------------------
+[0x104570000-0x104578000)		0x8000      __TEXT				r-x/r-x
+	[0x104574000-0x104574708)	0x708         __text			S_REGULAR S_ATTR_PURE_INSTRUCTIONS S_ATTR_SOME_INSTRUCTIONS
+	[0x104574708-0x1045747a4)	0x9c          __stubs			S_SYMBOL_STUBS S_ATTR_PURE_INSTRUCTIONS S_ATTR_SOME_INSTRUCTIONS
+	[0x1045747a4-0x10457484c)	0xa8          __stub_helper		S_REGULAR S_ATTR_PURE_INSTRUCTIONS S_ATTR_SOME_INSTRUCTIONS
+	[0x104574860-0x104574920)	0xc0          __objc_stubs		S_REGULAR S_ATTR_PURE_INSTRUCTIONS S_ATTR_SOME_INSTRUCTIONS
+	[0x104574920-0x104574954)	0x34          __cstring			S_CSTRING_LITERALS
+	[0x104574954-0x1045749ce)	0x7a          __objc_classname	S_CSTRING_LITERALS
+	[0x1045749ce-0x1045757fd)	0xe2f         __objc_methname	S_CSTRING_LITERALS
+	[0x1045757fd-0x104576326)	0xb29         __objc_methtype	S_CSTRING_LITERALS
+	[0x104576328-0x104576398)	0x70          __unwind_info		S_REGULAR
+----------------------------------------------------------------------------------------------------
+[0x104578000-0x10457c000)		0x4000      __DATA				rw-/rw-
+	[0x104578000-0x104578018)	0x18          __got				S_NON_LAZY_SYMBOL_POINTERS
+	[0x104578018-0x104578078)	0x60          __la_symbol_ptr	S_LAZY_SYMBOL_POINTERS
+	[0x104578078-0x1045780d8)	0x60          __cfstring		S_REGULAR
+	[0x1045780d8-0x1045780f8)	0x20          __objc_classlist	S_REGULAR S_ATTR_NO_DEAD_STRIP
+	[0x1045780f8-0x104578118)	0x20          __objc_protolist	S_COALESCED
+	[0x104578118-0x104578120)	0x8           __objc_imageinfo	S_REGULAR
+	[0x104578120-0x1045792d0)	0x11b0        __objc_const		S_REGULAR
+	[0x1045792d0-0x104579308)	0x38          __objc_selrefs	S_LITERAL_POINTERS S_ATTR_NO_DEAD_STRIP
+	[0x104579308-0x104579320)	0x18          __objc_classrefs	S_REGULAR S_ATTR_NO_DEAD_STRIP
+	[0x104579320-0x104579328)	0x8           __objc_superrefs	S_REGULAR S_ATTR_NO_DEAD_STRIP
+	[0x104579328-0x104579330)	0x8           __objc_ivar		S_REGULAR
+	[0x104579330-0x104579470)	0x140         __objc_data		S_REGULAR
+	[0x104579470-0x1045795f8)	0x188         __data			S_REGULAR
+----------------------------------------------------------------------------------------------------
+[0x10457c000-0x104584000)		0x8000      __LINKEDIT			r--/r--
+	[0x10457c550-0x10457c570)	0x20          Function Starts
+	[0x10457c570-0x10457d4b0)	0xf40         Symbol Table
+	[0x10457c570-0x10457c570)	0x0           Data In Code Entries
+	[0x10457d4b0-0x10457d520)	0x70          Dynamic Symbol Table
+	[0x10457d520-0x10457e760)	0x1240        String Table
+	[0x10457e760-0x104583640)	0x4ee0        Code Signature
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Module Analysis](#Module-Analysis)
 
 
 
@@ -1087,7 +1117,7 @@ address = 0x100e08cb0 JITDemo`entry1 at main.m:708:0
 address = 0x100e0960c JITDemo`entry2 at main.m:740:0
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Module Analysis](#Module-Analysis)
 
 
 
@@ -1119,7 +1149,7 @@ address = 0x1814ce1c0 where = libdyld.dylib`dyld_stub_binder (matched)
 13 location(s) found
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Module Analysis](#Module-Analysis)
 
 
 
@@ -1185,7 +1215,7 @@ Dump group ID(s) in the codesign entitlements.
 ['group.com.xxx.JITDemo']
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Module Analysis](#Module-Analysis)
 
 
 
@@ -1206,7 +1236,7 @@ addr: 0x104dc45f0 -> file offset: 0x85f0
 
 Print class names in the specified module.
 
-```bash
+```stylus
 (lldb) classes
 AppDelegate <0x10468e378>
 SceneDelegate <0x10468e418>
@@ -1215,7 +1245,7 @@ ViewController <0x10468e260>
 
 
 
-##### `dmethods`
+#### `dmethods`
 
 Dumps all methods implemented by the NSObject subclass, supporting both iOS and MacOS.
 
@@ -1235,7 +1265,7 @@ in ViewController:
 
 
 
-##### `divars`
+#### `divars`
 
 Dumps all ivars for an instance of a particular class which inherits from NSObject, supporting both iOS and MacOS.
 
@@ -1245,7 +1275,7 @@ in ViewController:
 	_test (unsigned long): {length = 8, bytes = 0x5a00ab0000000000}
 ```
 
-##### `duplicate_class`
+#### `duplicate_class`
 
 ```stylus
 (lldb) duplicate_class
@@ -1259,24 +1289,24 @@ class DDLoggingContextSet is implemented in:
 24 duplicate classes were found
 ```
 
-##### `overridden_method`
+#### `overridden_method`
 
 ```stylus
 (lldb) overridden_method
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Objective-C Commands](#Objective-C-Commands)
 
 
 
 ### Assembly Commands
 
-### `inst2bytes` - instructions to bytes
+#### `inst2bytes` - instructions to bytes
 
 Convert assembly instructions to machine code.
 Useful for understanding instruction encoding and creating byte patterns.
 
-```bash
+```stylus
 (lldb) inst2bytes 'mov    x9, sp;mov    x8, x0'
 disassembly:
        0: 910003e9     	mov	x9, sp
@@ -1284,22 +1314,22 @@ disassembly:
 machine code: e9030091e80300aa
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Assembly Commands](#Assembly-Commands)
 
 
 
-### `bytes2inst` - bytes to instructions
+#### `bytes2inst` - bytes to instructions
 
 Convert machine code to assembly instructions.
 Useful for disassembling raw bytes and understanding their meaning.
 
-```bash
+```stylus
 (lldb) bytes2inst e9030091e80300aa
 <+0>:	mov	x9, sp
 <+4>:	mov	x8, x0
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Assembly Commands](#Assembly-Commands)
 
 
 
@@ -1367,7 +1397,7 @@ Read memory and interpret as addresses with symbol information.
 338 locations found
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Memory Commands](#Memory-Commands)
 
 
 
@@ -1387,7 +1417,7 @@ Read memory and interpret as addresses with symbol information.
 
 - 使用JIT代码可以读取到真实内存
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Memory Commands](#Memory-Commands)
 
 
 
@@ -1398,13 +1428,13 @@ Read memory and interpret as addresses with symbol information.
 Add debug symbol file(s) to corresponding module(s).
 
 **Load single dSYM:**
-```bash
+```st
 (lldb) load_dSYM /path/to/dSYMs/Alamofire.framework.dSYM
 1 dSYM file(s) loaded
 ```
 
 **Load multiple dSYMs from directory:**
-```bash
+```stylus
 (lldb) load_dSYM /path/to/dSYMs
 16 dSYM file(s) loaded
 ```
@@ -1425,7 +1455,7 @@ JITDemo`___lldb_unnamed_symbol302:
 0x1045843d4: JITDemo`-[ViewController ls_dir:] + 0
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Symbolize Commands](#Symbolize-Commands)
 
 
 
@@ -1467,7 +1497,7 @@ or
 (lldb) symbolize /Users/xxx/Desktop/JITDemo.crash
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Symbolize Commands](#Symbolize-Commands)
 
 
 
@@ -1486,7 +1516,7 @@ DebugKit loaded
 
 
 
-### `UIControl` Extension
+#### `UIControl` Extension
 
 Enhanced UIControl debugging that shows all target-action pairs for UI controls.
 Helps you quickly understand what happens when a button is tapped or other control events occur.
@@ -1556,7 +1586,7 @@ in CDMachOFile:
 (CDFile ...)
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to DebugKit Commands](#DebugKit-Commands)
 
 
 
@@ -1594,7 +1624,7 @@ Here is DebugKit's block description, it's clearer and more straightforward.
         - int 20
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to DebugKit Commands](#DebugKit-Commands)
 
 
 
@@ -1649,13 +1679,13 @@ DYLD all image info: 0000000104cd0000 + 170 format = 1
 0000001000000000-0000007000000000 [ 384.0G] ---/--- SM=EMPTY
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to DebugKit Commands](#DebugKit-Commands)
 
 
 
 ### Other Commands
 
-### `find_el` — Find Endless Loop
+#### `find_el` - Find Endless Loop
 
 Detects endless loops in all threads at the current execution point.
 Useful for identifying performance issues and infinite loops.
@@ -1684,7 +1714,7 @@ call Interlock`-[ViewController touchesBegan:withEvent:] + 136 at ViewController
 ...
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Other Commands](#Other-Commands)
 
 
 
@@ -1713,7 +1743,9 @@ thread #4294967295: tid = 0x190c, 0x0000000104e907cc libdispatch.dylib`_dispatch
 ...
 ```
 
-[⬆ Back to Available Commands](##available-commands)
+[⬆ Back to Other Commands](#Other-Commands)
+
+
 
 ---
 
