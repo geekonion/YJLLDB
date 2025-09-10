@@ -85,6 +85,8 @@ Some commonly used LLDB commands for iOS debugging and reverse engineering.
 - [executable - print main executable name](#executable---print-main-executable-name)
 - [appdelegate](#appdelegate)
 - [mname - module name](#mname---module-name)
+- [lcs - print load commands](#lcs---print-load-commands)
+- [libs - print shared libraries used](#libs---print-shared-libraries-used)
 - [segments - print segments](#segments---print-segments)
 - [main](#main)
 - [initfunc - print init func](#initfunc---print-init-func)
@@ -1044,6 +1046,57 @@ LLDBCode
 
 
 
+#### `lcs` - print load commands
+
+```stylus
+(lldb) lcs
+-----parsing module JITDemo-----
+LC 00: LC_SEGMENT_64		Mem: 0x0005f4000-0x1005f4000	__PAGEZERO
+LC 01: LC_SEGMENT_64		Mem: 0x1005f4000-0x1005fc000	__TEXT
+	Mem: 0x1005f8000-0x1005f8708		__text				S_REGULAR S_ATTR_PURE_INSTRUCTIONS S_ATTR_SOME_INSTRUCTIONS
+	...
+	Mem: 0x1005fa328-0x1005fa398		__unwind_info		S_REGULAR
+LC 02: LC_SEGMENT_64		Mem: 0x1005fc000-0x100600000	__DATA
+	Mem: 0x1005fc000-0x1005fc018		__got				S_NON_LAZY_SYMBOL_POINTERS
+	...
+	Mem: 0x1005fd470-0x1005fd5f8		__data				S_REGULAR
+LC 03: LC_SEGMENT_64		Mem: 0x100600000-0x100608000	__LINKEDIT
+LC 04: LC_DYLD_INFO
+LC 05: LC_SYMTAB
+	Symbol table is at offset 0xc570 (50544), 274 entries
+	String table is at offset 0xd520 (54560), 7440 bytes
+LC 06: LC_SYMTAB
+	209 local symbols at index 0
+	11 external symbols at index 209
+	24 undefined symbols at index 220
+	No TOC
+	No modtab
+	28 indirect symbols at offset 0xd4b0
+LC 07: LC_LOAD_DYLINKER			/usr/lib/dyld
+...
+LC 21: LC_CODE_SIGNATURE		Offset: 59232 Size: 20192
+```
+
+[⬆ Back to Module Analysis](#Module-Analysis)
+
+
+
+#### `libs` - print shared libraries used
+
+```stylus
+(lldb) libs
+-----parsing module JITDemo-----
+/System/Library/Frameworks/UIKit.framework/UIKit
+/System/Library/Frameworks/Foundation.framework/Foundation
+/usr/lib/libobjc.A.dylib
+/usr/lib/libSystem.B.dylib
+/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation
+```
+
+[⬆ Back to Module Analysis](#Module-Analysis)
+
+
+
 #### `segments` - print segments
 
 Print segments and section info of macho.
@@ -1788,6 +1841,7 @@ This project builds upon and is inspired by several excellent open-source projec
 - [pookjw/IvarDescription](https://github.com/pookjw/IvarDescription) - Instance variable description
 - [yulingtianxia/BlockHook](https://github.com/yulingtianxia/BlockHook) - Block hooking (for private data)
 - [comex/myvmmap](https://github.com/comex/myvmmap) - Virtual memory mapping
+- [jtool](http://newosxbook.com/tools/jtool.html)
 
 ## License
 

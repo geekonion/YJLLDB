@@ -132,7 +132,7 @@ def parse_macho(debugger, command, result, internal_dict):
     # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-
     command_args = shlex.split(command, posix=False)
     # 创建parser
-    parser = generate_option_parser()
+    parser = generate_macho_option_parser()
     # 解析参数，捕获异常
     try:
         # options是所有的选项，key-value形式，args是其余剩余所有参数，不包含options
@@ -203,7 +203,7 @@ def parse_macho(debugger, command, result, internal_dict):
                 result.AppendMessage('read header failed! {}'.format(error.GetCString()))
                 continue
 
-    info = MachO.parse_header(header_data)
+    info = MachO.parse_header(header_data, not options.keep)
     print(json.dumps(info, indent=2))
 
 
@@ -229,5 +229,19 @@ def generate_option_parser():
                       default=False,
                       dest="group_id",
                       help="Extract and show only the group ID(s) within the entitlements.")
+
+    return parser
+
+
+def generate_macho_option_parser():
+    usage = "usage: %prog [module name]\n"
+
+    parser = optparse.OptionParser(usage=usage, prog='macho')
+
+    parser.add_option("-k", "--keep",
+                      action='store_true',
+                      default=False,
+                      dest="keep",
+                      help="Keep the original lcs structure.")
 
     return parser
