@@ -97,7 +97,7 @@ def parse_macho(target, header_addr, header_size, slide):
 
     lcs = info['lcs']
     # print(json.dumps(lcs, indent=2))
-    seg_info = '       [start - end)\t\t\tsize\t\tname\t\t\t\tprot/flags\n'
+    seg_info = '         [start, end)\t\t\tsize\t\tname\t\t\t\tprot/flags\n'
     for lc in lcs:
         cmd = lc['cmd']
         if cmd == '19':  # LC_SEGMENT_64
@@ -111,7 +111,7 @@ def parse_macho(target, header_addr, header_size, slide):
             num = math.ceil(name_len / 4)
 
             seg_info += '-' * 100 + '\n'
-            seg_info += '[0x{:<9x}-0x{:<9x})\t\t0x{:<9x} {}{}{}/{}\n'. \
+            seg_info += '[0x{:<9x}, 0x{:<9x})\t\t0x{:<9x} {}{}{}/{}\n'. \
                 format(seg_start, seg_end, seg_size, seg_name, (6 - num) * '\t', initprot, maxprot)
 
             sects = lc['sects']
@@ -125,7 +125,7 @@ def parse_macho(target, header_addr, header_size, slide):
                     datasize = int(sect['size'], 16)
                     data_start = linkedit_vmaddr + slide + dataoff - linkedit_offset
                     data_end = data_start + datasize
-                    seg_info += '\t[0x{:<9x}-0x{:<9x})\t0x{:<9x}   {}\n'. \
+                    seg_info += '\t[0x{:<9x}, 0x{:<9x})\t0x{:<9x}   {}\n'. \
                         format(data_start, data_end, datasize, sect['name'])
             else:
                 for sect in sects:
@@ -137,7 +137,7 @@ def parse_macho(target, header_addr, header_size, slide):
 
                     name_len = len(sec_name)
                     num = math.ceil((name_len - 1) / 4)
-                    seg_info += '\t[0x{:<9x}-0x{:<9x})\t0x{:<9x}   {}{}{}\n'. \
+                    seg_info += '\t[0x{:<9x}, 0x{:<9x})\t0x{:<9x}   {}{}{}\n'. \
                         format(sec_start, sec_end, sec_size, sec_name, '\t' * (5 - num), sec_flags[:-1])
 
     return seg_info

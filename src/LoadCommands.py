@@ -131,7 +131,7 @@ def handle_command(debugger, command, result, prog):
                 seg_end = seg_start + seg_size
                 seg_name = lc['name']
 
-                lcs_info += ('LC {:0{width}d}: LC_SEGMENT_64\t\tMem: {:#011x}-{:#011x}\t{}\n'.
+                lcs_info += ('LC {:0{width}d}: LC_SEGMENT_64\t\tMem: [{:#011x}, {:#011x})\t{}\n'.
                             format(idx, seg_start, seg_end, seg_name, width=width))
 
                 sects = lc['sects']
@@ -144,8 +144,8 @@ def handle_command(debugger, command, result, prog):
 
                     name_len = len(sec_name)
                     num = math.floor(name_len / 4)
-                    lcs_info += '\tMem: {:#09x}-{:#09x}\t\t{}{}{}\n'. \
-                        format(sec_start, sec_end, sec_name, '\t' * (5 - num), sec_flags[:-1])
+                    lcs_info += '\t\t{}{}Mem: [{:#09x}, {:#09x})\t{}\n'. \
+                        format(sec_name, '\t' * (5 - num), sec_start, sec_end, sec_flags[:-1])
             elif cmd == 0x2:
                 lcs_info += 'LC {:0{width}d}: LC_SYMTAB\n'.format(idx, width=width)
 
