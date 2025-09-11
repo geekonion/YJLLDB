@@ -60,7 +60,20 @@ def do_symbolize(debugger, command, result, internal_dict):
         return
 
     n_args = len(args)
-    if n_args == 1:
+    if n_args == 0:
+        target = debugger.GetSelectedTarget()
+        process = target.GetProcess()
+        thread = process.GetSelectedThread()
+
+        frame = thread.GetSelectedFrame()
+        pc = frame.GetPC()
+
+        code, module_name, name_or_addr, offset = symbolize_addr(pc)
+        if code == 0:
+            result.AppendMessage('{:#x}: {}`{} + {}'.format(pc, module_name, name_or_addr, offset))
+        else:
+            result.AppendMessage('symbol not found')
+    elif n_args == 1:
         arg = args[0].replace('"', '').replace("'", '')
         if arg.startswith('0x'):
             addr = int(arg, 16)
