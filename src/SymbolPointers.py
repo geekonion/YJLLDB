@@ -234,8 +234,12 @@ def get_sym_name(target, slide, sym_sec, linkedit_seg):
 
     ptr_size = target.GetAddressByteSize()
     count = int(size / ptr_size)
+
+
     for i in range(0, count):
-        addr = common.get_long(sec_data, i * ptr_size, byte_order)
+        current_addr = common.get_long(sec_data, i * ptr_size, byte_order)
+        addr = util.strip_pac(current_addr)
+
         addr_obj = target.ResolveLoadAddress(addr)
         desc = '{}'.format(addr_obj)
         if not desc:
@@ -259,14 +263,14 @@ def get_sym_name(target, slide, sym_sec, linkedit_seg):
             nsymbol = symbol_list.GetSize()
 
             if nsymbol == 0:
-                desc += ' -> {} (not a function)'.format(name)
+                desc += ' ==> {} (not a function)'.format(name)
             elif nsymbol == 1:
                 symbol = symbol_list.GetContextAtIndex(0).GetSymbol()
                 start_addr_obj = symbol.GetStartAddress()
                 if addr_obj == start_addr_obj:
                     desc += ' (matched)'
                 else:
-                    desc += ' -> {}'.format(start_addr_obj)
+                    desc += ' ==> {}'.format(start_addr_obj)
             else:
                 target_addr_obj = None
                 for idx in range(nsymbol):
@@ -278,9 +282,13 @@ def get_sym_name(target, slide, sym_sec, linkedit_seg):
                 if target_addr_obj:
                     desc += ' (matched)'
                 else:
-                    desc += ' -> ' + name
+                    desc += ' ==> ' + name
 
-        message += 'address = 0x{:x} where = {}\n'.format(addr, desc)
+        if current_addr != addr:
+            message += 'address = {:#x} ({:#x}) where = {}\n'.format(current_addr, addr, desc)
+        else:
+            message += 'address = {:#x} where = {}\n'.format(current_addr, desc)
+
         total_count += 1
 
     return message, total_count

@@ -18,6 +18,8 @@ g_x64_nops = {
     8: b'\x0F\x1F\x84\x00\x00\x00\x00\x00',
     9: b'\x66\x0F\x1F\x84\x00\x00\x00\x00\x00',
 }
+# 47是machdep.virtual_address_size
+g_addr_mask = (1 << 47) - 1
 
 
 def get_desc_for_address(addr, default_name=None, need_line=True):
@@ -525,3 +527,11 @@ def get_GPRs(frame):
         ...
     """
     return get_registers(frame, 'general purpose')
+
+
+def strip_pac(addr: int) -> int:
+
+    if addr > g_addr_mask:
+        return addr & g_addr_mask
+    else:
+        return addr
