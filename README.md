@@ -1343,11 +1343,11 @@ in NSObject:
 ```stylus
 (lldb) duplicate_class
 class DDContextAllowlistFilterLogFormatter is implemented in:
-	/JITDemo.app/Frameworks/JITMiddleWareSDK.framework/JITMiddleWareSDK
+	/JITDemo.app/Frameworks/LLDBJIT.framework/LLDBJIT
 	/JITDemo.app/Frameworks/LLDBLog.framework/LLDBLog
 ...
 class DDLoggingContextSet is implemented in:
-	/JITDemo.app/Frameworks/LLDBJIT.framework/JITMiddleWareSDK
+	/JITDemo.app/Frameworks/LLDBJIT.framework/LLDBJIT
 	/JITDemo.app/Frameworks/LLDBLog.framework/LLDBLog
 24 duplicate classes were found
 ```
