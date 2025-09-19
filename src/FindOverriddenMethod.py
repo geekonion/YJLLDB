@@ -4,7 +4,7 @@ import lldb
 import optparse
 import shlex
 import os
-import util
+import re
 
 extra_offset = 0
 base_num_frames = 0
@@ -43,23 +43,27 @@ def find_overridden_method(debugger, command, result, internal_dict):
         return
 
     target = debugger.GetSelectedTarget()
+
     app_name = None
-    app_path = target.GetExecutable().GetDirectory()
-    last_slash_pos = app_path.rfind('/')
-    if last_slash_pos > 0:
-        app_name = app_path[last_slash_pos:] + os.path.sep
+    if not options.all:
+        app_path = target.GetExecutable().GetDirectory()
+        last_slash_pos = app_path.rfind('/')
+        if last_slash_pos > 0:
+            app_name = app_path[last_slash_pos:] + os.path.sep
 
     methods_dict = dict()
     for module in target.module_iter():
         module_file_spec = module.GetFileSpec()
-        module_path = str(module_file_spec)
-        pos = module_path.rfind(app_name)
 
-        if pos == -1:
-            continue
+        if not options.all:
+            module_path = str(module_file_spec)
+            pos = module_path.rfind(app_name)
+
+            if pos == -1:
+                continue
 
         name = module_file_spec.GetFilename()
-        oc_methods = find_oc_methods(target, module)
+        oc_methods = find_oc_methods(target, module, options.exclude)
         methods_dict[name] = oc_methods
 
     all_names = []
@@ -70,9 +74,9 @@ def find_overridden_method(debugger, command, result, internal_dict):
         all_names.append(names)
 
     overridden_methods_set = set()
-    n_list = len(all_names)
-    for i in range(n_list):
-        for j in range(i + 1, n_list):
+    n_names = len(all_names)
+    for i in range(n_names):
+        for j in range(i + 1, n_names):
             tmp = find_duplicates(all_names[i], all_names[j])
             overridden_methods_set.update(tmp)
 
@@ -104,7 +108,14 @@ def find_overridden_method(debugger, command, result, internal_dict):
                 #         inst_2.GetMnemonic(target) == 'br':
                 #         pass
 
-                methods.append('{}`{:#x}{}'.format(mod_name, address, suffix))
+                real_name = sym.GetName()
+                if sym_name != real_name:
+                    if len(suffix) > 0:
+                        methods.append('{}`{:#x} {} {}'.format(mod_name, address, real_name, suffix))
+                    else:
+                        methods.append('{}`{:#x} {}'.format(mod_name, address, real_name))
+                else:
+                    methods.append('{}`{:#x}{}'.format(mod_name, address, suffix))
 
         print('{}: {}'.format(method_name, methods))
 
@@ -118,7 +129,7 @@ def find_duplicates(list1, list2):
     return duplicates
 
 
-def find_oc_methods(target, module):
+def find_oc_methods(target, module, exclude):
     oc_methods = {}
     for symbol in module:
         # 2为Code
@@ -130,6 +141,9 @@ def find_oc_methods(target, module):
         if not sym_name.endswith(']'):
             continue
 
+        if not exclude: # 移除category名
+            sym_name = re.sub(r'\([^)]*\)', '', sym_name)
+
         start_addr = symbol.GetStartAddress().GetLoadAddress(target)
         oc_methods[start_addr] = sym_name
 
@@ -140,5 +154,15 @@ def generate_option_parser():
     usage = "usage: %prog"
 
     parser = optparse.OptionParser(usage=usage, prog='overridden_method')
+    parser.add_option("-a", "--all",
+                      action="store_true",
+                      default=False,
+                      dest="all",
+                      help="search all modules")
+    parser.add_option("-e", "--exclude",
+                      action="store_true",
+                      default=False,
+                      dest="exclude",
+                      help="exclude overridden methods by category")
 
     return parser
