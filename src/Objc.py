@@ -73,8 +73,6 @@ def handle_command(debugger, command, result, name):
         input_arg = ''
     elif n_args == 1:
         input_arg = args[0]
-        input_arg = input_arg.replace("'", "")
-        input_arg = input_arg.replace('"', '')
     else:
         result.AppendMessage(parser.get_usage())
         return
