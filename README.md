@@ -1328,6 +1328,16 @@ in ViewController:
 	_test (unsigned long): {length = 8, bytes = 0x5a00ab0000000000}
 ```
 
+```stylus
+(lldb) divars -j self
+in ViewController: (JIT)
+	8: _test
+in NSObject:
+	0: isa
+```
+
+
+
 #### `duplicate_class`
 
 ```stylus

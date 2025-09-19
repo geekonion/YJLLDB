@@ -49,7 +49,7 @@ def dump_ivars(debugger, command, result, internal_dict):
     Dumps all ivars for an instance of a particular class which inherits from NSObject, supporting both iOS and MacOS.
     implemented in YJLLDB/src/Objc.py
     """
-    handle_command(debugger, command, result, 'ivars')
+    handle_command(debugger, command, result, 'divars')
 
 
 def handle_command(debugger, command, result, name):
@@ -94,8 +94,8 @@ def handle_command(debugger, command, result, name):
         print(util.exe_command("process load /System/Library/PrivateFrameworks/UIKitCore.framework/UIKitCore"))
     if name == 'dmethods':
         result.AppendMessage(get_methods(input_arg))
-    elif name == 'ivars':
-        result.AppendMessage(get_ivars(input_arg))
+    elif name == 'divars':
+        result.AppendMessage(get_ivars(input_arg, options.jit))
 
 
 def find_module(target, name):
@@ -269,7 +269,7 @@ def get_methods(input_arg):
     return ret_str
 
 
-def get_ivars(input_arg):
+def get_ivars(input_arg, jit):
     command_script = '@import Foundation;\n@import ObjectiveC;\n'
     if input_arg.startswith('0x'):
         command_script += 'id ivar_obj = (id)' + input_arg + ';'
@@ -277,13 +277,19 @@ def get_ivars(input_arg):
         command_script += 'id ivar_obj = (Class)objc_getClass("' + input_arg + '");'
     else:
         command_script += 'id ivar_obj = ' + input_arg + ';'
+
+    if jit:
+        command_script += 'BOOL jit = YES;'
+    else:
+        command_script += 'BOOL jit = NO;'
+
     command_script += r'''
     NSString *x_ivar_des = nil;
     NSString *x_ivar_source = nil;
-    if ((BOOL)[ivar_obj respondsToSelector:@selector(_ivarDescription)]) {
+    if (!jit && (BOOL)[ivar_obj respondsToSelector:@selector(_ivarDescription)]) {
         x_ivar_des = (id)[ivar_obj _ivarDescription];
         x_ivar_source = @" (UI)\n";
-    } else if ((BOOL)[NSObject respondsToSelector:@selector(fp__ivarDescriptionForClass:)]) {
+    } else if (!jit && (BOOL)[NSObject respondsToSelector:@selector(fp__ivarDescriptionForClass:)]) {
         Class ivar_cls = nil;
         if (object_isClass(ivar_obj)) {
             ivar_cls = ivar_obj;
@@ -292,7 +298,7 @@ def get_ivars(input_arg):
         }
         x_ivar_des = (id)[NSObject fp__ivarDescriptionForClass:ivar_cls];
         x_ivar_source = @" (FP)\n";
-    } else if ((BOOL)[ivar_obj respondsToSelector:@selector(_fd_ivarDescription)]) {
+    } else if (!jit && (BOOL)[ivar_obj respondsToSelector:@selector(_fd_ivarDescription)]) {
         x_ivar_des = (id)[ivar_obj _fd_ivarDescription];
         x_ivar_source = @" (DK)\n";
     } else {
@@ -423,5 +429,11 @@ def generate_option_parser(name):
         usage = "usage: %prog\n"
 
     parser = optparse.OptionParser(usage=usage, prog=name)
+    if name == 'divars':
+        parser.add_option("-j", "--jit",
+                          action="store_true",
+                          default=False,
+                          dest="jit",
+                          help="Use jit code")
 
     return parser
