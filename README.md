@@ -336,6 +336,21 @@ Breakpoint 7: JITDemo`entry2 at main.m:740:0, address = 0x100e0960c
 
 
 
+#### `bclass` - break class
+
+Break methods of a stripped Objective-C class
+
+```stylus
+(lldb) bclass ApplicationProxy
+Breakpoint 101: where = appstored`+[ApplicationProxy proxyMatchingBundleID:orItemID:], address = 0x104c34a64
+Breakpoint 102: where = appstored`+[ApplicationProxy proxyForBundle:], address = 0x104c351e0
+...
+Breakpoint 200: where = appstored`-[ApplicationProxy .cxx_destruct], address = 0x104c36e68
+set 100 breakpoints
+```
+
+
+
 #### `bmethod` - break method
 
 Break the specified method(s) in user modules
