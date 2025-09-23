@@ -56,6 +56,7 @@ def break_class(debugger, command, result, internal_dict):
     total_count = 0
     for method in method_list:
         addr = int(method["addr"])
+        addr = util.strip_pac(addr)
         addr_obj = target.ResolveLoadAddress(addr)
 
         module = addr_obj.GetModule()
