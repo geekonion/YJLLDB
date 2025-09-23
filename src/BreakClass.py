@@ -107,9 +107,9 @@ def dump_class( class_name, dump_level):
         dump_methods(dm_cls, NO);
     }
     
-    NSData *data = [NSJSONSerialization dataWithJSONObject:dm_array options:kNilOptions error:nil];
+    NSData *dm_data = [NSJSONSerialization dataWithJSONObject:dm_array options:kNilOptions error:nil];
     // 4 NSUTF8StringEncoding
-    NSString *json_str = [[NSString alloc] initWithData:data encoding:4];
+    NSString *json_str = [[NSString alloc] initWithData:dm_data encoding:4];
     json_str;
     '''
 
