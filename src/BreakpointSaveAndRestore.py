@@ -212,7 +212,9 @@ def clear_breakpoints(debugger, command, result, internal_dict):
     """
     target = debugger.GetSelectedTarget()
 
-    for brk in target.breakpoint_iter():
+    nbrk = target.GetNumBreakpoints()
+    for idx in range(nbrk - 1, -1, -1):
+        brk = target.GetBreakpointAtIndex(idx)
         brk_des = str(brk)
         if 'name = ' in brk_des:
             continue
