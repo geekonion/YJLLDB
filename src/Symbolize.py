@@ -866,8 +866,8 @@ def find_addresses_in_module(addr_list, module_path):
             NSNumber *addr = @(method_imp);
             if ([addr_list containsObject:addr]) {
                 const char *sel_name = sel_getName((SEL)method_getName(method));
-                NSString *key = [NSString stringWithFormat:@"%lld", method_imp];
-                methods_info[key] = [NSString stringWithFormat:@"-[%s %s]", cls_name, sel_name];
+                NSString *sym_key = [NSString stringWithFormat:@"%lld", method_imp];
+                methods_info[sym_key] = [NSString stringWithFormat:@"-[%s %s]", cls_name, sel_name];
                 [addr_list removeObject:addr];
             }
         }
@@ -886,8 +886,8 @@ def find_addresses_in_module(addr_list, module_path):
             NSNumber *addr = @(method_imp);
             if ([addr_list containsObject:addr]) {
                 const char *sel_name = sel_getName((SEL)method_getName(method));
-                NSString *key = [NSString stringWithFormat:@"%lld", method_imp];
-                methods_info[key] = [NSString stringWithFormat:@"+[%s %s]", cls_name, sel_name];
+                NSString *sy_key = [NSString stringWithFormat:@"%lld", method_imp];
+                methods_info[sy_key] = [NSString stringWithFormat:@"+[%s %s]", cls_name, sel_name];
                 [addr_list removeObject:addr];
             }
         }
