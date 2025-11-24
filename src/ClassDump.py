@@ -33,13 +33,36 @@ def class_dump(debugger, command, result, internal_dict):
 
     n_args = len(args)
     if n_args == 1:
-        class_name = args[0]
+        input = args[0]
     else:
         result.AppendMessage(parser.get_usage())
         return
 
     target = debugger.GetSelectedTarget()
+    if options.module:
+        class_dump_module(target, input)
+    else:
+        class_dump_one(target, input)
 
+
+def class_dump_module(target, lookup_module_name):
+    for module in target.module_iter():
+        module_file_spec = module.GetFileSpec()
+        module_name = module_file_spec.GetFilename()
+
+        dylib_name = lookup_module_name + '.dylib'
+        if lookup_module_name == module_name or dylib_name == module_name:
+            types = module.GetTypes()
+            for tmp_type in types:
+                if (tmp_type.GetTypeClass() != lldb.eTypeClassObjCInterface
+                        and tmp_type.GetTypeClass() != lldb.eTypeClassStruct
+                        and tmp_type.GetTypeClass() != lldb.eTypeClassUnion):
+                    continue
+
+                print(tmp_type)
+
+
+def class_dump_one(target, class_name):
     types = target.FindTypes(class_name)
     for tmp_type in types:
         if tmp_type.GetTypeClass() != lldb.eTypeClassObjCInterface:
@@ -65,5 +88,10 @@ def generate_option_parser():
     usage = "usage: %prog <class name>\n"
 
     parser = optparse.OptionParser(usage=usage, prog='cdump')
+    parser.add_option("-m", "--module",
+                      action="store_true",
+                      default=False,
+                      dest="module",
+                      help="lookup from module")
 
     return parser
