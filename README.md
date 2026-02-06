@@ -95,6 +95,7 @@ Some commonly used LLDB commands for iOS debugging and reverse engineering.
 - [lazy_sym - print __la_symbol_ptr section](#lazy_sym---print-__la_symbol_ptr-section)
 - [entitlements - dump entitlements](#entitlements---dump-entitlements)
 - [offset - get file offset for address](#offset---get-file-offset-for-address)
+- [dependency - list dependencies](#dependency---list-dependencies)
 
 ### Objective-C Commands
 - [classes - print class names](#classes---print-class-names)
@@ -1295,6 +1296,47 @@ addr: 0x104dc45f0 -> file offset: 0x85f0
 (lldb) offset 0x104dc45f0
 addr: 0x104dc45f0 -> file offset: 0x85f0
 ```
+
+
+
+#### dependency - list dependencies
+
+List the dependencies of a binary.
+
+```stylus
+(lldb) dep
+[
+  {
+    "/usr/lib/libc++.1.dylib": []
+  },
+  {
+    "/usr/lib/libz.1.dylib": []
+  },
+ 	...
+  {
+    "@rpath/Framework.framework/Framework": [
+      {
+        "/System/Library/Frameworks/Foundation.framework/Foundation": []
+      },
+      ...
+      {
+        "@rpath/Test.dylib (weak)": [
+          {
+            "/System/Library/Frameworks/Foundation.framework/Foundation": []
+          },
+          ...
+          {
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation": []
+          }
+        ]
+      }
+    ]
+  },
+  ...
+]
+```
+
+[⬆ Back to Module Analysis](#Module-Analysis)
 
 
 
