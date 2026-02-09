@@ -6,7 +6,7 @@ import shlex
 
 
 def __lldb_init_module(debugger, internal_dict):
-    debugger.HandleCommand('command script add -h "dump class info" -f ClassDump.class_dump dclass')
+    debugger.HandleCommand('command script add -h "dump class info" -f ClassDump.class_dump dcls')
 
 
 def class_dump(debugger, command, result, internal_dict):
@@ -107,7 +107,7 @@ def class_dump_one(target, class_name):
 def generate_option_parser():
     usage = "usage: \n\t%prog <class name>\n\t%prog -m <module name>"
 
-    parser = optparse.OptionParser(usage=usage, prog='dclass')
+    parser = optparse.OptionParser(usage=usage, prog='dcls')
     parser.add_option("-m", "--module",
                       action="store_true",
                       default=False,

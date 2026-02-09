@@ -95,7 +95,7 @@ Some commonly used LLDB commands for iOS debugging and reverse engineering.
 - [lazy_sym - print __la_symbol_ptr section](#lazy_sym---print-__la_symbol_ptr-section)
 - [entitlements - dump entitlements](#entitlements---dump-entitlements)
 - [offset - get file offset for address](#offset---get-file-offset-for-address)
-- [dclass - class dump](#dclass---class-dump)
+- [dcls - class dump](#dcls---class-dump)
 - [dependency - list dependencies](#dependency---list-dependencies)
 
 ### Objective-C Commands
@@ -1300,10 +1300,10 @@ addr: 0x104dc45f0 -> file offset: 0x85f0
 
 
 
-#### dclass - class dump
+#### dcls - class dump
 
 ```objective-c
-(lldb) dclass ViewController
+(lldb) dcls ViewController
 @interface ViewController : UIViewController{
     UITableView * _tableView;
     ...
