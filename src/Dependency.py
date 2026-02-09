@@ -45,10 +45,6 @@ def dependency(debugger, command, result, internal_dict):
     elif len(args) == 0:
         file_spec = target.GetExecutable()
         input_arg = file_spec.GetFilename()
-        full_path = str(file_spec)
-        debug_dylib = full_path + '.debug.dylib'
-        if os.path.exists(debug_dylib):
-            input_arg += '.debug.dylib'
     else:
         result.SetError("\n" + parser.get_usage())
         return
@@ -91,8 +87,7 @@ def parse_dependency_with(target, app_name, input_arg):
         header_addr = header_addr_obj.GetLoadAddress(target)
 
         if ((is_address and header_addr == target_header_addr)
-                or (lookup_module_name == module_name or
-                    lookup_module_name + '.dylib' == module_name)):
+                or lookup_module_name == module_name):
             seg = module.FindSection('__TEXT')
             if not seg:
                 print('seg __TEXT not found in {}'.format(module_name))
