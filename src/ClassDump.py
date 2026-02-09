@@ -3,11 +3,10 @@
 import lldb
 import optparse
 import shlex
-import util
-import json
+
 
 def __lldb_init_module(debugger, internal_dict):
-    debugger.HandleCommand('command script add -h "dump class info" -f ClassDump.class_dump cdump')
+    debugger.HandleCommand('command script add -h "dump class info" -f ClassDump.class_dump dclass')
 
 
 def class_dump(debugger, command, result, internal_dict):
@@ -54,9 +53,10 @@ def class_dump_module(target, lookup_module_name):
         if lookup_module_name == module_name or dylib_name == module_name:
             types = module.GetTypes()
             for tmp_type in types:
-                if (tmp_type.GetTypeClass() != lldb.eTypeClassObjCInterface
-                        and tmp_type.GetTypeClass() != lldb.eTypeClassStruct
-                        and tmp_type.GetTypeClass() != lldb.eTypeClassUnion):
+                type_class = tmp_type.GetTypeClass()
+                if (type_class != lldb.eTypeClassObjCInterface
+                        and type_class != lldb.eTypeClassStruct
+                        and type_class != lldb.eTypeClassUnion):
                     continue
 
                 print(tmp_type)
@@ -74,20 +74,40 @@ def class_dump_one(target, class_name):
         nfunc = tmp_type.GetNumberOfMemberFunctions()
         for i in range(nfunc):
             func = tmp_type.GetMemberFunctionAtIndex(i)
+
             kind = func.GetKind()
             if kind == lldb.eMemberFunctionKindInstanceMethod:
-                func_info += '-[{} {}]\n'.format(class_name, func.GetName())
+                func_info += '- '
             elif kind == lldb.eMemberFunctionKindStaticMethod:
-                func_info += '+[{} {}]\n'.format(class_name, func.GetName())
+                func_info += '+ '
+
+            func_info += '({})'.format(func.GetReturnType().GetDisplayTypeName())
+
+            nargs = func.GetNumberOfArguments()
+            method_name = func.GetName()
+            if nargs > 0:
+                comps = method_name.split(':')
+                for idx in range(nargs):
+                    arg_type = func.GetArgumentTypeAtIndex(idx).GetName()
+                    func_info += ('{}:({})arg{}'.format(comps[idx], arg_type, idx + 1))
+                    if idx < nargs - 1:
+                        func_info += ' '
+            else:
+                func_info += method_name
+
+            func_info += ';\n'
 
         class_info = class_info.replace('@end', func_info + '@end')
         print(class_info)
 
+        if tmp_type.GetModule():
+            break
+
 
 def generate_option_parser():
-    usage = "usage: %prog <class name>\n"
+    usage = "usage: \n\t%prog <class name>\n\t%prog -m <module name>"
 
-    parser = optparse.OptionParser(usage=usage, prog='cdump')
+    parser = optparse.OptionParser(usage=usage, prog='dclass')
     parser.add_option("-m", "--module",
                       action="store_true",
                       default=False,
