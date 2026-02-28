@@ -3,6 +3,7 @@
 import lldb
 import optparse
 import shlex
+import util
 
 
 def __lldb_init_module(debugger, internal_dict):
@@ -44,13 +45,24 @@ def class_dump(debugger, command, result, internal_dict):
         class_dump_one(target, input)
 
 
-def class_dump_module(target, lookup_module_name):
+def class_dump_module(target, input_arg):
+    target_header_addr = 0
+    lookup_module_name = None
+    is_address, name_or_addr = util.parse_arg(input_arg)
+    if is_address:
+        target_header_addr = int(name_or_addr, 16)
+    else:
+        lookup_module_name = name_or_addr
+
     for module in target.module_iter():
         module_file_spec = module.GetFileSpec()
         module_name = module_file_spec.GetFilename()
+        header_addr_obj = module.GetObjectFileHeaderAddress()
+        header_addr = header_addr_obj.GetLoadAddress(target)
 
-        dylib_name = lookup_module_name + '.dylib'
-        if lookup_module_name == module_name or dylib_name == module_name:
+        if ((is_address and target_header_addr == header_addr) or
+                (lookup_module_name and
+                 (lookup_module_name == module_name or lookup_module_name + '.dylib' == module_name))):
             types = module.GetTypes()
             for tmp_type in types:
                 type_class = tmp_type.GetTypeClass()
@@ -60,6 +72,7 @@ def class_dump_module(target, lookup_module_name):
                     continue
 
                 print(tmp_type)
+                print('\t')
 
 
 def class_dump_one(target, class_name):
