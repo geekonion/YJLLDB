@@ -86,7 +86,7 @@ Some commonly used LLDB commands for iOS debugging and reverse engineering.
 - [appdelegate](#appdelegate)
 - [mname - module name](#mname---module-name)
 - [lcs - print load commands](#lcs---print-load-commands)
-- [libs - print shared libraries used](#libs---print-shared-libraries-used)
+- [libs - print shared libraries](#libs---print-shared-libraries)
 - [segments - print segments](#segments---print-segments)
 - [main](#main)
 - [initfunc - print init func](#initfunc---print-init-func)
@@ -134,9 +134,8 @@ Some commonly used LLDB commands for iOS debugging and reverse engineering.
 1. **Clone the repository**
    ```bash
    git clone https://github.com/geekonion/YJLLDB.git
-   cd YJLLDB
    ```
-
+   
 2. **Locate or create the LLDB initialization file**
 
    The LLDB initialization file is located at `~/.lldbinit`. If it doesn't exist, create it:
@@ -1098,7 +1097,7 @@ LC 21: LC_CODE_SIGNATURE		Offset: 59232 Size: 20192
 
 
 
-#### `libs` - print shared libraries used
+#### `libs` - print shared libraries
 
 ```stylus
 (lldb) libs
